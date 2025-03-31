@@ -65,7 +65,7 @@ fi
 # --- Checking Internet Connection ---
 if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
   echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
-  return 1
+  exit 1
 fi
 
 # --- Global variables ---
@@ -82,7 +82,7 @@ branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # --- Checking Android Version ---
 if [ $Android -le 7 ]; then
   echo -e "${bad} ${Red}Android $Android is not supported by Chromium.${Reset}"  # Chromium required Android 8+
-  return 1
+  exit 1
 fi
 
 # --- Checking device arch ---
