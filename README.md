@@ -59,6 +59,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS.
 
 ## Devoloper info
 - Powered by [Chromium](https://www.chromium.org/Home/)
+- Inspired by [chromium-latest-linux](https://github.com/scheib/chromium-latest-linux)
 - Developer: [@arghya339](https://github.com/arghya339)
 
 ## Keep cruising the web
