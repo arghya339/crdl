@@ -72,10 +72,10 @@ fi
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 internalStorage="/storage/emulated/0"
-crdl="$internalStorage/crdl" && mkdir -p "$crdl"
+crdl="$internalStorage/crdl"
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-LAST_INSTALL="$crdl/LAST_INSTALL.txt"
+LAST_INSTALL="$crdl/LAST_INSTALL"
 installedVersion=$(cat "$LAST_INSTALL" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 
@@ -201,8 +201,14 @@ elif [ $arch == "x86_64" ]; then
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 
+mkdir -p "$crdl"  # create crdl dir
+# Get crdl directory Access time in 'YYYY-MM-DD HH:MM' format
+crdlAccessTime=$(stat -c "%x" $crdl | awk '{print $1, substr($2,1,5)}')
+# Get current time in the same format
+currentTime=$(date "+%Y-%m-%d %H:%M")
+
 # --- Shizuku Setup first time ---
-if ! $HOME/rish -c "id" >/dev/null 2>&1 && [ ! -f "$LAST_INSTALL" ]; then
+if ! $HOME/rish -c "id" >/dev/null 2>&1 && [ ! -f "$LAST_INSTALL" ] && [ "crdlAccessTime" == "currentTime" ]; then
   termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
   if [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; then
     curl -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish" && chmod +x "$HOME/rish" > /dev/null 2>&1
