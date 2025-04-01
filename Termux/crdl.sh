@@ -85,7 +85,7 @@ clear && echo -e "${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- bash pkg update function ---
 update_bash() {
-  if $outdatedPKG | grep -q "^bash"; then
+  if echo $outdatedPKG | grep -q "^bash/" 2>/dev/null; then
     pkg upgrade bash -y > /dev/null 2>&1
   fi
 }
@@ -99,7 +99,7 @@ fi
 
 # --- grep pkg update function ---
 update_grep() {
-  if $outdatedPKG | grep -q "^grep"; then
+  if echo $outdatedPKG | grep -q "^grep/" 2>/dev/null; then
     pkg upgrade grep -y > /dev/null 2>&1
   fi
 }
@@ -113,7 +113,7 @@ fi
 
 # --- curl pkg update function ---
 update_curl() {
-  if $outdatedPKG | grep -q "^curl"; then
+  if echo $outdatedPKG | grep -q "^curl/" 2>/dev/null; then
     pkg upgrade curl -y > /dev/null 2>&1
   fi
 }
@@ -127,7 +127,7 @@ fi
 
 # --- jq pkg update function ---
 update_jq() {
-  if $outdatedPKG | grep -q "^jq/"; then
+  if echo $outdatedPKG | grep -q "^jq/" 2>/dev/null; then
     pkg upgrade jq -y > /dev/null 2>&1
   fi
 }
@@ -142,7 +142,7 @@ fi
 
 # --- unzip pkg update function ---
 update_unzip() {
-  if $outdatedPKG | grep -q "^unzip/"; then
+  if echo $outdatedPKG | grep -q "^unzip/" 2>/dev/null; then
     pkg upgrade unzip -y > /dev/null 2>&1
   fi
 }
@@ -156,7 +156,7 @@ fi
 
 # --- bc pkg update function ---
 update_bc() {
-  if $outdatedPKG | grep -q "^bc/"; then
+  if echo $outdatedPKG | grep -q "^bc/" 2>/dev/null; then
     pkg upgrade bc -y > /dev/null 2>&1
   fi
 }
