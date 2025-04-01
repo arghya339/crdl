@@ -238,7 +238,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-android.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip"
-        echo -e "$question Are you want to install chromium_v$crVersion.apk? [Y/n]"
+        echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
@@ -282,7 +282,7 @@ findValidSnapshotInEachPossition() {
               curl -L -o "$HOME/chrome-android.zip" "$checkUrl"
               echo -e "$running Extracting chrome-android.zip"
               unzip -o "$HOME/chrome-android.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-android.zip"
-              echo -e "$question Are you want to install chromium_v$crVersion.apk? [Y/n]"
+              echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")

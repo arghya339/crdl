@@ -13,14 +13,14 @@ A feature-rich command-line Chromium Downloader for Android/ macOS.
 - Downloads the latest version of Chromium.
 - written in bash shell script.
 - Custom channel support (e.g. stable, beta, dev, canary, last canary).
-- Support macOS and Android 8+ (arm64-v8a, armeabi-v7a, x86_64), more platforms will be added soon..
+- Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64), more platforms will be added soon..
 - Built in Updating Checks feature.
 - Auto Delete the downloaded file after installation complete.
 - Support SU (ROOT and Shizuku) Installer method.
 - Fallback to Session installer if SU installer not present.
 - Prefer 32-bit apk if device is usually low on memory (lessthen 4GB RAM).
 - User Friendly, Free and Open Source.
-- Smaller size script (20 KB), allowing you to save space on your device.
+- Smaller size script (< 20 KB), allowing you to save space on your device.
 
 ## Prerequisites
 - macOS computer with working internet connection.
