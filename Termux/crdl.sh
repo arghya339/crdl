@@ -226,27 +226,33 @@ if ! $HOME/rish -c "id" >/dev/null 2>&1 && [ ! -f "$LAST_INSTALL" ] && [ "crdlAc
   exit 1
 fi
 
+if [ $snapshotPlatform == "AndroidDesktop_arm64" ] || [ $snapshotPlatform == "AndroidDesktop_x64" ]; then
+  crUNZIP="chrome-android-desktop"
+else
+  crUNZIP="chrome-android"
+fi
+
 # --- install Chromium function ---
 crInstall() {
   if su -c "id" >/dev/null 2>&1; then
-    su -c "cp '$HOME/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
-    rm -rf "$HOME/chrome-android"
+    su -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
+    rm -rf "$HOME/$crUNZIP"
     su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    ~/rish -c "cp '$HOME/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
-    rm -rf "$HOME/chrome-android"
+    ~/rish -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
+    rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   else
-    termux-open "$HOME/chrome-android/apks/ChromePublic.apk"  # install apk using Session installer
-    sleep 30 && rm -rf "$HOME/chrome-android/"
+    termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
+    sleep 30 && rm -rf "$HOME/$crUNZIP/"
   fi
 }
 
 # --- Direct Download Function ---
 directDl() {
-downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-android.zip"
+downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     echo -e "${good} Found valid snapshot at: $pos"
@@ -255,9 +261,9 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         sleep 3 && clear && exit 0
     else
         echo -e "$running Direct Downloading Chromium $crVersion form $downloadUrl"
-        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" "$downloadUrl"
-        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-android.zip"
-        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip"
+        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
+        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
+        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
@@ -265,8 +271,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                   clear && exit 0
                   ;;
-                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-android/"; sleep 1 ;;
-                *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/chrome-android/"; sleep 2 ;;
+                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 1 ;;
+                *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 2 ;;
               esac
     fi
 else
@@ -285,7 +291,7 @@ findValidSnapshotInEachPossition() {
   # Iterate through each unique branch position in descending order
   for pos in $positions; do
       echo -e "$running Checking for snapshot at branch position: $pos"
-      checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-android.zip"
+      checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
       if curl --head --silent --fail "$checkUrl" > /dev/null; then
           # Get version for this position
           version=$(echo "$branchDataAll" | jq -r --arg pos "$pos" 'map(select(.chromium_main_branchPosition == ($pos | tonumber))) | .[0].version')
@@ -299,9 +305,9 @@ findValidSnapshotInEachPossition() {
               sleep 3 && clear && exit 0
           else
               echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
-              curl -L -o "$HOME/chrome-android.zip" "$checkUrl"
-              echo -e "$running Extracting chrome-android.zip"
-              unzip -o "$HOME/chrome-android.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-android.zip"
+              curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
+              echo -e "$running Extracting $crUNZIP.zip"
+              unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
               echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
@@ -311,11 +317,11 @@ findValidSnapshotInEachPossition() {
                     ;;
                   n*|N*)
                     echo -e "$notice Chromium installation skipped."
-                    rm -rf "$HOME/chrome-android" && sleep 1
+                    rm -rf "$HOME/$crUNZIP" && sleep 1
                     ;;
                   *)
                     echo -e "$info Invalid choice. Installation skipped."
-                    rm -rf "$HOME/chrome-android" && sleep 2
+                    rm -rf "$HOME/$crUNZIP" && sleep 2
                     ;;
               esac
               sleep 3 && break
@@ -345,7 +351,7 @@ findValidSnapshot() {
     for ((pos = position; pos >= position - range; pos--)); do
         [ "$pos" -lt 0 ] && break  # Stop if we go below 0
         
-        checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-android.zip"
+        checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
             echo -e "${good} Found valid snapshot at: $pos"
             if [ "$installedVersion" == "$pos" ]; then
@@ -353,9 +359,9 @@ findValidSnapshot() {
                 sleep 3 && clear && exit 0
             else
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
-                curl -L -o "$HOME/chrome-android.zip" "$checkUrl"
-                echo -e "$running Extracting chrome-android.zip"
-                unzip -o "$HOME/chrome-android.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-android.zip"
+                curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
+                echo -e "$running Extracting $crUNZIP.zip"
+                unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
                 echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
