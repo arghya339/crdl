@@ -255,6 +255,14 @@ findValidSnapshot() {
     done
 }
 
+# --- Fetch the last Chromium Extended version info ---
+eInfo() {
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Extended&platform=$snapshotPlatform&num=2")
+    crVersion=$(echo "$branchData" | jq -r '.[0].version')
+    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+    echo -e "$info Last Chromium Extended Version: $crVersion at branch position: $branchPosition"
+}
+
 # --- Fetch the last Chromium Stable version info ---
 sInfo() {
     branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=$snapshotPlatform&num=2")
@@ -300,9 +308,14 @@ tInfo() {
 while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
-  echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
+  echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
         case "$channel" in
+          [Ee]*)
+            channel="Extended"
+            eInfo  # Call the Chromium Extended info function
+            findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+            ;;
           [Ss]*)
             channel="Stable"
             sInfo  # Call the Chromium Stable info function
