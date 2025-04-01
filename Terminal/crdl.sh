@@ -72,7 +72,7 @@ if [ $productVersion -le 10 ]; then
   exit 1
 fi
 
-clear && echo -e "${Yellow}Please wait! starting crdl...${Reset}"
+echo -e "${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- Check if brew is installed ---
 if brew --version >/dev/null 2>&1; then
@@ -180,7 +180,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     echo -e "${good} Found valid snapshot at: $pos"
     if [ "$installedVersion" == "$branchPosition" ]; then
         echo -e "$notice Already installed: $installedVersion"
-        sleep 3 && clear && exit 0
+        sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
         echo -e "$running Direct Downloading Chromium $crVersion form $downloadUrl"
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
@@ -191,7 +191,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               case $opt in
                 y*|Y*|"")
                   crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                  clear && exit 0
+                  printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
                 *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 2 ;;
@@ -225,7 +225,7 @@ findValidSnapshot() {
             echo -e "${good} Found valid snapshot at: $pos"
             if [ "$installedVersion" == "$pos" ]; then
                 echo -e "$notice Already installed: $installedVersion"
-                sleep 3 && clear && exit 0
+                sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
                 curl -L -o "$HOME/chrome-mac.zip" "$checkUrl"
@@ -236,7 +236,7 @@ findValidSnapshot() {
                 case $opt in
                     y*|Y*|"")
                       crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null
-                      sleep 3 && clear && exit 0
+                      sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
                     n*|N*)
                       echo -e "$notice Chromium installation skipped."
@@ -306,7 +306,7 @@ tInfo() {
 
 # --- Main Menu ---
 while true; do
-  clear  # clear Terminal
+  printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   print_crdl  # Call the print crdl shape function
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
@@ -341,7 +341,7 @@ while true; do
             directDl  # Call the direct download function
             ;;
           [Qq]*)
-            clear  # clear Termianl
+            printf '\033[2J\033[3J\033[H' # clear Terminal
             break  # break the loop
             ;;
           *)
