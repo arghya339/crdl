@@ -255,7 +255,7 @@ directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
-    echo -e "${good} Found valid snapshot at: $pos"
+    echo -e "${good} Found valid snapshot at: $branchPosition"
     if [ "$installedVersion" == "$branchPosition" ]; then
         echo -e "$notice Already installed: $installedVersion"
         sleep 3 && clear && exit 0
