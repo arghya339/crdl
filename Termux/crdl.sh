@@ -298,6 +298,7 @@ findValidSnapshotInEachPossition() {
                     rm -rf "$HOME/chrome-android" && sleep 2
                     ;;
               esac
+              break
           fi
       else
           echo -e "$bad No snapshot found at position: $pos" && sleep 2
@@ -351,11 +352,12 @@ findValidSnapshot() {
                       rm -rf "$HOME/chrome-android" && sleep 2 
                       ;;
                 esac
+                break  # Break the searching loop
             fi
+        else
+          echo -e "${bad} No snapshot found in $range steps downward from $position" && sleep 2
         fi
     done
-
-    echo -e "${bad} No snapshot found in $range steps downward from $position" && sleep 2
 }
 
 # --- Fetch the last Chromium Stable version info ---
