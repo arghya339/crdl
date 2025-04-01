@@ -30,8 +30,6 @@ White="\033[37m"
 Yellow="\033[93m"
 Reset="\033[0m"
 
-clear && echo -e "${Yellow}Please wait! starting crdl...${Reset}"
-
 # --- Construct the crdl shape using string concatenation (ANSI Lean Font) ---
 print_crdl() {
   printf "${Blue}     https://github.com/arghya339/crdl${Reset}\n"                                               
@@ -46,22 +44,6 @@ print_crdl() {
   printf '\n'   
 }
 
-# --- Permission Check Logic ---
-if [ ! -d "$HOME/storage/shared" ]; then
-    # Attempt to list /storage/emulated/0 to trigger the error
-    error=$(ls /storage/emulated/0 2>&1)
-    expected_error="ls: cannot open directory '/storage/emulated/0': Permission denied"
-
-    if echo "$error" | grep -qF "$expected_error"; then
-        echo -e "${notice} Storage permission not granted. Running termux-setup-storage.."
-        termux-setup-storage
-        exit 1  # Exit the script after handling the error
-    else
-        echo -e "${bad} Unknown error: $error"
-        exit 1  # Exit on any other error
-    fi
-fi
-
 # --- Checking Internet Connection ---
 if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
   echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
@@ -71,11 +53,11 @@ fi
 # --- Global variables ---
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
-internalStorage="/storage/emulated/0"
-crdl="$internalStorage/crdl"
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
+outdatedPKG=$(apt list --upgradable 2>/dev/null)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-LAST_INSTALL="$crdl/LAST_INSTALL"
+FIRST_INSTALL="$HOME/.FIRST_INSTALL"
+LAST_INSTALL="$HOME/.LAST_INSTALL"
 installedVersion=$(cat "$LAST_INSTALL" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 
@@ -99,9 +81,11 @@ if [ $arch == "x86" ]; then
     exit 1
 fi
 
+clear && echo -e "${Yellow}Please wait! starting crdl...${Reset}"
+
 # --- bash pkg update function ---
 update_bash() {
-  if apt list --upgradable 2>/dev/null | grep -q "^bash"; then
+  if $outdatedPKG | grep -q "^bash"; then
     pkg upgrade bash -y > /dev/null 2>&1
   fi
 }
@@ -115,7 +99,7 @@ fi
 
 # --- grep pkg update function ---
 update_grep() {
-  if apt list --upgradable 2>/dev/null | grep -q "^grep"; then
+  if $outdatedPKG | grep -q "^grep"; then
     pkg upgrade grep -y > /dev/null 2>&1
   fi
 }
@@ -129,7 +113,7 @@ fi
 
 # --- curl pkg update function ---
 update_curl() {
-  if apt list --upgradable 2>/dev/null | grep -q "^curl"; then
+  if $outdatedPKG | grep -q "^curl"; then
     pkg upgrade curl -y > /dev/null 2>&1
   fi
 }
@@ -143,7 +127,7 @@ fi
 
 # --- jq pkg update function ---
 update_jq() {
-  if apt list --upgradable 2>/dev/null | grep -q "^jq/"; then
+  if $outdatedPKG | grep -q "^jq/"; then
     pkg upgrade jq -y > /dev/null 2>&1
   fi
 }
@@ -158,7 +142,7 @@ fi
 
 # --- unzip pkg update function ---
 update_unzip() {
-  if apt list --upgradable 2>/dev/null | grep -q "^unzip/"; then
+  if $outdatedPKG | grep -q "^unzip/"; then
     pkg upgrade unzip -y > /dev/null 2>&1
   fi
 }
@@ -172,7 +156,7 @@ fi
 
 # --- bc pkg update function ---
 update_bc() {
-  if apt list --upgradable 2>/dev/null | grep -q "^bc/"; then
+  if $outdatedPKG | grep -q "^bc/"; then
     pkg upgrade bc -y > /dev/null 2>&1
   fi
 }
@@ -185,7 +169,7 @@ else
 fi
 
 # --- Variables ---
-memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a bashCalculator
+memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a basicCalculator
 # --- Detect arch (ARM or ARM64 or x86_64) ---
 if [ $arch == "arm64-v8a" ]; then
     # Prefer 32-bit apk if device is usually low on memory (RAM).
@@ -200,10 +184,11 @@ elif [ $arch == "x86_64" ]; then
     snapshotPlatform="AndroidDesktop_x64" # For x86_64
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
-
-mkdir -p "$crdl"  # create crdl dir
-# Get crdl directory Access time in 'YYYY-MM-DD HH:MM' format
-crdlAccessTime=$(stat -c "%x" $crdl | awk '{print $1, substr($2,1,5)}')
+if [ ! -f "$FIRST_INSTALL" ]; then
+  touch "$FIRST_INSTALL"  # create FIRST_INSTALL file if it doesn't exist
+fi
+# Get crdl Script First Access time in 'YYYY-MM-DD HH:MM' format
+crdlAccessTime=$(stat -c "%x" $FIRST_INSTALL | awk '{print $1, substr($2,1,5)}')
 # Get current time in the same format
 currentTime=$(date "+%Y-%m-%d %H:%M")
 
@@ -225,18 +210,18 @@ fi
 # --- install Chromium function ---
 crInstall() {
   if su -c "id" >/dev/null 2>&1; then
-    su -c "cp '$crdl/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
-    rm -rf "$crdl/chrome-android"
+    su -c "cp '$HOME/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
+    rm -rf "$HOME/chrome-android"
     su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    ~/rish -c "cp '$crdl/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
-    rm -rf "$crdl/chrome-android"
+    ~/rish -c "cp '$HOME/chrome-android/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
+    rm -rf "$HOME/chrome-android"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   else
-    termux-open "$crdl/chrome-android/apks/ChromePublic.apk"  # install apk using Session installer
-    sleep 30 && rm -rf "$crdl/chrome-android/"
+    termux-open "$HOME/chrome-android/apks/ChromePublic.apk"  # install apk using Session installer
+    sleep 30 && rm -rf "$HOME/chrome-android/"
   fi
 }
 
@@ -245,14 +230,15 @@ directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-android.zip"
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
+    echo -e "${good} Found valid snapshot at: $pos"
     if [ "$installedVersion" == "$branchPosition" ]; then
-        echo -e "$notice Already installed version: $installedVersion"
+        echo -e "$notice Already installed: $installedVersion"
         sleep 3 && clear && exit 0
     else
         echo -e "$running Direct Downloading Chromium $crVersion form $downloadUrl"
-        curl -L -o "$crdl/${snapshotPlatform}_${branchPosition}_chrome-android.zip" "$downloadUrl"
+        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-android.zip"
-        unzip -o "$crdl/${snapshotPlatform}_${branchPosition}_chrome-android.zip" -d "$crdl/" > /dev/null 2>&1 && rm "$crdl/${snapshotPlatform}_${branchPosition}_chrome-android.zip"
+        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-android.zip"
         echo -e "$question Are you want to install chromium_v$crVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
@@ -260,12 +246,12 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                   clear && exit 0
                   ;;
-                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$crdl/chrome-android/"; sleep 1 ;;
-                *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$crdl/chrome-android/"; sleep 2 ;;
+                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-android/"; sleep 1 ;;
+                *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/chrome-android/"; sleep 2 ;;
               esac
     fi
 else
-    echo -e "$notice No direct download URL found." && sleep 1
+    echo -e "${bad} No direct download URL found." && sleep 1
 fi
 }
 
@@ -287,15 +273,15 @@ findValidSnapshotInEachPossition() {
           if [ "$version" == "null" ] || [ -z "$version" ]; then
               version="Unknown"
           fi
-          echo -e "$notice Found valid snapshot for Chromium version $version at position: $pos"
+          echo -e "$good Found valid snapshot for Chromium version $crVersion at position: $pos"
           if [ "$installedVersion" == "$pos" ]; then
-              echo -e "$notice Already installed version: $installedVersion"
+              echo -e "$notice Already installed: $installedVersion"
               sleep 3 && clear && exit 0
           else
-              echo -e "$running Downloading Chromium $version from: $checkUrl"
-              curl -L -o "$crdl/chrome-android.zip" "$checkUrl"
+              echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
+              curl -L -o "$HOME/chrome-android.zip" "$checkUrl"
               echo -e "$running Extracting chrome-android.zip"
-              unzip -o "$crdl/chrome-android.zip" -d "$crdl" > /dev/null 2>&1 && rm "$crdl/chrome-android.zip"
+              unzip -o "$HOME/chrome-android.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-android.zip"
               echo -e "$question Are you want to install chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
@@ -305,11 +291,11 @@ findValidSnapshotInEachPossition() {
                     ;;
                   n*|N*)
                     echo -e "$notice Chromium installation skipped."
-                    rm -rf "$crdl/chrome-android" && sleep 1
+                    rm -rf "$HOME/chrome-android" && sleep 1
                     ;;
                   *)
                     echo -e "$info Invalid choice. Installation skipped."
-                    rm -rf "$crdl/chrome-android" && sleep 2
+                    rm -rf "$HOME/chrome-android" && sleep 2
                     ;;
               esac
           fi
@@ -342,14 +328,14 @@ findValidSnapshot() {
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
             echo -e "${good} Found valid snapshot at: $pos"
             if [ "$installedVersion" == "$pos" ]; then
-                echo -e "$notice Already installed version: $installedVersion"
+                echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && clear && exit 0
             else
-                echo -e "$running Downloading Chromium from: $checkUrl"
-                curl -L -o "$crdl/chrome-android.zip" "$checkUrl"
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
+                curl -L -o "$HOME/chrome-android.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-android.zip"
-                unzip -o "$crdl/chrome-android.zip" -d "$crdl" > /dev/null 2>&1 && rm "$crdl/chrome-android.zip"
-                echo -e "$question Are you want to install chromium_.apk? [Y/n]"
+                unzip -o "$HOME/chrome-android.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-android.zip"
+                echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
@@ -358,11 +344,11 @@ findValidSnapshot() {
                       ;;
                     n*|N*)
                       echo -e "$notice Chromium installation skipped."
-                      rm -rf "$crdl/chrome-android" && sleep 1
+                      rm -rf "$HOME/chrome-android" && sleep 1
                       ;;
                     *)
                       echo -e "$info Invalid choice. Installation skipped."
-                      rm -rf "$crdl/chrome-android" && sleep 2 
+                      rm -rf "$HOME/chrome-android" && sleep 2 
                       ;;
                 esac
             fi
