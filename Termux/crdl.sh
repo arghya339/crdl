@@ -426,7 +426,7 @@ while true; do
             ;;
           [Cc]*)
             channel="Canary"
-            C_info
+            cInfo
             findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Tt]*)
