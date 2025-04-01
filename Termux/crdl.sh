@@ -59,6 +59,7 @@ memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 FIRST_INSTALL="$HOME/.FIRST_INSTALL"
 LAST_INSTALL="$HOME/.LAST_INSTALL"
 installedVersion=$(cat "$LAST_INSTALL" 2>/dev/null)
+AndroidDesktop="$HOME/.AndroidDesktop_arm64"
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 
 # --- Checking Android Version ---
@@ -167,12 +168,31 @@ else
   pkg install bc -y > /dev/null 2>&1
 fi
 
+if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTSLL" ]; then
+  echo -e "$question Are you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
+  read -r -p "Select: " crx
+        case $crx in
+            y*|Y*|"")
+              touch "$AndroidDesktop"
+              echo -e "$info crdl Extensions config are store in a $AndroidDesktop file. \nif you don't need AndroidDesktopChromium please remove this file by running following command in Termux ~ rm $AndroidDesktop" && sleep 6
+              ;;
+            n*|N*)
+              echo -e "$notice AndroidDesktopChromium skipped."
+              ;;
+            *)
+              echo -e "$info Invalid choice. AndroidDesktop skipped."
+              ;;
+        esac
+fi
+
 # --- Variables ---
 memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a basicCalculator
 # --- Detect arch (ARM or ARM64 or x86_64) ---
 if [ $arch == "arm64-v8a" ]; then
     # Prefer 32-bit apk if device is usually low on memory (RAM).
-    if [ $(echo "$memTotalGB <= 4" | bc -l) -eq 1 ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+    if [ -f $AndroidDesktop ]; then
+      snapshotPlatform="AndroidDesktop_arm64"
+    elif [ $(echo "$memTotalGB <= 4" | bc -l) -eq 1 ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
       snapshotPlatform="Android"
     else
       snapshotPlatform="Android_Arm64"  # For ARM64
