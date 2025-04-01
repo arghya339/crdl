@@ -259,7 +259,8 @@ fi
 # --- Fallback to Chromium snapshots using the list of branch positions from Stable releases ---
 findValidSnapshotInEachPossition() {
   echo -e "$running Fetching list of all Stable branch positions.."
-  branchDataAll=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=$snapshotPlatform&num=70")
+  range="70"
+  branchDataAll=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=$snapshotPlatform&num=$range")
   positions=$(echo "$branchDataAll" | jq -r '.[].chromium_main_branchPosition' | sort -nu -r)
 
   # Iterate through each unique branch position in descending order
@@ -301,9 +302,10 @@ findValidSnapshotInEachPossition() {
               break
           fi
       else
-          echo -e "$bad No snapshot found at position: $pos" && sleep 2
+          echo -e "$notice No valid snapshot found at position: $pos"
       fi
   done
+  echo -e "${bad} No valid snapshot found in $range steps downward from $position" && sleep 2
 }
 comment
 
@@ -355,9 +357,10 @@ findValidSnapshot() {
                 break  # Break the searching loop
             fi
         else
-          echo -e "${bad} No snapshot found in $range steps downward from $position" && sleep 2
+          echo -e "$notice No valid snapshot found at position: $pos"
         fi
     done
+    echo -e "${bad} No valid snapshot found in $range steps downward from $position" && sleep 2
 }
 
 # --- Fetch the last Chromium Stable version info ---
