@@ -388,7 +388,7 @@ findValidSnapshot() {
 
 # --- Fetch the last Chromium Stable version info ---
 sInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=$snapshotPlatform&num=2")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Android&num=2")
     crVersion=$(echo "$branchData" | jq -r '.[1].version')
     branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
     echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
@@ -396,7 +396,7 @@ sInfo() {
 
 # --- Fetch the last Chromium Beta version info ---
 bInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=$snapshotPlatform&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Android&num=1")
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
@@ -404,7 +404,7 @@ bInfo() {
 
 # --- Fetch the last Chromium Dev version info ---
 dInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=$snapshotPlatform&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Android&num=1")
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
@@ -412,7 +412,7 @@ dInfo() {
 
 # --- Fetch the last Chromium Canary version ---
 cInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=$snapshotPlatform&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
@@ -420,7 +420,7 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=$snapshotPlatform&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
     # canary_milestone=$(echo "$canary_branchData" | jq -r '.[0].milestone')
     crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX\.XXX/')
     branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
