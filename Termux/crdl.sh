@@ -136,7 +136,6 @@ update_jq() {
 if [ -f "$PREFIX/bin/jq" ]; then
     update_jq  # Check jq pkg updates by calling the function
 else
-    echo -e "$running installing jq..."
     pkg install jq -y > /dev/null 2>&1
 fi
 
