@@ -422,7 +422,7 @@ cInfo() {
 tInfo() {
     branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
     # canary_milestone=$(echo "$canary_branchData" | jq -r '.[0].milestone')
-    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX\.XXX/')
+    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
     branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
     echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
