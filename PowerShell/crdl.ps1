@@ -5,10 +5,6 @@
 
 # --- Downloading latest crdl.ps1 file from GitHub ---
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" | Out-Null
-# Create a symbolic link (requires admin privileges)
-if (-not (Test-Path "$env:ProgramFiles\Git\usr\bin\crdl")) {
-    New-Item -ItemType SymbolicLink -Path "$env:ProgramFiles\Git\usr\bin\crdl" -Target "$env:USERPROFILE\.crdl.ps1" -Force
-}
 
 # Define ANSI color codes for Windows.PowerShell
 $Red = @{ForegroundColor = "Red"}

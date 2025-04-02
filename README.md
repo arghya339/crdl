@@ -56,11 +56,15 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   - Open Windows Terminal (Admin) / Microsoft PowerShell Terminal (Admin) and run the script with the following command:
 
   ```
-  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" && Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1"; Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
   ```
-  Run crdl with these commands in Windows Terminal (Admin):
+  Run crdl with these commands in Windows PowerShell (Admin):
   ```
-  crdl
+  Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
+  ```
+  Run crdl with these commands in Microsoft PowerShell (Admin):
+  ```
+  .crdl.ps1"
   ```
   > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
 
