@@ -1,6 +1,6 @@
 <h1 align="center">cr >_dl</h1>
 <p align="center">
-A feature-rich command-line Chromium Downloader for Android/ macOS.
+A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 <br>
 <br>
 <img src="docs/images/Main.png">
@@ -13,7 +13,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS.
 - Downloads the latest version of Chromium.
 - written in bash shell script.
 - Custom channel support (e.g. extended, stable, beta, dev, canary, last canary).
-- Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64), more platforms will be added soon..
+- Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+, Linux will be added soon..
 - AndroidDesktopChromium [Extensions](https://chromewebstore.google.com/category/extensions) support
 - Built in Updating Checks feature.
 - Auto Delete the downloaded file after installation complete.
@@ -27,6 +27,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS.
 - macOS computer with working internet connection.
 - Android device with working internet connection.
 - Android device with root access (optional).
+- Windows 10 1809 (build 17763) or later (Windows 11) with working internet connection.
 
 ## Usage
 ### Android
@@ -50,6 +51,18 @@ A feature-rich command-line Chromium Downloader for Android/ macOS.
   crdl
   ```
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
+
+### Windows
+  - Open Windows Terminal (Admin) / Microsoft PowerShell Terminal (Admin) and run the script with the following command:
+
+  ```
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" && Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
+  ```
+  Run crdl with these commands in Windows Terminal (Admin):
+  ```
+  crdl
+  ```
+  > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
 
 ## How it works (_[Demo on YouTube](https://youtube.com/)_)
 
