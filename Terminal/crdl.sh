@@ -172,7 +172,7 @@ crInstall() {
     rm -rf "$HOME/chrome-mac"
   else
     sudo cp -Rn ~/chrome-mac/Chromium.app /Applications/  # Skips if already exists
-    curl -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/top-50.sh > /dev/null 2>&1 && bash "$HOME/top-50.sh" && rm "$HOME/top-50.sh"
+    curl -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh > /dev/null 2>&1 && bash "$HOME/top-50.sh" && rm "$HOME/top-50.sh"
   fi
   echo -e "$good Chromium_v$crVersion.dmg successfully installed! Please restart Chromium.app to take effect." && sleep 3
 }
@@ -191,7 +191,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
-        echo -e "$question Are you want to install Chromium_v$crVersion.dmg? [Y/n]"
+        echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
@@ -236,7 +236,7 @@ findValidSnapshot() {
                 curl -L -o "$HOME/chrome-mac.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-mac.zip"
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-mac.zip"
-                echo -e "$question Are you want to install Chromium_v$crVersion.dmg? [Y/n]"
+                echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")

@@ -264,7 +264,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
-        echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
+        echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
@@ -308,7 +308,7 @@ findValidSnapshotInEachPossition() {
               curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
               echo -e "$running Extracting $crUNZIP.zip"
               unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
-              echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
+              echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")
@@ -362,7 +362,7 @@ findValidSnapshot() {
                 curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
                 echo -e "$running Extracting $crUNZIP.zip"
                 unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
-                echo -e "$question Are you want to install Chromium_v$crVersion.apk? [Y/n]"
+                echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
