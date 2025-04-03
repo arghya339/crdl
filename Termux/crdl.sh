@@ -260,7 +260,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$notice Already installed: $installedVersion"
         sleep 3 && clear && exit 0
     else
-        echo -e "$running Direct Downloading Chromium $crVersion form $downloadUrl"
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"

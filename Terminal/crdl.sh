@@ -187,7 +187,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$notice Already installed: $installedVersion"
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
-        echo -e "$running Direct Downloading Chromium $crVersion form $downloadUrl"
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
