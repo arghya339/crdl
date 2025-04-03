@@ -53,7 +53,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
 ### Windows
-  - Open Windows Terminal (Admin) / Microsoft PowerShell Terminal (Admin) and run the script with the following command:
+  - Open Windows Terminal (Admin) / Microsoft PowerShell (Admin) and run the script with the following command:
 
   ```
   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1"; Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
@@ -64,9 +64,17 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   ```
   Run crdl with these commands in Microsoft PowerShell (Admin):
   ```
-  .crdl.ps1"
+  & .crdl.ps1
   ```
   > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
+
+## Chromium update notification
+### Android
+  - [Feeder](https://github.com/spacecowboy/Feeder/releases) + [rss/feed/android](https://chromium.woolyss.com/feed/android)
+### macOS
+  - [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) + [rss/feed/mac](https://chromium.woolyss.com/feed/mac)
+### Windows
+  - [fluent-reader](https://github.com/yang991178/fluent-reader/releases) + [rss/feed/windows-64-bit](https://chromium.woolyss.com/feed/windows-64-bit) / [rss/feed/windows-32-bit](https://chromium.woolyss.com/feed/windows-32-bit)
 
 ## How it works (_[Demo on YouTube](https://youtube.com/)_)
 
@@ -80,4 +88,4 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Inspired by [chromium-latest-linux](https://github.com/scheib/chromium-latest-linux)
 - Developer: [@arghya339](https://github.com/arghya339)
 
-## Keep cruising the web
+## Keep cruising the web!
