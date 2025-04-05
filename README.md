@@ -13,7 +13,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Downloads the latest version of Chromium.
 - written in bash shell script.
 - Custom channel support (e.g. extended, stable, beta, dev, canary, last canary).
-- Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+, Linux will be added soon..
+- Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+.
 - AndroidDesktopChromium [Extensions](https://chromewebstore.google.com/category/extensions) support
 - Built in Updating Checks feature.
 - Auto Delete the downloaded file after installation complete.
@@ -67,6 +67,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   & .crdl.ps1
   ```
   > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
+
+### Linux
+- [Flathub](https://flathub.org/setup) - [Chromium](https://flathub.org/apps/org.chromium.Chromium)
 
 ## Chromium update notification
 ### Android
