@@ -244,6 +244,8 @@ crInstall() {
     rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
+  elif [ $Android -le 11 ]; then
+    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${HOME}/${crUNZIP}/apks/ChromePublic.apk"  # Activity Manager
   else
     termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
     sleep 30 && rm -rf "$HOME/$crUNZIP/"
