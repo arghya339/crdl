@@ -44,6 +44,22 @@ print_crdl() {
   printf '\n'   
 }
 
+# --- Storage Permission Check Logic ---
+if [ ! -d "$HOME/storage/shared" ]; then
+    # Attempt to list /storage/emulated/0 to trigger the error
+    error=$(ls /storage/emulated/0 2>&1)
+    expected_error="ls: cannot open directory '/storage/emulated/0': Permission denied"
+
+    if echo "$error" | grep -qF "$expected_error" || ! echo "$error" | grep -q "^Android"; then
+        echo -e "${notice} Storage permission not granted. Running termux-setup-storage.."
+        termux-setup-storage
+        exit 1  # Exit the script after handling the error
+    else
+        echo -e "${bad} Unknown error: $error"
+        exit 1  # Exit on any other error
+    fi
+fi
+
 # --- Checking Internet Connection ---
 if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
   echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
@@ -245,7 +261,10 @@ crInstall() {
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   elif [ $Android -le 11 ]; then
-    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${HOME}/${crUNZIP}/apks/ChromePublic.apk"  # Activity Manager
+    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
+    rm -rf "$HOME/$crUNZIP/"
+    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk"  # Activity Manager
+    rm "/sdcard/ChromePublic.apk"
   else
     termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
     sleep 30 && rm -rf "$HOME/$crUNZIP/"
