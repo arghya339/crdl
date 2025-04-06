@@ -185,7 +185,7 @@ else
 fi
 
 if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTSLL" ]; then
-  echo -e "$question Are you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
+  echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
   read -r -p "Select: " crx
         case $crx in
             y*|Y*|"")
