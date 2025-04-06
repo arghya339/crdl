@@ -184,7 +184,7 @@ else
   pkg install bc -y > /dev/null 2>&1
 fi
 
-if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTSLL" ]; then
+if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTALL" ]; then
   echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
   read -r -p "Select: " crx
         case $crx in
