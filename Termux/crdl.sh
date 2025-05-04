@@ -69,6 +69,7 @@ fi
 # --- Global variables ---
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
+OEM=$(getprop ro.product.manufacturer)  # Get Device Manufacturer
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
@@ -260,6 +261,13 @@ crInstall() {
     rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
+  elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ]; then
+    if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
+      rm "/sdcard/Download/ChromePublic.apk"
+    fi
+    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
+    echo "MIUI Optimization detected! Please manually install Chromium from file:///sdcard/Download/ChromePublic.apk"
+    sleep 3 && rm -rf "$HOME/$crUNZIP"
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
