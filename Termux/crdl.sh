@@ -261,12 +261,16 @@ crInstall() {
     rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
-  elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ]; then
+  elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
       rm "/sdcard/Download/ChromePublic.apk"
     fi
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
-    echo "MIUI Optimization detected! Please manually install Chromium from file:///sdcard/Download/ChromePublic.apk"
+    if [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ]; then
+      echo -e $notice "${Yellow}MIUI Optimization detected! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
+    else
+      echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
+    fi
     sleep 3 && rm -rf "$HOME/$crUNZIP"
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
