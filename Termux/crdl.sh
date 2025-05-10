@@ -75,7 +75,9 @@ outdatedPKG=$(apt list --upgradable 2>/dev/null)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 FIRST_INSTALL="$HOME/.FIRST_INSTALL"
 LAST_INSTALL="$HOME/.LAST_INSTALL"
-installedVersion=$(cat "$LAST_INSTALL" 2>/dev/null)
+INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
+installedPosition=$(cat "$LAST_INSTALL" 2>/dev/null)
+installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
 AndroidDesktop="$HOME/.AndroidDesktop_arm64"
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 
@@ -288,8 +290,8 @@ downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     echo -e "${good} Found valid snapshot at: $branchPosition"
-    if [ "$installedVersion" == "$branchPosition" ]; then
-        echo -e "$notice Already installed: $installedVersion"
+    if [ "$installedPosition" == "$branchPosition" ]; then
+        echo -e "$notice Already installed: $installedPosition"
         sleep 3 && clear && exit 0
     else
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
@@ -332,7 +334,7 @@ findValidSnapshotInEachPossition() {
               version="Unknown"
           fi
           echo -e "$good Found valid snapshot for Chromium version $crVersion at position: $pos"
-          if [ "$installedVersion" == "$pos" ]; then
+          if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
               echo -e "$notice Already installed: $installedVersion"
               sleep 3 && clear && exit 0
           else
@@ -344,7 +346,7 @@ findValidSnapshotInEachPossition() {
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")
-                    crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null
+                    crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                     sleep 3 && clear && exit 0
                     ;;
                   n*|N*)
@@ -386,7 +388,7 @@ findValidSnapshot() {
         checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
             echo -e "${good} Found valid snapshot at: $pos"
-            if [ "$installedVersion" == "$pos" ]; then
+            if [ "$installedPosition" == "$pos" ]&& [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && clear && exit 0
             else
@@ -398,7 +400,7 @@ findValidSnapshot() {
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
-                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null
+                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       sleep 3 && clear && exit 0
                       ;;
                     n*|N*)

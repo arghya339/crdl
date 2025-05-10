@@ -56,7 +56,9 @@ productVersion=$(sw_vers -productVersion | cut -d '.' -f 1)  # get macOS major v
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedFormulae=$(brew outdated 2>/dev/null)
 LAST_INSTALL="$HOME/.LAST_INSTALL"
-installedVersion=$(cat "$LAST_INSTALL" 2>/dev/null)
+INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
+installedPosition=$(cat "$LAST_INSTALL" 2>/dev/null)
+installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # Detect platform (Intel or ARM)
 if [[ $(uname -m) == "x86_64" ]]; then
@@ -184,8 +186,8 @@ downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     echo -e "${good} Found valid snapshot at: $branchPosition"
-    if [ "$installedVersion" == "$branchPosition" ]; then
-        echo -e "$notice Already installed: $installedVersion"
+    if [ "$installedPosition" == "$branchPosition" ]; then
+        echo -e "$notice Already installed: $installedPosition"
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
@@ -229,7 +231,7 @@ findValidSnapshot() {
         checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-mac.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
             echo -e "${good} Found valid snapshot at: $pos"
-            if [ "$installedVersion" == "$pos" ]; then
+            if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
@@ -241,7 +243,7 @@ findValidSnapshot() {
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
-                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null
+                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
                     n*|N*)

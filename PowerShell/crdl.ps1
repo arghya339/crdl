@@ -112,7 +112,9 @@ $majorVersion = (Get-ComputerInfo).WindowsVersion -split '\.' | Select-Object -F
 $cloudflareDOH = "-L --doh-url https://cloudflare-dns.com/dns-query"
 $outdatedPKG = & winget upgrade --list 2>$null
 $LAST_INSTALL = "$env:USERPROFILE/.LAST_INSTALL"
-$installedVersion = Get-Content -Path "$LAST_INSTALL" -ErrorAction SilentlyContinue
+$INSTALLED_VERSION = "$env:USERPROFILE/.INSTALLED_VERSION"
+$installedPosition = Get-Content -Path "$LAST_INSTALL" -ErrorAction SilentlyContinue
+$installedVersion = Get-Content -Path "$INSTALLED_VERSION" -ErrorAction SilentlyContinue
 $branchUrl = "https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 
 # Detect platform (Intel or ARM) - Windows equivalent with x86 detection
@@ -215,8 +217,8 @@ function directDl {
     if ($downloadUrl -and $downloadUrl -ne "null") {
         Write-Host "[+]" @Green "Found valid snapshot at: $branchPosition"
 
-        if ($installedVersion -eq $branchPosition) {
-            Write-Host "[!]" @Yellow "Already installed: $installedVersion"
+        if ($installedPosition -eq $branchPosition) {
+            Write-Host "[!]" @Yellow "Already installed: $installedPosition"
             Start-Sleep -Seconds 3
             Clear-Host
             exit 0
@@ -287,7 +289,7 @@ function Find-ValidSnapshot {
             if ($response.StatusCode -eq 200) {
                 Write-Host "[+]" @Green "Found valid snapshot at: $pos"
 
-                if ($installedVersion -eq $pos) {
+                if (($installedPosition -eq $pos) -and ($installedVersion -eq $crVersion)) {
                     Write-Host "[!]" @Yellow "Already installed: $installedVersion"
                     Start-Sleep -Seconds 3
                     Clear-Host
@@ -307,6 +309,7 @@ function Find-ValidSnapshot {
                             crInstall # Call the installation function
                             New-Item -Path $LAST_INSTALL -ItemType File -Force | Out-Null
                             Set-Content -Path $LAST_INSTALL -Value $pos
+                            New-Item -Path $INSTALLED_VERSION -ItemType File -Force | Out-Null; Set-Content -Path $INSTALLED_VERSION -Value $crVersion
                             Start-Sleep -Seconds 3
                             Clear-Host
                             exit 0
