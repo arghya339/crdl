@@ -388,7 +388,7 @@ findValidSnapshot() {
         checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
             echo -e "${good} Found valid snapshot at: $pos"
-            if [ "$installedPosition" == "$pos" ]&& [ "$installedVersion" == "$crVersion" ]; then
+            if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && clear && exit 0
             else
