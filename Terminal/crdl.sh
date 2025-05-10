@@ -167,7 +167,7 @@ fi
 
 # --- install Chromium function ---
 crInstall() {
-  if [ -f "/Applications/Chromium.app" ]; then
+  if [ -d "/Applications/Chromium.app" ]; then
     sudo cp -R $HOME/chrome-mac/Chromium.app /Applications/  # Copy with replace an app
     sleep 15 && rm -rf "$HOME/chrome-mac"
   else
