@@ -256,12 +256,21 @@ crInstall() {
   if su -c "id" >/dev/null 2>&1; then
     su -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
     rm -rf "$HOME/$crUNZIP"
-    su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    # Temporary Disable SELinux Enforcing during installation if it not in Permissive
+    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+      su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+      INSTALL_STATUS=$?  # Capture exit status of the install command
+      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+    else
+      su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    fi
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     ~/rish -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
     rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    INSTALL_STATUS=$?  # Capture exit status of the install command
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
@@ -303,11 +312,20 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               case $opt in
                 y*|Y*|"")
                   crInstall
-                  if [ ! -f "$LAST_INSTALL" ]; then
+                  if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                     curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                   fi
-                  touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                  clear && exit 0
+                  if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+                    if $INSTALL_STATUS > /dev/null 2>&1; then
+                      touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                      clear && exit 0
+                    else
+                      echo -e "$bad installation failed!"
+                    fi
+                  else
+                    touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                    clear && exit 0
+                  fi
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 1 ;;
                 *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 2 ;;
@@ -351,11 +369,20 @@ findValidSnapshotInEachPossition() {
               case $opt in
                   y*|Y*|"")
                     crInstall
-                    if [ ! -f "$LAST_INSTALL" ]; then
+                    if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                       curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                     fi
-                    echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                    sleep 3 && clear && exit 0
+                    if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+                      if $INSTALL_STATUS > /dev/null 2>&1; then
+                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                        sleep 3 && clear && exit 0
+                      else
+                        echo -e "$bad installation failed!"
+                      fi
+                    else
+                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                      sleep 3 && clear && exit 0
+                    fi
                     ;;
                   n*|N*)
                     echo -e "$notice Chromium installation skipped."
@@ -409,11 +436,20 @@ findValidSnapshot() {
                 case $opt in
                     y*|Y*|"")
                       crInstall
-                      if [ ! -f "$LAST_INSTALL" ]; then
+                      if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                         curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                       fi
-                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                      sleep 3 && clear && exit 0
+                      if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+                        if $INSTALL_STATUS > /dev/null 2>&1; then
+                          echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                          sleep 3 && clear && exit 0
+                        else
+                          echo -e "$bad installation failed!"
+                        fi
+                      else
+                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                        sleep 3 && clear && exit 0
+                      fi
                       ;;
                     n*|N*)
                       echo -e "$notice Chromium installation skipped."
