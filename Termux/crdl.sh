@@ -316,7 +316,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                     curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                   fi
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                    if $INSTALL_STATUS > /dev/null 2>&1; then
+                    if [ $INSTALL_STATUS -eq 0 ]; then
                       touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                       clear && exit 0
                     else
@@ -373,7 +373,7 @@ findValidSnapshotInEachPossition() {
                       curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                     fi
                     if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                      if $INSTALL_STATUS > /dev/null 2>&1; then
+                      if [ $INSTALL_STATUS -eq 0 ]; then
                         echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                         sleep 3 && clear && exit 0
                       else
@@ -440,7 +440,7 @@ findValidSnapshot() {
                         curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
                       fi
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                        if $INSTALL_STATUS > /dev/null 2>&1; then
+                        if [ $INSTALL_STATUS -eq 0 ]; then
                           echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                           sleep 3 && clear && exit 0
                         else
