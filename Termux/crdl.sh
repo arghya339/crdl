@@ -302,7 +302,11 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
-                  crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                  crInstall
+                  if [ ! -f "$LAST_INSTALL" ]; then
+                    curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
+                  fi
+                  touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                   clear && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 1 ;;
@@ -346,7 +350,11 @@ findValidSnapshotInEachPossition() {
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")
-                    crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                    crInstall
+                    if [ ! -f "$LAST_INSTALL" ]; then
+                      curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
+                    fi
+                    echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                     sleep 3 && clear && exit 0
                     ;;
                   n*|N*)
@@ -400,7 +408,11 @@ findValidSnapshot() {
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
-                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                      crInstall
+                      if [ ! -f "$LAST_INSTALL" ]; then
+                        curl -o "$HOME/top-10.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-10.sh > /dev/null 2>&1 && bash "$HOME/top-10.sh" && rm "$HOME/top-10.sh"
+                      fi
+                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       sleep 3 && clear && exit 0
                       ;;
                     n*|N*)
