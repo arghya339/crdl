@@ -315,7 +315,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 y*|Y*|"")
                   crInstall
                   if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                    curl -o "$HOME/top-20.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-20.sh > /dev/null 2>&1 && bash "$HOME/top-20.sh" && rm "$HOME/top-20.sh"
+                    curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                   fi
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                     if [ $INSTALL_STATUS -eq 0 ]; then
@@ -372,7 +372,7 @@ findValidSnapshotInEachPossition() {
                   y*|Y*|"")
                     crInstall
                     if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                      curl -o "$HOME/top-20.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-20.sh > /dev/null 2>&1 && bash "$HOME/top-20.sh" && rm "$HOME/top-20.sh"
+                      curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                     fi
                     if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                       if [ $INSTALL_STATUS -eq 0 ]; then
@@ -439,7 +439,7 @@ findValidSnapshot() {
                     y*|Y*|"")
                       crInstall
                       if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                        curl -o "$HOME/top-20.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-20.sh > /dev/null 2>&1 && bash "$HOME/top-20.sh" && rm "$HOME/top-20.sh"
+                        curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                       fi
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                         if [ $INSTALL_STATUS -eq 0 ]; then
