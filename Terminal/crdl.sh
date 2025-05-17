@@ -182,7 +182,7 @@ crInstall() {
     sleep 15 && rm -rf "$HOME/chrome-mac"
     curl -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh > /dev/null 2>&1 && bash "$HOME/top-50.sh" && rm "$HOME/top-50.sh"
   fi
-  echo -e "$good Chromium_v$crVersion.dmg successfully installed! Please restart Chromium.app to take effect." && sleep 3
+  echo -e "$good $actualVersion successfully installed! Please restart Chromium.app to take effect." && sleep 3
 }
 
 # --- Direct Download Function ---
@@ -201,7 +201,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
-        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/chrome-mac/Chromium.app)/1000000}")
+        crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
         echo -e "$question Do you want to install $actualVersion? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
@@ -250,7 +250,7 @@ findValidSnapshot() {
                 echo -e "$running Extracting chrome-mac.zip"
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
-                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/chrome-mac/Chromium.app)/1000000}") 
+                crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
                 echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
