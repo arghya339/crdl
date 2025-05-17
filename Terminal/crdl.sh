@@ -197,7 +197,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     else
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
-        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
+        curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
@@ -246,7 +246,7 @@ findValidSnapshot() {
             else
                 crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-                curl -L -o "$HOME/chrome-mac.zip" "$checkUrl"
+                curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-mac.zip"
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
