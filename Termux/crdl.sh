@@ -323,7 +323,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
+        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk")/1000000}")
         echo -e "$question Do you want to install Chromium_v$actualVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
@@ -335,7 +335,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                     if [ $INSTALL_STATUS -eq 0 ]; then
                       touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                      touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACCTUAL_INSTALL"
+                      touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
                       touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
                       clear && exit 0
                     else
@@ -386,7 +386,7 @@ findValidSnapshotInEachPossition() {
               unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
               actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-              crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
+              crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk")/1000000}")
               echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
@@ -459,7 +459,7 @@ findValidSnapshot() {
                 unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
+                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk")/1000000}")
                 echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
