@@ -232,7 +232,7 @@ elif [ $arch == "armeabi-v7a" ]; then
 elif [ $arch == "x86_64" ]; then
     snapshotPlatform="AndroidDesktop_x64" # For x86_64
 fi
-LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE" > /dev/null)
 if [ ! -f "$FIRST_INSTALL" ]; then
   touch "$FIRST_INSTALL"  # create FIRST_INSTALL file if it doesn't exist
 fi
@@ -318,7 +318,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     else
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
-        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
+        curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl" > /dev/null
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -360,7 +360,7 @@ fi
 findValidSnapshotInEachPossition() {
   echo -e "$running Fetching list of all Stable branch positions.."
   range="70"
-  branchDataAll=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=$snapshotPlatform&num=$range")
+  branchDataAll=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=$snapshotPlatform&num=$range" > /dev/null)
   positions=$(echo "$branchDataAll" | jq -r '.[].chromium_main_branchPosition' | sort -nu -r)
 
   # Iterate through each unique branch position in descending order
@@ -381,7 +381,7 @@ findValidSnapshotInEachPossition() {
           else
               crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
               echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-              curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
+              curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl" > /dev/null
               echo -e "$running Extracting $crUNZIP.zip"
               unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -454,7 +454,7 @@ findValidSnapshot() {
             else
                 crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-                curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
+                curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl" > /dev/null
                 echo -e "$running Extracting $crUNZIP.zip"
                 unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -501,7 +501,7 @@ findValidSnapshot() {
 
 # --- Fetch the last Chromium Stable version info ---
 sInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Android&num=2")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Android&num=2" > /dev/null)
     crVersion=$(echo "$branchData" | jq -r '.[1].version')
     branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
     echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
@@ -509,7 +509,7 @@ sInfo() {
 
 # --- Fetch the last Chromium Beta version info ---
 bInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Android&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Android&num=1" > /dev/null)
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
@@ -517,7 +517,7 @@ bInfo() {
 
 # --- Fetch the last Chromium Dev version info ---
 dInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Android&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Android&num=1" > /dev/null)
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
@@ -525,7 +525,7 @@ dInfo() {
 
 # --- Fetch the last Chromium Canary version ---
 cInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1" > /dev/null)
     crVersion=$(echo "$branchData" | jq -r '.[0].version')
     branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
     echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
@@ -533,10 +533,10 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
+    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1" > /dev/null)
     # canary_milestone=$(echo "$canary_branchData" | jq -r '.[0].milestone')
     crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
-    branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+    branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE" > /dev/null)
     echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
 
