@@ -179,6 +179,20 @@ else
   pkg install unzip -y > /dev/null 2>&1
 fi
 
+# --- pv pkg update function ---
+update_pv() {
+  if echo $outdatedPKG | grep -q "^pv/" 2>/dev/null; then
+    pkg upgrade pv -y > /dev/null 2>&1
+  fi
+}
+
+# --- Check if pipeviewer is installed ---
+if [ -f "$PREFIX/bin/pv" ]; then
+  update_pv
+else
+  pkg install pv -y > /dev/null 2>&1
+fi
+
 # --- bc pkg update function ---
 update_bc() {
   if echo $outdatedPKG | grep -q "^bc/" 2>/dev/null; then
@@ -320,7 +334,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
-        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
+        itemCount=$(unzip -l $HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -383,7 +397,7 @@ findValidSnapshotInEachPossition() {
               echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
               curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
               echo -e "$running Extracting $crUNZIP.zip"
-              unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
+              itemCount=$(unzip -l "$HOME/$crUNZIP.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
               actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
               crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -456,7 +470,7 @@ findValidSnapshot() {
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
                 echo -e "$running Extracting $crUNZIP.zip"
-                unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
+                itemCount=$(unzip -l "$HOME/$crUNZIP.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)

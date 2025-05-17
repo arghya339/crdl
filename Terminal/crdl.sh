@@ -158,6 +158,20 @@ else
     brew install unzip -y > /dev/null 2>&1
 fi
 
+# --- pv update function ---
+update_pv() {
+  if echo $outdatedFormulae | grep -q "^pv" 2>/dev/null; then
+    brew upgrade pv -y > /dev/null 2>&1
+  fi
+}
+
+# --- Check if pipeviewer is installed ---
+if which pv > /dev/null 2>&1; then
+  update_pv
+else
+  brew install pv -y > /dev/null 2>&1
+fi
+
 # --- bc formulae update function ---
 update_bc() {
   if echo $outdatedFormulae | grep -q "^bc" 2>/dev/null; then
@@ -199,7 +213,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
-        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
+        itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
         echo -e "$question Do you want to install $actualVersion? [Y/n]"
@@ -248,7 +262,7 @@ findValidSnapshot() {
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-mac.zip"
-                unzip -o "$HOME/chrome-mac.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-mac.zip"
+                itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
                 echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
