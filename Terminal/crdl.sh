@@ -67,6 +67,11 @@ else
     snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+INSTALLED_SIZE="$HOME/.INSTALLED_SIZE"
+installedSize=$(cat "$INSTALLED_SIZE")
+if [ -d /Applications/Chromium.app ]; then
+  actualInstalledVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
+fi
 
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then
@@ -190,15 +195,19 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$notice Already installed: $installedPosition"
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
+        crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
-        echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
+        chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
+        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/chrome-mac/Chromium.app)/1000000}")
+        echo -e "$question Do you want to install $actualVersion? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
                   crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                  touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
                   printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
@@ -235,15 +244,19 @@ findValidSnapshot() {
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
+                crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L -o "$HOME/chrome-mac.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-mac.zip"
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/chrome-mac.zip"
+                chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
+                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/chrome-mac/Chromium.app)/1000000}") 
                 echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
                       crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                      echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
                       sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
                     n*|N*)
@@ -316,6 +329,9 @@ tInfo() {
 while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   print_crdl  # Call the print crdl shape function
+  if [ -d /Applications/Chromium.app ]; then
+    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize" && echo
+  fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
         case "$channel" in

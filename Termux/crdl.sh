@@ -73,13 +73,19 @@ OEM=$(getprop ro.product.manufacturer)  # Get Device Manufacturer
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-FIRST_INSTALL="$HOME/.FIRST_INSTALL"
-LAST_INSTALL="$HOME/.LAST_INSTALL"
-INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
+crdl="$HOME/.crdl"
+mkdir -p "$crdl"
+FIRST_INSTALL="$crdl/.FIRST_INSTALL"
+LAST_INSTALL="$crdl/.LAST_INSTALL"
+INSTALLED_VERSION="$crdl/.INSTALLED_VERSION"
 installedPosition=$(cat "$LAST_INSTALL" 2>/dev/null)
 installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
-AndroidDesktop="$HOME/.AndroidDesktop_arm64"
+AndroidDesktop="$crdl/.AndroidDesktop_arm64"
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
+INSTALLED_SIZE="$crdl/.INSTALLED_SIZE"
+installedSize=$(cat "$INSTALLED_SIZE")
+ACTUAL_INSTALL="$crdl/.ACTUAL_INSTALL"
+actualInstalledVersion=$(cat "$ACTUAL_INSTALL")
 
 # --- Checking Android Version ---
 if [ $Android -le 7 ]; then
@@ -185,6 +191,11 @@ if [ -f "$PREFIX/bin/bc" ]; then
   update_bc
 else
   pkg install bc -y > /dev/null 2>&1
+fi
+
+# --- Download and give execute (--x) permission to AAPT2 Binary ---
+if [ ! -f "$HOME/aapt2" ]; then
+  curl -L "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" > /dev/null 2>&1 && chmod +x "$HOME/aapt2"
 fi
 
 if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTALL" ]; then
@@ -305,11 +316,15 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$notice Already installed: $installedPosition"
         sleep 3 && clear && exit 0
     else
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl"
+        crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" > /dev/null 2>&1 && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
-        echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
+        actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+        actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
+        echo -e "$question Do you want to install Chromium_v$actualVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
@@ -320,6 +335,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                     if [ $INSTALL_STATUS -eq 0 ]; then
                       touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                      touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACCTUAL_INSTALL"
+                      touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
                       clear && exit 0
                     else
                       echo -e "$bad installation failed!"
@@ -362,10 +379,14 @@ findValidSnapshotInEachPossition() {
               echo -e "$notice Already installed: $installedVersion"
               sleep 3 && clear && exit 0
           else
-              echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
+              crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+              echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
               curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
               echo -e "$running Extracting $crUNZIP.zip"
               unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
+              actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+              actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+              crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
               echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
@@ -377,6 +398,8 @@ findValidSnapshotInEachPossition() {
                     if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                       if [ $INSTALL_STATUS -eq 0 ]; then
                         echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                        echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
+                        echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
                         sleep 3 && clear && exit 0
                       else
                         echo -e "$bad installation failed!"
@@ -429,10 +452,14 @@ findValidSnapshot() {
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && clear && exit 0
             else
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl"
+                crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L -o "$HOME/$crUNZIP.zip" "$checkUrl"
                 echo -e "$running Extracting $crUNZIP.zip"
                 unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" > /dev/null 2>&1 && rm "$HOME/$crUNZIP.zip"
+                actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+                actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -f%z $HOME/$crUNZIP/apks/ChromePublic.apk)/1000000}")
                 echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
@@ -444,6 +471,8 @@ findValidSnapshot() {
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                         if [ $INSTALL_STATUS -eq 0 ]; then
                           echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                          echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
+                          echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
                           sleep 3 && clear && exit 0
                         else
                           echo -e "$bad installation failed!"
@@ -515,6 +544,9 @@ tInfo() {
 while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
+  if [ -f "$LAST_INSTALL" ]; then
+    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize" && echo
+  fi
   echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
         case "$channel" in
