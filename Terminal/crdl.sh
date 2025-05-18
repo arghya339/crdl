@@ -212,14 +212,14 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize" && echo
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
-        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip" && echo
+        echo && echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
-        echo -e "$question Do you want to install $actualVersion? [Y/n]"
+        echo && echo -e "$question Do you want to install $actualVersion? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
@@ -265,14 +265,14 @@ findValidSnapshot() {
                 sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize" && echo
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
-                echo -e "$running Extracting chrome-mac.zip" && echo
+                echo && echo -e "$running Extracting chrome-mac.zip"
                 itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
-                echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
+                echo && echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
