@@ -68,12 +68,12 @@ else
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 INSTALLED_SIZE="$HOME/.INSTALLED_SIZE"
-installedSize=$(cat "$INSTALLED_SIZE")
+installedSize=$(cat "$INSTALLED_SIZE" 2>/dev/null)
 if [ -d /Applications/Chromium.app ]; then
   actualInstalledVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 fi
 INSTALL_TIME="$crdl/.INSTALL_TIME"
-installTime=$(cat "$INSTALL_TIME")
+installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
 
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then

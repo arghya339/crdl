@@ -83,11 +83,11 @@ installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
 AndroidDesktop="$crdl/.AndroidDesktop_arm64"
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 INSTALLED_SIZE="$crdl/.INSTALLED_SIZE"
-installedSize=$(cat "$INSTALLED_SIZE")
+installedSize=$(cat "$INSTALLED_SIZE" 2>/dev/null)
 ACTUAL_INSTALL="$crdl/.ACTUAL_INSTALL"
-actualInstalledVersion=$(cat "$ACTUAL_INSTALL")
+actualInstalledVersion=$(cat "$ACTUAL_INSTALL" 2>/dev/null)
 INSTALL_TIME="$crdl/.INSTALL_TIME"
-installTime=$(cat "$INSTALL_TIME")
+installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
 
 # --- Checking Android Version ---
 if [ $Android -le 7 ]; then
