@@ -72,7 +72,7 @@ installedSize=$(cat "$INSTALLED_SIZE" 2>/dev/null)
 if [ -d /Applications/Chromium.app ]; then
   actualInstalledVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 fi
-INSTALL_TIME="$crdl/.INSTALL_TIME"
+INSTALL_TIME="$HOME/.INSTALL_TIME"
 installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
 
 # --- Check OS version ---
