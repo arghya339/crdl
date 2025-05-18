@@ -91,7 +91,7 @@ fi
 # --- bash formulae update function ---
 update_bash() {
   if echo $outdatedFormulae | grep -q "^bash" 2>/dev/null; then
-    brew upgrade bash -y > /dev/null 2>&1
+    brew upgrade bash > /dev/null 2>&1
   fi
 }
 
@@ -99,13 +99,13 @@ update_bash() {
 if which bash > /dev/null 2>&1; then
   update_bash
 else
-  brew install bash -y > /dev/null 2>&1
+  brew install bash > /dev/null 2>&1
 fi
 
 # --- grep formulae update function ---
 update_grep() {
   if echo $outdatedFormulae | grep -q "^grep" 2>/dev/null; then
-    brew upgrade grep -y > /dev/null 2>&1
+    brew upgrade grep > /dev/null 2>&1
   fi
 }
 
@@ -113,13 +113,13 @@ update_grep() {
 if [ -f "/usr/bin/grep" ]; then
   update_grep
 else
-  brew install grep -y > /dev/null 2>&1
+  brew install grep > /dev/null 2>&1
 fi
 
 # --- curl formulae update function ---
 update_curl() {
   if echo $outdatedFormulae | grep -q "^curl" 2>/dev/null; then
-    brew upgrade curl -y > /dev/null 2>&1
+    brew upgrade curl > /dev/null 2>&1
   fi
 }
 
@@ -127,13 +127,13 @@ update_curl() {
 if which curl > /dev/null 2>&1; then
   update_curl
 else
-  brew install curl -y > /dev/null 2>&1
+  brew install curl > /dev/null 2>&1
 fi
 
 # --- jq formulae update function ---
 update_jq() {
   if echo $outdatedFormulae | grep -q "^jq" 2>/dev/null; then
-    brew upgrade jq -y > /dev/null 2>&1
+    brew upgrade jq > /dev/null 2>&1
   fi
 }
 
@@ -141,13 +141,13 @@ update_jq() {
 if which jq > /dev/null 2>&1; then
     update_jq  # Check jq furmulae updates by calling the function
 else
-    brew install jq -y > /dev/null 2>&1
+    brew install jq > /dev/null 2>&1
 fi
 
 # --- unzip formulae update function ---
 update_unzip() {
   if echo $outdatedFormulae | grep -q "^unzip" 2>/dev/null; then
-    brew upgrade unzip -y > /dev/null 2>&1
+    brew upgrade unzip > /dev/null 2>&1
   fi
 }
 
@@ -155,13 +155,13 @@ update_unzip() {
 if which unzip > /dev/null 2>&1; then
     update_unzip  # Check unzip furmulae updates by calling the function
 else
-    brew install unzip -y > /dev/null 2>&1
+    brew install unzip > /dev/null 2>&1
 fi
 
 # --- pv update function ---
 update_pv() {
   if echo $outdatedFormulae | grep -q "^pv" 2>/dev/null; then
-    brew upgrade pv -y > /dev/null 2>&1
+    brew upgrade pv > /dev/null 2>&1
   fi
 }
 
@@ -169,13 +169,13 @@ update_pv() {
 if which pv > /dev/null 2>&1; then
   update_pv
 else
-  brew install pv -y > /dev/null 2>&1
+  brew install pv > /dev/null 2>&1
 fi
 
 # --- bc formulae update function ---
 update_bc() {
   if echo $outdatedFormulae | grep -q "^bc" 2>/dev/null; then
-    brew upgrade bc -y > /dev/null 2>&1
+    brew upgrade bc > /dev/null 2>&1
   fi
 }
 
@@ -183,7 +183,7 @@ update_bc() {
 if which bc > /dev/null 2>&1; then
     update_bc  # Check bc furmulae updates by calling the function
 else
-    brew install bc -y > /dev/null 2>&1
+    brew install bc > /dev/null 2>&1
 fi
 
 # --- install Chromium function ---
@@ -213,7 +213,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
         echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
-        itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
+        itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
+        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
         echo -e "$question Do you want to install $actualVersion? [Y/n]"
@@ -262,7 +263,8 @@ findValidSnapshot() {
                 echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
                 curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
                 echo -e "$running Extracting chrome-mac.zip"
-                itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
+                itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
+                unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
                 echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
