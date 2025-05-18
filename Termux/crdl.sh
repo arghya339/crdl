@@ -86,6 +86,8 @@ INSTALLED_SIZE="$crdl/.INSTALLED_SIZE"
 installedSize=$(cat "$INSTALLED_SIZE")
 ACTUAL_INSTALL="$crdl/.ACTUAL_INSTALL"
 actualInstalledVersion=$(cat "$ACTUAL_INSTALL")
+INSTALL_TIME="$crdl/.INSTALL_TIME"
+installTime=$(cat "$INSTALL_TIME")
 
 # --- Checking Android Version ---
 if [ $Android -le 7 ]; then
@@ -325,15 +327,15 @@ directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
-    echo -e "${good} Found valid snapshot at: $branchPosition"
+    echo -e "${good} Found valid snapshot at: $branchPosition" && echo
     if [ "$installedPosition" == "$branchPosition" ]; then
         echo -e "$notice Already installed: $installedPosition"
         sleep 3 && clear && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize" && echo
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
-        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
+        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" && echo
         itemCount=$(unzip -l $HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
@@ -342,22 +344,26 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
+                  mkConfig() {
+                    touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
+                    touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                    touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
+                    touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
+                    if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
+                      curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                    fi
+                    clear && exit 0
+                  }
                   crInstall
-                  if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                    curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
-                  fi
+                  timeIs=$(date "+%Y-%m-%d %H:%M")
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                     if [ $INSTALL_STATUS -eq 0 ]; then
-                      touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                      touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
-                      touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
-                      clear && exit 0
+                      mkConfig
                     else
-                      echo -e "$bad installation failed!"
+                      echo -e "$bad installation failed!" && sleep 1
                     fi
                   else
-                    touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                    clear && exit 0
+                    mkConfig
                   fi
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 1 ;;
@@ -388,15 +394,15 @@ findValidSnapshotInEachPossition() {
           if [ "$version" == "null" ] || [ -z "$version" ]; then
               version="Unknown"
           fi
-          echo -e "$good Found valid snapshot for Chromium version $crVersion at position: $pos"
+          echo -e "$good Found valid snapshot for Chromium version $crVersion at position: $pos" && echo
           if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
               echo -e "$notice Already installed: $installedVersion"
               sleep 3 && clear && exit 0
           else
               crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-              echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
+              echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize" && echo
               curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
-              echo -e "$running Extracting $crUNZIP.zip"
+              echo -e "$running Extracting $crUNZIP.zip" && echo
               itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
               actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
@@ -405,22 +411,26 @@ findValidSnapshotInEachPossition() {
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")
+                    mkConfig() {
+                      touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
+                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                      echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
+                      echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
+                      if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
+                        curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                      fi
+                      sleep 3 && clear && exit 0
+                    }
                     crInstall
-                    if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                      curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
-                    fi
+                    timeIs=$(date "+%Y-%m-%d %H:%M")
                     if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                       if [ $INSTALL_STATUS -eq 0 ]; then
-                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                        echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
-                        echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                        sleep 3 && clear && exit 0
+                        mkConfig
                       else
-                        echo -e "$bad installation failed!"
+                        echo -e "$bad installation failed!" && sleep 1
                       fi
                     else
-                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                      sleep 3 && clear && exit 0
+                      mkConfig
                     fi
                     ;;
                   n*|N*)
@@ -461,15 +471,15 @@ findValidSnapshot() {
         
         checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
-            echo -e "${good} Found valid snapshot at: $pos"
+            echo -e "${good} Found valid snapshot at: $pos" && echo
             if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && clear && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize" && echo
                 curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
-                echo -e "$running Extracting $crUNZIP.zip"
+                echo -e "$running Extracting $crUNZIP.zip" && echo
                 itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
@@ -478,22 +488,26 @@ findValidSnapshot() {
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
+                      mkConfig() {
+                        touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
+                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                        echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
+                        echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
+                        if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
+                          curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                        fi
+                        sleep 3 && clear && exit 0
+                      }
                       crInstall
-                      if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                        curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
-                      fi
+                      timeIs=$(date "+%Y-%m-%d %H:%M")
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                         if [ $INSTALL_STATUS -eq 0 ]; then
-                          echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                          echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
-                          echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                          sleep 3 && clear && exit 0
+                          mkConfig
                         else
-                          echo -e "$bad installation failed!"
+                          echo -e "$bad installation failed!" && sleep 1
                         fi
                       else
-                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                        sleep 3 && clear && exit 0
+                        mkConfig
                       fi
                       ;;
                     n*|N*)
@@ -559,33 +573,33 @@ while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
   if [ -f "$LAST_INSTALL" ]; then
-    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize" && echo
+    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize - $installTime" && echo
   fi
   echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
         case "$channel" in
           [Ss]*)
             channel="Stable"
-            sInfo  # Call the Chromium Stable info function
-            findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+            echo && sInfo  # Call the Chromium Stable info function
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
             ;;
           [Bb]*)
             channel="Beta"
-            bInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && bInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Dd]*)
             channel="Dev"
-            dInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && dInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Cc]*)
             channel="Canary"
-            cInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && cInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Tt]*)
-            tInfo
+            echo && tInfo
             directDl  # Call the direct download function
             ;;
           [Qq]*)

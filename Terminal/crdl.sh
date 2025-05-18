@@ -72,6 +72,8 @@ installedSize=$(cat "$INSTALLED_SIZE")
 if [ -d /Applications/Chromium.app ]; then
   actualInstalledVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 fi
+INSTALL_TIME="$crdl/.INSTALL_TIME"
+installTime=$(cat "$INSTALL_TIME")
 
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then
@@ -204,15 +206,15 @@ directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-mac.zip"
 # Prefer the direct download link if available
 if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
-    echo -e "${good} Found valid snapshot at: $branchPosition"
+    echo -e "${good} Found valid snapshot at: $branchPosition" && echo
     if [ "$installedPosition" == "$branchPosition" ]; then
         echo -e "$notice Already installed: $installedPosition"
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
+        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize" && echo
         curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
-        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
+        echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip" && echo
         itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
@@ -221,7 +223,10 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
-                  crInstall && touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
+                  crInstall
+                  timeIs=$(date "+%Y-%m-%d %H:%M")
+                  touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
+                  touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                   touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
                   printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
@@ -254,15 +259,15 @@ findValidSnapshot() {
         
         checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-mac.zip"
         if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
-            echo -e "${good} Found valid snapshot at: $pos"
+            echo -e "${good} Found valid snapshot at: $pos" && echo
             if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
                 sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
+                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize" && echo
                 curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
-                echo -e "$running Extracting chrome-mac.zip"
+                echo -e "$running Extracting chrome-mac.zip" && echo
                 itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
@@ -271,7 +276,10 @@ findValidSnapshot() {
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
-                      crInstall && echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
+                      crInstall
+                      timeIs=$(date "+%Y-%m-%d %H:%M")
+                      touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
+                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
                       sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
@@ -346,38 +354,38 @@ while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   print_crdl  # Call the print crdl shape function
   if [ -d /Applications/Chromium.app ]; then
-    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize" && echo
+    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize - $installTime" && echo
   fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
         case "$channel" in
           [Ee]*)
             channel="Extended"
-            eInfo  # Call the Chromium Extended info function
-            findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+            echo && eInfo  # Call the Chromium Extended info function
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
             ;;
           [Ss]*)
             channel="Stable"
-            sInfo  # Call the Chromium Stable info function
-            findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+            echo && sInfo  # Call the Chromium Stable info function
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
             ;;
           [Bb]*)
             channel="Beta"
-            bInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && bInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Dd]*)
             channel="Dev"
-            dInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && dInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Cc]*)
             channel="Canary"
-            cInfo
-            findValidSnapshot "$branchPosition" $LAST_CHANGE
+            echo && cInfo
+            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
           [Tt]*)
-            tInfo
+            echo && tInfo
             directDl  # Call the direct download function
             ;;
           [Qq]*)
