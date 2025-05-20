@@ -214,7 +214,7 @@ if [ ! -f "$HOME/aapt2" ]; then
   curl -L "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" > /dev/null 2>&1 && chmod +x "$HOME/aapt2"
 fi
 
-if [ $arch == "arm64-v8a" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTALL" ]; then
+if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTALL" ]; then
   echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
   read -r -p "Select: " crx
         case $crx in
