@@ -293,6 +293,7 @@ crInstall() {
       su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
     else
       su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+      INSTALL_STATUS=$?  # Capture exit status of the install command
     fi
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
