@@ -334,8 +334,15 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         sleep 3 && clear && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
-        curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
+        echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
+        while true; do
+            curl -L --progress-bar -C - -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
+            DOWNLOAD_STATUS=$?
+            if [ $DOWNLOAD_STATUS -eq "0" ]; then
+              break  # break the resuming download loop
+            fi
+            echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+        done
         echo && echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         itemCount=$(unzip -l $HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -401,8 +408,15 @@ findValidSnapshotInEachPossition() {
               sleep 3 && clear && exit 0
           else
               crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-              echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-              curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
+              echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
+              while true; do
+                  curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$checkUrl"
+                  DOWNLOAD_STATUS=$?
+                  if [ $DOWNLOAD_STATUS -eq "0" ]; then
+                    break  # break the resuming download loop
+                  fi
+                  echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+              done
               echo && echo -e "$running Extracting $crUNZIP.zip"
               itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -478,8 +492,15 @@ findValidSnapshot() {
                 sleep 3 && clear && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-                curl -L --progress-bar -o "$HOME/$crUNZIP.zip" "$checkUrl"
+                echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
+                while true; do
+                    curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$checkUrl"
+                    DOWNLOAD_STATUS=$?
+                    if [ $DOWNLOAD_STATUS -eq "0" ]; then
+                      break  # break the resuming download loop
+                    fi
+                    echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+                done
                 echo && echo -e "$running Extracting $crUNZIP.zip"
                 itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")

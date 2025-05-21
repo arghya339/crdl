@@ -212,8 +212,15 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-        echo -e "$running Direct Downloading Chromium $crVersion from $downloadUrl $crdlSize"
-        curl -L --progress-bar -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
+        echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
+        while true; do
+            curl -L --progress-bar -C - -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
+            DOWNLOAD_STATUS=$?
+            if [ $DOWNLOAD_STATUS -eq "0" ]; then
+              break  # break the resuming download loop
+            fi
+            echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+        done
         echo && echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
         itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
         unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
@@ -265,8 +272,15 @@ findValidSnapshot() {
                 sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-                echo -e "$running Downloading Chromium $crVersion from: $checkUrl $crdlSize"
-                curl -L --progress-bar -o "$HOME/chrome-mac.zip" "$checkUrl"
+                echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
+                while true; do
+                    curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$checkUrl"
+                    DOWNLOAD_STATUS=$?
+                    if [ $DOWNLOAD_STATUS -eq "0" ]; then
+                      break  # break the resuming download loop
+                    fi
+                    echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+                done
                 echo && echo -e "$running Extracting chrome-mac.zip"
                 itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
                 unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
