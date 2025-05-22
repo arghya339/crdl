@@ -188,6 +188,50 @@ else
     brew install bc > /dev/null 2>&1
 fi
 
+# Get active interfaces (those with 'status: active')
+active_ifaces=$(ifconfig | awk '
+  /^[a-z]/ { iface=$1; sub(":", "", iface) }
+  /status: active/ { print iface }
+')
+
+# Build list of active service names based on active interfaces
+active_services=()
+while IFS= read -r device; do
+  service=$(networksetup -listnetworkserviceorder | awk -v dev="$device" '
+    $0 ~ "Device: " dev {
+      sub(/^.*\) /, "", prev)
+      print prev
+    }
+    { prev = $0 }
+  ')
+  [ -n "$service" ] && active_services+=("$service")
+done <<< "$active_ifaces"
+
+# Get all network services (remove header and leading '*')
+all_services=$(networksetup -listallnetworkservices | tail -n +2 | sed 's/^\* //')
+
+# Build list of inactive services, excluding VPN/Proxy by name pattern
+inactive_services=()
+while IFS= read -r svc; do
+  # Skip if service is active
+  skip_active=
+  for active in "${active_services[@]}"; do
+    [[ "$svc" == "$active" ]] && skip_active=1 && break
+  done
+  [ -n "$skip_active" ] && continue
+
+  # Skip VPN/Proxy related services by name
+  if [[ "$svc" == *"VPN"* || "$svc" == *"Proxy"* || "$svc" == wg-* ]]; then
+    continue
+  fi
+
+  inactive_services+=("$svc")
+done <<< "$all_services"
+
+# Convert arrays to comma-separated strings for display
+active_list=$(IFS=, ; echo "${active_services[*]}")
+inactive_list=$(IFS=, ; echo "${inactive_services[*]}")
+
 # --- install Chromium function ---
 crInstall() {
   if [ -d "/Applications/Chromium.app" ]; then
@@ -218,6 +262,13 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
+            elif [ $DOWNLOAD_STATUS -eq "6" ]; then
+              echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
+              echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
+              open "https://one.one.one.one/"
+            elif [ $DOWNLOAD_STATUS -eq "56" ]; then
+              echo -e "$bad $active_list signal are very unstable!"
+              echo -e "$info Please switch Network service to $inactive_list"
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done

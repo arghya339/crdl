@@ -69,7 +69,15 @@ fi
 # --- Global variables ---
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
+arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
 OEM=$(getprop ro.product.manufacturer)  # Get Device Manufacturer
+networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
+networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
+networkName1=$(getprop gsm.operator.alpha | cut -d',' -f1)  # Get SIM1 Carrier name
+networkName2=$(getprop gsm.operator.alpha | cut -d',' -f2)  # Get SIM2 Carrier name
+simOperator1=$(getprop gsm.sim.operator.alpha | cut -d',' -f1)  # Get SIM1 Operator name
+simOperator2=$(getprop gsm.sim.operator.alpha | cut -d',' -f2)  # Get SIM2 Operator name
+simCountry=$(getprop gsm.sim.operator.iso-country | cut -d',' -f1)  # Get SIM1 Country
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
@@ -88,6 +96,17 @@ ACTUAL_INSTALL="$crdl/.ACTUAL_INSTALL"
 actualInstalledVersion=$(cat "$ACTUAL_INSTALL" 2>/dev/null)
 INSTALL_TIME="$crdl/.INSTALL_TIME"
 installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
+if su -c "id" >/dev/null 2>&1; then
+  if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+    su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+    package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # SnapChat packages list
+    su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+  else
+    package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+  fi
+elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+  package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+fi
 
 # --- Checking Android Version ---
 if [ $Android -le 7 ]; then
@@ -238,7 +257,7 @@ if [ $arch == "arm64-v8a" ]; then
     # Prefer 32-bit apk if device is usually low on memory (RAM).
     if [ -f $AndroidDesktop ]; then
       snapshotPlatform="AndroidDesktop_arm64"
-    elif [ $(echo "$memTotalGB <= 4" | bc -l) -eq 1 ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+    elif [ $(echo "$memTotalGB <= 4" | bc -l) -eq 1 ] && [ $arch32 == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
       snapshotPlatform="Android"
     else
       snapshotPlatform="Android_Arm64"  # For ARM64
@@ -340,6 +359,30 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
+            elif [ $DOWNLOAD_STATUS -eq "6" ]; then
+              echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
+              echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
+              if su -c "id" >/dev/null 2>&1 && [ -n "$package" ]; then
+                su -c "monkey -p com.cloudflare.onedotonedotonedotone -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1"
+              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -n "$package" ]; then
+                ~/rish -c "monkey -p com.cloudflare.onedotonedotonedotone -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1"
+              else
+                if [ $simCountry != "in" ]; then
+                  termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
+                else
+                  termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"
+                  sleep 0.5 && termux-open "https://github.com/Aefyr/SAI/releases/latest/"
+                fi
+              fi
+            elif [ $DOWNLOAD_STATUS -eq "56" ]; then
+              echo -e "$bad $networkName1 / $networkName2 signal are very unstable!"
+              if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
+                echo -e "$info Switch Mobile data to SIM2: $simOperator2"
+              elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
+                echo -e "$info Switch Mobile data to SIM1: $simOperator1"
+              else
+                echo -e "$info Connect to Wi-Fi"
+              if
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
