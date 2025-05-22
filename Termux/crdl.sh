@@ -382,7 +382,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 echo -e "$info Switch Mobile data to SIM1: $simOperator1"
               else
                 echo -e "$info Connect to Wi-Fi"
-              if
+              fi
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
