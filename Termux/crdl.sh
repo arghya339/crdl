@@ -2,7 +2,7 @@
 
 # Chromium is an open-source browser project, developed and maintained by Google
 # Easy Script to download and run latest Chromium Android build
-# Use: ~ curl -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/crdl.sh" && bash "$HOME/.crdl.sh"
+# Use: ~ curl --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/crdl.sh" && bash "$HOME/.crdl.sh"
 # Developer github.com/arghya339
 
 # --- Downloading latest crdl.sh file from GitHub ---
@@ -239,7 +239,7 @@ if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f $AndroidDesktop ] 
         case $crx in
             y*|Y*|"")
               touch "$AndroidDesktop"
-              echo -e "$info crdl Extensions config are store in a $AndroidDesktop file. \nif you don't need AndroidDesktopChromium please remove this file by running following command in Termux ~ rm $AndroidDesktop" && sleep 6
+              echo -e "$info crdl Extensions config are store in a '$AndroidDesktop' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}rm${Reset} '$AndroidDesktop'" && sleep 10
               ;;
             n*|N*)
               echo -e "$notice AndroidDesktopChromium skipped."

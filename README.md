@@ -14,8 +14,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - written in bash shell script.
 - Custom channel support (e.g. extended, stable, beta, dev, canary, last canary).
 - Support macOS 10+ and Android 8+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+.
-- AndroidDesktopChromium [Extensions](https://chromewebstore.google.com/category/extensions) support
+- AndroidDesktopChromium (arm64, x64) [Extensions](https://chromewebstore.google.com/category/extensions) support
 - Built in Updating Checks feature.
+- Support auto resuming Chromium downloads
 - Auto Delete the downloaded file after installation complete.
 - Support SU (ROOT and Shizuku) Installer method.
 - Fallback to Session installer if SU installer not present.
@@ -33,7 +34,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ### Android
   - Open [Termux](https://github.com/termux/termux-app/releases/) and run the script with the following command:
   ```
-  curl -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/crdl.sh && bash "$HOME/.crdl.sh"
+  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/crdl.sh && bash "$HOME/.crdl.sh"
   ```
   Run crdl with these commands in Termux:
   ```
@@ -44,7 +45,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ### macOS
   - Open macOS Terminal and run the script with the following command:
   ```
-  curl -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Terminal/crdl.sh && bash "$HOME/.crdl.sh"
+  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Terminal/crdl.sh && bash "$HOME/.crdl.sh"
   ```
   Run crdl with these commands in Terminal:
   ```
@@ -82,6 +83,10 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ## How it works (_[Demo on YouTube](https://youtube.com/)_)
 
 ![image](docs/images/Result_Android.png)
+
+![image](docs/images/AndroidChromium_Extensions1.png)
+
+![image](docs/images/AndroidChromium_Extensions2.png)
 
 ## Disclaimer
 - Chromium is an open-source browser project, developed and maintained by Google.
