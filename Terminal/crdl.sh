@@ -238,10 +238,10 @@ inactive_list=$(IFS=, ; echo "${inactive_services[*]}")
 # --- install Chromium function ---
 crInstall() {
   if [ -d "/Applications/Chromium.app" ]; then
-    sudo cp -R $HOME/chrome-mac/Chromium.app /Applications/  # Copy with replace an app
+    sudo cp -R $HOME/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Copy with replace an app
     sleep 15 && rm -rf "$HOME/chrome-mac"
   else
-    sudo cp -Rn ~/chrome-mac/Chromium.app /Applications/  # Skips if already exists
+    sudo cp -Rn ~/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Skips if already exists
     sleep 15 && rm -rf "$HOME/chrome-mac"
     curl -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh > /dev/null 2>&1 && bash "$HOME/top-50.sh" && rm "$HOME/top-50.sh"
   fi
