@@ -265,10 +265,21 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             elif [ $DOWNLOAD_STATUS -eq "6" ]; then
               echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-              open "https://one.one.one.one/"
+              if [ -d "/Applications/Cloudflare WARP.app" ]; then
+                open -a "Cloudflare WARP"
+              else
+                curl -L --progress-bar -o "$HOME/Downloads/Cloudflare_WARP.pkg" "https://1111-releases.cloudflareclient.com/mac/latest"
+                sudo installer -pkg ~/Downloads/Cloudflare_WARP.pkg  -target / > /dev/null 2>&1
+                rm "$HOME/Downloads/Cloudflare_WARP.pkg"
+              fi
             elif [ $DOWNLOAD_STATUS -eq "56" ]; then
               echo -e "$bad $active_list signal are very unstable!"
               echo -e "$info Please switch Network service to $inactive_list"
+              if [ $productVersion -ge "13" ]; then
+                open "x-apple.systempreferences:com.apple.Network-Settings.extension"
+              else
+                open "/System/Library/PreferencePanes/Network.prefPane"
+              fi
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
