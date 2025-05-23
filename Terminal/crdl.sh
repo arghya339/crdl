@@ -146,19 +146,22 @@ else
     brew install jq > /dev/null 2>&1
 fi
 
-# --- unzip formulae update function ---
-update_unzip() {
-  if echo $outdatedFormulae | grep -q "^unzip" 2>/dev/null; then
-    brew upgrade unzip > /dev/null 2>&1
+# --- libarchive formulae update function ---
+update_libarchive() {
+  if echo $outdatedFormulae | grep -q "^libarchive" 2>/dev/null; then
+    brew upgrade libarchive > /dev/null 2>&1
   fi
 }
 
-# --- Check if unzip is installed ---
-if which unzip > /dev/null 2>&1; then
-    update_unzip  # Check unzip furmulae updates by calling the function
+# bsdtar is part of macOS's system utilities
+<<comment
+# --- Check if libarchive (brew version of bsdtar) is installed ---
+if which libarchive > /dev/null 2>&1; then
+    update_libarchive  # Check libarchive furmulae updates by calling the function
 else
-    brew install unzip > /dev/null 2>&1
+    brew install libarchive > /dev/null 2>&1
 fi
+comment
 
 # --- pv update function ---
 update_pv() {
@@ -258,7 +261,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
         while true; do
-            curl -L --progress-bar -C - -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" "$downloadUrl"
+            curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
@@ -283,9 +286,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
-        echo && echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
-        itemCount=$(unzip -l "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
-        unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_chrome-mac.zip"
+        echo && echo -e "$running Extrcting ${Red}chrome-mac.zip${Reset}"
+        pv "$HOME/chrome-mac.zip" | bsdtar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
         echo && echo -e "$question Do you want to install $actualVersion? [Y/n]"
@@ -343,9 +345,8 @@ findValidSnapshot() {
                     fi
                     echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
                 done
-                echo && echo -e "$running Extracting chrome-mac.zip"
-                itemCount=$(unzip -l "$HOME/chrome-mac.zip" | tail -n +4 | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | wc -l)
-                unzip -o "$HOME/chrome-mac.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/chrome-mac.zip"
+                echo && echo -e "$running Extracting ${Red}chrome-mac.zip${Reset}"
+                pv "$HOME/chrome-mac.zip" | bsdtar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
                 echo && echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"

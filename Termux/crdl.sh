@@ -186,18 +186,18 @@ else
     pkg install jq -y > /dev/null 2>&1
 fi
 
-# --- unzip pkg update function ---
-update_unzip() {
-  if echo $outdatedPKG | grep -q "^unzip/" 2>/dev/null; then
-    pkg upgrade unzip -y > /dev/null 2>&1
+# --- bsdtar pkg update function ---
+update_bsdtar() {
+  if echo $outdatedPKG | grep -q "^bsdtar/" 2>/dev/null; then
+    pkg upgrade bsdtar -y > /dev/null 2>&1
   fi
 }
 
-# --- Check if unzip is installed ---
-if [ -f "$PREFIX/bin/unzip" ]; then
-  update_unzip  # Check unzip pkg updates by calling the function
+# --- Check if bsdtar is installed ---
+if [ -f "$PREFIX/bin/bsdtar" ]; then
+  update_bsdtar  # Check bsdtar pkg updates by calling the function
 else
-  pkg install unzip -y > /dev/null 2>&1
+  pkg install bsdtar -y > /dev/null 2>&1
 fi
 
 # --- pv pkg update function ---
@@ -355,7 +355,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
         while true; do
-            curl -L --progress-bar -C - -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" "$downloadUrl"
+            curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$downloadUrl"
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
@@ -386,8 +386,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
-        echo && echo -e "$running Extrcting ${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
-        itemCount=$(unzip -l $HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip" -d "$HOME/" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/${snapshotPlatform}_${branchPosition}_$crUNZIP.zip"
+        echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
+        pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -460,8 +460,8 @@ findValidSnapshotInEachPossition() {
                   fi
                   echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
               done
-              echo && echo -e "$running Extracting $crUNZIP.zip"
-              itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
+              echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
+              pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
               actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
               crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -544,8 +544,8 @@ findValidSnapshot() {
                     fi
                     echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
                 done
-                echo && echo -e "$running Extracting $crUNZIP.zip"
-                itemCount=$(unzip -l "$HOME/$crUNZIP.zip" 2>/dev/null | tail -n +4 | head -n -2 | wc -l) && unzip -o "$HOME/$crUNZIP.zip" -d "$HOME" | pv -l -s "$itemCount" > /dev/null && rm "$HOME/$crUNZIP.zip"
+                echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
+                pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
