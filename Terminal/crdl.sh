@@ -287,7 +287,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
         echo && echo -e "$running Extrcting ${Red}chrome-mac.zip${Reset}"
-        pv "$HOME/chrome-mac.zip" | bsdtar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
+        pv "$HOME/chrome-mac.zip" | tar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
         chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
         echo && echo -e "$question Do you want to install $actualVersion? [Y/n]"
@@ -346,7 +346,7 @@ findValidSnapshot() {
                     echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
                 done
                 echo && echo -e "$running Extracting ${Red}chrome-mac.zip${Reset}"
-                pv "$HOME/chrome-mac.zip" | bsdtar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
+                pv "$HOME/chrome-mac.zip" | tar -xf - --include "chrome-mac/Chromium.app" && rm "$HOME/chrome-mac.zip"
                 chmod +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
                 echo && echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
