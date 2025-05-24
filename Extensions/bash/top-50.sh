@@ -2,6 +2,7 @@
 
 urls=(
   "https://chromewebstore.google.com/detail/chrome-web-store-launcher/gecgipfabdickgidpmbicneamekgbaej"  # Chrome Web Store Launcher (by Google)
+  "chrome://flags/#allow-legacy-mv2-extensions"  # Allow load MV2 unpacked extensions @138.0.XXXX.0
   "https://github.com/prem-k-r/CRXtract"  # download the extension CRX file
   "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"  # uBlock Origin Lite
   "https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"  # AdGuard AdBlocker
