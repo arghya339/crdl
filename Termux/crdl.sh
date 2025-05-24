@@ -367,6 +367,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -n "$package" ]; then
                 ~/rish -c "monkey -p com.cloudflare.onedotonedotonedotone -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1"
               else
+                am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
                 if [ $simCountry != "in" ]; then
                   termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
                 else
@@ -375,13 +376,17 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 fi
               fi
             elif [ $DOWNLOAD_STATUS -eq "56" ]; then
-              echo -e "$bad $networkName1 / $networkName2 signal are very unstable!"
+              echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
+              am start -a android.settings.WIRELESS_SETTINGS /dev/null 2>&1
               if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
                 echo -e "$info Switch Mobile data to SIM2: $simOperator2"
+                am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS /dev/null 2>&1
               elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
                 echo -e "$info Switch Mobile data to SIM1: $simOperator1"
+                am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS /dev/null 2>&1
               else
                 echo -e "$info Connect to Wi-Fi"
+                am start -a android.settings.WIFI_SETTINGS /dev/null 2>&1
               fi
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
