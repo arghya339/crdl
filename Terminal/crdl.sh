@@ -191,6 +191,20 @@ else
     brew install bc > /dev/null 2>&1
 fi
 
+# --- pup formulae update function ---
+update_pup() {
+  if echo $outdatedFormulae | grep -q "^pup" 2>/dev/null; then
+    brew upgrade pup > /dev/null 2>&1
+  fi
+}
+
+# --- Check if pup is installed ---
+if which pup > /dev/null 2>&1; then
+    update_pup  # Check pup furmulae updates by calling the function
+else
+    brew install pup > /dev/null 2>&1
+fi
+
 # Get active interfaces (those with 'status: active')
 active_ifaces=$(ifconfig | awk '
   /^[a-z]/ { iface=$1; sub(":", "", iface) }
@@ -419,11 +433,55 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Mac&num=1")
-    # canary_milestone=$(echo "$canary_branchData" | jq -r '.[0].milestone')
-    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
-    branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
-    echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
+  #branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
+  #crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
+  branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+
+  # Get the Chromium Canary Test commit time string (e.g., "1 hours ago")
+  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
+    | head -1 | sed 's/^[·[:space:]]*//')
+
+  # Parse the time string into minutes
+  if [[ "$time_str" =~ ([0-9]+)[[:space:]]+minute ]]; then
+    minutes=${BASH_REMATCH[1]}
+  elif [[ "$time_str" =~ ([0-9]+)[[:space:]]+hour ]]; then
+    minutes=$(( ${BASH_REMATCH[1]} * 60 ))
+  elif [[ "$time_str" =~ ([0-9]+)[[:space:]]+day ]]; then
+    minutes=$(( ${BASH_REMATCH[1]} * 24 * 60 ))
+  fi
+
+  # Compare time
+  if (( minutes > 30 )); then
+    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=200" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -1) && baseCommitUrl="https://chromium.googlesource.com"
+    diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}') && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
+    major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2) && minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
+    build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
+    crVersion="${major}.${minor}.${build}.${patch}"
+    
+<<comment
+    commitHash=$(curl -s "https://api.github.com/repos/chromium/chromium/commits?sha=main&per_page=100" | jq -r '.[] | select(.commit.message | test("Updating trunk VERSION from [0-9.]+ to [0-9.]+")) | .sha' | head -1 2>/dev/null)
+    diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
+    major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2) && minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
+    build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
+    crVersion="${major}.${minor}.${build}.${patch}"
+comment
+  else
+    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=200" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -n 2 | tail -n 1) && baseCommitUrl="https://chromium.googlesource.com"
+    diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}') && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
+    major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2) && minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
+    build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
+    crVersion="${major}.${minor}.${build}.${patch}"
+
+<<comment  
+    commitHash=$(curl -s "https://api.github.com/repos/chromium/chromium/commits?sha=main&per_page=100" | jq -r '.[] | select(.commit.message | test("Updating trunk VERSION from [0-9.]+ to [0-9.]+")) | .sha' | head -n 2 | tail -n 1 2>/dev/null)
+    diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
+    major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2) && minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
+    build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
+    crVersion="${major}.${minor}.${build}.${patch}"
+comment
+  fi
+
+  echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Main Menu ---
