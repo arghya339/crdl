@@ -437,8 +437,8 @@ tInfo() {
   #crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 
-  # Get the Chromium Canary Test commit time string (e.g., "1 hours ago")
-  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
+  # Get the Chromium Canary Test commit time string (e.g., "30 minutes / 36 hours / 2 days ago")
+  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
     | head -1 | sed 's/^[·[:space:]]*//')
 
   # Parse the time string into minutes
