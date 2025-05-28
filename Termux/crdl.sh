@@ -645,16 +645,27 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
-  #branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
-  #crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
   branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+  
+  n="500"  # Initialize n=500
+  while true; do
+    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
+      | sed 's/^[·[:space:]]*//' | wc -l)
+    if [ "$count" -ge 1 ]; then
+      break  # break the loop if count > 1
+    fi
+    n=$((n + 500))  # if ! count > 1; then n=n+500
+  done
 
-  # Get the Chromium Canary Test commit time string (e.g., "30 minutes / 36 hours / 2 days ago")
-  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
+  # Get the Chromium Canary Test commit time string (e.g., "30 seconds / 30 minutes / 36 hours / 2 days ago")
+  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
     | head -1 | sed 's/^[·[:space:]]*//')
 
   # Parse the time string into minutes
-  if [[ "$time_str" =~ ([0-9]+)[[:space:]]+minute ]]; then
+  if [[ "$time_str" =~ ([0-9]+)[[:space:]]+second ]]; then
+    minutes=$(( ${BASH_REMATCH[1]} / 60 ))
+  elif [[ "$time_str" =~ ([0-9]+)[[:space:]]+minute ]]; then
     minutes=${BASH_REMATCH[1]}
   elif [[ "$time_str" =~ ([0-9]+)[[:space:]]+hour ]]; then
     minutes=$(( ${BASH_REMATCH[1]} * 60 ))
@@ -664,7 +675,7 @@ tInfo() {
 
   # Compare time
   if (( minutes > 30 )); then
-    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -1) && baseCommitUrl="https://chromium.googlesource.com"
+    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
     if [ -z "$major" ]; then
@@ -695,7 +706,7 @@ tInfo() {
     crVersion="${major}.${minor}.${build}.${patch}"
 comment
   else
-    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -n 2 | tail -n 1) && baseCommitUrl="https://chromium.googlesource.com"
+    commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -n 2 | tail -n 1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
     if [ -z "$major" ]; then
@@ -733,6 +744,10 @@ comment
     build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
 comment
+  fi
+  
+  if [ "$crVersion" == " . . . " ]; then
+    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   fi
 
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
