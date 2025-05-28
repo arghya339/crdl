@@ -132,6 +132,20 @@ else
   brew install curl > /dev/null 2>&1
 fi
 
+# --- aria2 formulae update function ---
+update_aria2() {
+  if echo $outdatedFormulae | grep -q "^aria2c" 2>/dev/null; then
+    brew upgrade aria2 > /dev/null 2>&1
+  fi
+}
+
+# --- Check if aria2 is installed ----
+if which aria2c > /dev/null 2>&1; then
+  update_aria2
+else
+  brew install aria2 > /dev/null 2>&1
+fi
+
 # --- jq formulae update function ---
 update_jq() {
   if echo $outdatedFormulae | grep -q "^jq" 2>/dev/null; then
@@ -276,11 +290,12 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
         while true; do
-            curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
+            #curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
+            aria2c -x 16 -s 16 --continue=true --console-log-level=error --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$downloadUrl"
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
-            elif [ $DOWNLOAD_STATUS -eq "6" ]; then
+            elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
               echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if [ -d "/Applications/Cloudflare WARP.app" ]; then
@@ -290,7 +305,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 sudo installer -pkg ~/Downloads/Cloudflare_WARP.pkg  -target / > /dev/null 2>&1
                 rm "$HOME/Downloads/Cloudflare_WARP.pkg"
               fi
-            elif [ $DOWNLOAD_STATUS -eq "56" ]; then
+            elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
               echo -e "$bad $active_list signal are very unstable!"
               echo -e "$info Please switch Network service to $inactive_list"
               if [ $productVersion -ge "13" ]; then

@@ -180,6 +180,20 @@ else
   pkg install curl -y > /dev/null 2>&1
 fi
 
+# --- aria2 pkg update function ---
+update_aria2() {
+  if echo $outdatedPKG | grep -q "^aria2c/" 2>/dev/null; then
+    pkg upgrade aria2 -y > /dev/null 2>&1
+  fi
+}
+
+# --- Check if aria2 is installed ----
+if [ -f "$PREFIX/bin/aria2c" ]; then
+  update_aria2
+else
+  pkg install aria2 -y > /dev/null 2>&1
+fi
+
 # --- jq pkg update function ---
 update_jq() {
   if echo $outdatedPKG | grep -q "^jq/" 2>/dev/null; then
@@ -381,11 +395,12 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
         while true; do
-            curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$downloadUrl"
+            #curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$downloadUrl"
+            aria2c -x 16 -s 16 --continue=true --console-log-level=error --download-result=hide -o "$crUNZIP.zip" -d "$HOME" "$downloadUrl"
             DOWNLOAD_STATUS=$?
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
-            elif [ $DOWNLOAD_STATUS -eq "6" ]; then
+            elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
               echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
@@ -403,7 +418,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   sleep 0.5 && termux-open "https://github.com/Aefyr/SAI/releases/latest/"
                 fi
               fi
-            elif [ $DOWNLOAD_STATUS -eq "56" ]; then
+            elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
               echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
               if [ $apMode == 1 ]; then
                 echo -e "$notice Please turn off Airplane mode!"
