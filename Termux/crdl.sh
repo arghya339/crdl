@@ -388,12 +388,12 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             elif [ $DOWNLOAD_STATUS -eq "6" ]; then
               echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-              if su -c "id" >/dev/null 2>&1 && [ $pvDnsMode == off ] && [ $pvDnsSpec == null ]; then
+              if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
                 su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-                putDns=1
-              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ $pvDnsMode == off ] && [ $pvDnsSpec == null ]; then
+                putDns="1"
+              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
                 ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-                putDns=1
+                putDns="1"
               else
                 am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
                 if [ $simCountry != "in" ]; then
@@ -432,7 +432,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
-        if [ $putDns == 1 ] && [ $pvDnsMode == "hostname" ] && [ $pvDnsSpec == "one.one.one.one" ]; then
+        if [ "$putDns" == "1" ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
           if su -c "id" >/dev/null 2>&1; then
             su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
           elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
