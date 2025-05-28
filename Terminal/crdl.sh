@@ -81,7 +81,7 @@ if [ $productVersion -le 10 ]; then
   exit 1
 fi
 
-echo -e "${Yellow}Please wait! starting crdl...${Reset}"
+echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- Check if brew is installed ---
 if brew --version >/dev/null 2>&1; then
@@ -254,6 +254,7 @@ crInstall() {
   if [ -d "/Applications/Chromium.app" ]; then
     sudo cp -R $HOME/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Copy with replace an app
     sleep 15 && rm -rf "$HOME/chrome-mac"
+    open -a "Chromium" # open Chromium app after update
   else
     sudo cp -Rn ~/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Skips if already exists
     sleep 15 && rm -rf "$HOME/chrome-mac"
@@ -433,6 +434,7 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
+  printf "🕊️ ${Yellow}Please wait few seconds! fetching crVersion..${Reset}"
   branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
   branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
   
@@ -537,7 +539,8 @@ comment
   if [ "$crVersion" == " . . . " ]; then
     crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   fi
-  
+  printf "\r\033[K"
+
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
 

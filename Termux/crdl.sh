@@ -70,7 +70,9 @@ fi
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
+socOEM=$(getprop ro.soc.manufacturer)  # Get SOC Manufacturer
 OEM=$(getprop ro.product.manufacturer)  # Get Device Manufacturer
+apMode=$(getprop persist.radio.airplane_mode_on)  # Get AirPlane Mode Status (0=OFF; 1=ON)
 networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
 networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
 networkName1=$(getprop gsm.operator.alpha | cut -d',' -f1)  # Get SIM1 Carrier name
@@ -99,13 +101,19 @@ installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
 if su -c "id" >/dev/null 2>&1; then
   if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
     su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-    package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # SnapChat packages list
+    package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # Cloudflare 1.1.1.1 packages list
+    pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
+    pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
     su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
   else
     package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+    pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
+    pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
   fi
 elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
   package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+  pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # off
+  pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
 fi
 
 # --- Checking Android Version ---
@@ -128,7 +136,7 @@ if [ $arch == "x86" ]; then
     exit 1
 fi
 
-clear && echo -e "${Yellow}Please wait! starting crdl...${Reset}"
+clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- bash pkg update function ---
 update_bash() {
@@ -294,14 +302,17 @@ currentTime=$(date "+%Y-%m-%d %H:%M")
 if ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 && [ ! -f "$LAST_INSTALL" ] && [ "$crdlAccessTime" == "$currentTime" ]; then
   echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
   termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
+  am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
   if [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; then
     curl -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish" > /dev/null 2>&1 && chmod +x "$HOME/rish"
     sleep 0.5 && curl -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex" > /dev/null 2>&1
   fi
   echo -e "$info Please start Shizuku by following guide. Then rerun script by running ${Cyan}~${Reset} ${Green}crdl${Reset}" && sleep 1
   if [ $Android -le 10 ]; then
+    am start -n com.android.settings/.Settings\$DevelopmentSettingsDashboardActivity > /dev/null 2>&1  # Open Developer options
     termux-open-url "https://youtu.be/ZxjelegpTLA"  # YouTube/@MrPalash360: Start Shizuku using Computer
   else
+    am start -n com.android.settings/.Settings\$WirelessDebuggingActivity > /dev/null 2>&1  # Open Wireless Debugging Settings
     termux-open-url "https://youtu.be/YRd0FBfdntQ"  # YouTube/@MrPalash360: Start Shizuku Android 11+
   fi
   exit 1
@@ -346,6 +357,7 @@ crInstall() {
       echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
     fi
     sleep 3 && rm -rf "$HOME/$crUNZIP"
+    am start -n com.google.android.documentsui/com.android.documentsui.files.FilesActivi > /dev/null 2>&1  # Open Android Files
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
@@ -376,10 +388,12 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             elif [ $DOWNLOAD_STATUS -eq "6" ]; then
               echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-              if su -c "id" >/dev/null 2>&1 && [ -n "$package" ]; then
-                su -c "monkey -p com.cloudflare.onedotonedotonedotone -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1"
-              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -n "$package" ]; then
-                ~/rish -c "monkey -p com.cloudflare.onedotonedotonedotone -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1"
+              if su -c "id" >/dev/null 2>&1 && [ $pvDnsMode == off ] && [ $pvDnsSpec == null ]; then
+                su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                putDns=1
+              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ $pvDnsMode == off ] && [ $pvDnsSpec == null ]; then
+                ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                putDns=1
               else
                 am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
                 if [ $simCountry != "in" ]; then
@@ -391,20 +405,41 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               fi
             elif [ $DOWNLOAD_STATUS -eq "56" ]; then
               echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
+              if [ $apMode == 1 ]; then
+                echo -e "$notice Please turn off Airplane mode!"
+              fi
               am start -a android.settings.WIRELESS_SETTINGS > /dev/null 2>&1
               if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
-                echo -e "$info Switch Mobile data to SIM2: $simOperator2"
+                echo -e "$info If Mobile data is turned on for SIM1, please switch Mobile data to SIM2: $simOperator2"
                 am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
               elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
-                echo -e "$info Switch Mobile data to SIM1: $simOperator1"
+                echo -e "$info If Mobile data is turned on for SIM2, please switch Mobile data to SIM1: $simOperator1"
                 am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
               else
-                echo -e "$info Connect to Wi-Fi"
+                echo -e "$info Please connect to Wi-Fi if there is a network available near you."
                 am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
+              fi
+              if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
+                if [ $socOEM == "Mediatek" ] && su -c "id" >/dev/null 2>&1; then
+                  echo -e "$info Please select Network Type: LTE/NR"
+                  su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
+                fi
+                if [ $socOEM != "Mediatek" ]; then
+                  echo -e "$info Please select Network Type: LTE/NR"
+                  am start -n com.android.phone/.settings.RadioInfo > /dev/null 2>&1  # Open Redio Info
+                fi
               fi
             fi
             echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
+        if [ $putDns == 1 ] && [ $pvDnsMode == "hostname" ] && [ $pvDnsSpec == "one.one.one.one" ]; then
+          if su -c "id" >/dev/null 2>&1; then
+            su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+          elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+            ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+          fi
+          putDns="0"
+        fi
         echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
         pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
@@ -419,6 +454,9 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                     touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                     touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
                     touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
+                    if [ -f $LAST_INSTALL ]; then
+                      am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+                    fi
                     if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                       curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                     fi
@@ -493,6 +531,9 @@ findValidSnapshotInEachPossition() {
                       echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
                       echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
+                      if [ -f $LAST_INSTALL ]; then
+                        am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+                      fi
                       if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                         curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                       fi
@@ -577,6 +618,9 @@ findValidSnapshot() {
                         echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                         echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
                         echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
+                        if [ -f $LAST_INSTALL ]; then
+                          am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+                        fi
                         if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
                           curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
                         fi
@@ -645,6 +689,7 @@ cInfo() {
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
+  printf "🕊️ ${Yellow}Please wait few seconds! fetching crVersion..${Reset}"
   branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
   branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
   
@@ -749,6 +794,7 @@ comment
   if [ "$crVersion" == " . . . " ]; then
     crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   fi
+  printf "\r\033[K"
 
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }

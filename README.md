@@ -18,8 +18,8 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Built in Updating Checks feature.
 - Support auto resuming Chromium downloads
 - Auto Delete the downloaded file after installation complete.
-- Support SU (ROOT and Shizuku) Installer method.
-- Fallback to Session installer if SU installer not present.
+- Support SU (ROOT: [Magisk](https://github.com/topjohnwu/Magisk)) and [SUI](https://github.com/RikkaApps/Sui) ([Shizuku](https://github.com/RikkaApps/Shizuku)) Installer method.
+- Fallback to Session installer if SU / SUI installer not present.
 - Prefer 32-bit apk if device is usually low on memory (lessthen 4GB RAM).
 - User Friendly, Free and Open Source.
 - Smaller size script (< 20 KB), allowing you to save space on your device.
@@ -92,7 +92,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Chromium is an open-source browser project, developed and maintained by Google.
 
 ## Devoloper info
-- Powered by [Chromium](https://www.chromium.org/Home/)
+- Powered by [Chromium](https://github.com/chromium/chromium)
 - Inspired by [chromium-latest-linux](https://github.com/scheib/chromium-latest-linux)
 - Developer: [@arghya339](https://github.com/arghya339)
 
