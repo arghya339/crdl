@@ -275,7 +275,7 @@ if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f $AndroidDesktop ] 
         case $crx in
             y*|Y*|"")
               touch "$AndroidDesktop"
-              echo -e "$info crdl Extensions config are store in a '$AndroidDesktop' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}rm${Reset} '$AndroidDesktop'" && sleep 10
+              echo -e "$info crdl Extensions config are store in a '$AndroidDesktop' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}rm${Reset} '\$HOME/.crdl/.AndroidDesktop_arm64'" && sleep 10
               ;;
             n*|N*)
               echo -e "$notice AndroidDesktopChromium skipped."
@@ -398,6 +398,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             #curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$downloadUrl"
             aria2c -x 16 -s 16 --continue=true --console-log-level=error --download-result=hide -o "$crUNZIP.zip" -d "$HOME" "$downloadUrl"
             DOWNLOAD_STATUS=$?
+            echo
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
             elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then

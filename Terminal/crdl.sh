@@ -293,6 +293,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             #curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
             aria2c -x 16 -s 16 --continue=true --console-log-level=error --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$downloadUrl"
             DOWNLOAD_STATUS=$?
+            echo
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
             elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
