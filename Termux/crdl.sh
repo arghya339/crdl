@@ -420,7 +420,13 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
-                su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+                  su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+                  su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                  su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+                else
+                  su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                fi
                 putDns="1"
               elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
                 ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
@@ -466,7 +472,13 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         done
         if [ "$putDns" == "1" ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
           if su -c "id" >/dev/null 2>&1; then
-            su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+            if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+              su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+              su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+              su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+            else
+              su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+            fi
           elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
             ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
           fi
