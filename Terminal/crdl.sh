@@ -305,7 +305,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
         while true; do
             #curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
-            aria2c -x 16 -s 16 --continue=true --console-log-level=error --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$downloadUrl"
+            aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$downloadUrl"
             DOWNLOAD_STATUS=$?
             echo
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
