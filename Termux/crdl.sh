@@ -371,7 +371,7 @@ crInstall() {
       echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
     fi
     sleep 3 && rm -rf "$HOME/$crUNZIP"
-    am start -n com.google.android.documentsui/com.android.documentsui.files.FilesActivi > /dev/null 2>&1  # Open Android Files
+    am start -n com.google.android.documentsui/com.android.documentsui.files.FilesActivity > /dev/null 2>&1  # Open Android Files
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
