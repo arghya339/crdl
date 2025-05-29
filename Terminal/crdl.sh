@@ -286,7 +286,7 @@ aria2ConsoleLogHide() {
   fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   echo "Select Chromium Channel: $channel"
-  echo && tInfo
+  echo && echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
   echo -e "${good} Found valid snapshot at: $branchPosition" && echo
   echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
 }
