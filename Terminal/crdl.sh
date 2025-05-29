@@ -277,6 +277,20 @@ crInstall() {
   echo -e "$good $actualVersion successfully installed! Please restart Chromium.app to take effect." && sleep 3
 }
 
+# for aria2 due to this cl tool doesn't support --console-log-level=hide flag
+aria2ConsoleLogHide() {
+  printf '\033[2J\033[3J\033[H'  # clear aria2 multi error log from console
+  print_crdl  # call the print_crdl function 
+  if [ -d /Applications/Chromium.app ]; then
+    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize - $installTime" && echo
+  fi
+  echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
+  echo "Select Chromium Channel: $channel"
+  echo && tInfo
+  echo -e "${good} Found valid snapshot at: $branchPosition" && echo
+  echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
+}
+
 # --- Direct Download Function ---
 directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-mac.zip"
@@ -297,6 +311,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
             elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
+              aria2ConsoleLogHide  # for aria2
               echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if [ -d "/Applications/Cloudflare WARP.app" ]; then
@@ -307,6 +322,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 rm "$HOME/Downloads/Cloudflare_WARP.pkg"
               fi
             elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
+              aria2ConsoleLogHide  # for aria2
               echo -e "$bad $active_list signal are very unstable!"
               echo -e "$info Please switch Network service to $inactive_list"
               if [ $productVersion -ge "13" ]; then
@@ -315,7 +331,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 open "/System/Library/PreferencePanes/Network.prefPane"
               fi
             fi
-            echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+            echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
         echo && echo -e "$running Extrcting ${Red}chrome-mac.zip${Reset}"
         pv "$HOME/chrome-mac.zip" | tar -xf - -C "$HOME" && rm "$HOME/chrome-mac.zip"

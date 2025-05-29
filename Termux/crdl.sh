@@ -382,6 +382,20 @@ crInstall() {
   fi
 }
 
+# for aria2 due to this cl tool doesn't support --console-log-level=hide flag
+aria2ConsoleLogHide() {
+  clear  # clear aria2 multi error log from console
+  print_crdl  # call the print_crdl function 
+  if [ -f "$LAST_INSTALL" ]; then
+    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize - $installTime" && echo
+  fi
+  echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
+  echo "Select Chromium Channel: $channel"
+  echo && tInfo
+  echo -e "${good} Found valid snapshot at: $branchPosition" && echo
+  echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
+}
+
 # --- Direct Download Function ---
 directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
@@ -402,6 +416,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
               break  # break the resuming download loop
             elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
+              aria2ConsoleLogHide  # for aria2
               echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
@@ -420,6 +435,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 fi
               fi
             elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
+              aria2ConsoleLogHide  # for aria2
               echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
               if [ $apMode == 1 ]; then
                 echo -e "$notice Please turn off Airplane mode!"
@@ -446,7 +462,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                 fi
               fi
             fi
-            echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+            echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
         done
         if [ "$putDns" == "1" ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
           if su -c "id" >/dev/null 2>&1; then
