@@ -67,6 +67,7 @@ if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
 fi
 
 # --- Global variables ---
+Model=$(getprop ro.product.model)  # Get device model
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
@@ -353,12 +354,14 @@ crInstall() {
       su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
       INSTALL_STATUS=$?  # Capture exit status of the install command
     fi
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     ~/rish -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
     rm -rf "$HOME/$crUNZIP"
     ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
     INSTALL_STATUS=$?  # Capture exit status of the install command
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
@@ -368,16 +371,18 @@ crInstall() {
     if [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ]; then
       echo -e $notice "${Yellow}MIUI Optimization detected! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
     else
-      echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} ${Blue}file:///sdcard/Download/ChromePublic.apk${Reset}"
+      echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} Files: $Model > ${Blue}Download${Reset} > ChromePublic.apk"
     fi
     sleep 3 && rm -rf "$HOME/$crUNZIP"
     am start -n com.google.android.documentsui/com.android.documentsui.files.FilesActivity > /dev/null 2>&1  # Open Android Files
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
   else
     termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     sleep 30 && rm -rf "$HOME/$crUNZIP/"
   fi
 }
@@ -498,11 +503,8 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                     touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
                     touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
                     touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
-                    if [ -f $LAST_INSTALL ]; then
-                      am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-                    fi
                     if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                      curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                      curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
                     fi
                     clear && exit 0
                   }
@@ -575,11 +577,8 @@ findValidSnapshotInEachPossition() {
                       echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                       echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
                       echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                      if [ -f $LAST_INSTALL ]; then
-                        am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-                      fi
                       if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                        curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                        curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
                       fi
                       sleep 3 && clear && exit 0
                     }
@@ -662,11 +661,8 @@ findValidSnapshot() {
                         echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
                         echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
                         echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                        if [ -f $LAST_INSTALL ]; then
-                          am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-                        fi
                         if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                          curl -o "$HOME/top-25.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-25.sh > /dev/null 2>&1 && bash "$HOME/top-25.sh" && rm "$HOME/top-25.sh"
+                          curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
                         fi
                         sleep 3 && clear && exit 0
                       }
