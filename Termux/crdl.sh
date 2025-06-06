@@ -357,9 +357,11 @@ crInstall() {
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    ~/rish -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
+    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     rm -rf "$HOME/$crUNZIP"
-    ./rish -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
+    rm -rf "/sdcard/ChromePublic.apk"
+    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"  # -r=reinstall --force-uplow=downgrade
     INSTALL_STATUS=$?  # Capture exit status of the install command
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
@@ -378,12 +380,41 @@ crInstall() {
   elif [ $Android -le 13 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
+    INSTALL_STATUS=$?
+    if [ "$INSTALL_STATUS" != "0" ]; then
+      termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"
+      FALLBACK_INSTALL_STATUS=$?
+    fi
+    if [ "$INSTALL_STATUS" == "0" ] || [ "$FALLBACK_INSTALL_STATUS" == "0" ]; then
+      am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+      sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
+    else
+      if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
+        rm "/sdcard/Download/ChromePublic.apk"
+      fi
+      cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
+      echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} Files: $Model > ${Blue}Download${Reset} > ChromePublic.apk"
+      sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
+    fi
   else
     termux-open "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    sleep 30 && rm -rf "$HOME/$crUNZIP/"
+    INSTALL_STATUS=$?
+    if [ "$INSTALL_STATUS" != "0" ]; then
+      cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
+      am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
+      FALLBACK_INSTALL_STATUS=$?
+    fi
+    if [ "$INSTALL_STATUS" == "0" ] || [ "$FALLBACK_INSTALL_STATUS" == "0" ]; then
+      am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+      sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
+    else
+      if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
+        rm "/sdcard/Download/ChromePublic.apk"
+      fi
+      cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
+      echo -e $notice "${Yellow}There was a problem open the Chromium package using Termux API! Please manually install Chromium from${Reset} Files: $Model > ${Blue}Download${Reset} > ChromePublic.apk"
+      sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm "/sdcard/ChromePublic.apk"
+    fi
   fi
 }
 

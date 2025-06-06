@@ -21,6 +21,7 @@ skyBlue="\033[38;5;117m"
 Cyan="\033[96m"
 White="\033[37m"
 Yellow="\033[93m"
+Orange="\e[38;5;208m"
 Reset="\033[0m"
 
 # --- Colored log indicators ---
@@ -53,7 +54,12 @@ fi
 
 # --- Global Variables ---
 productVersion=$(sw_vers -productVersion | cut -d '.' -f 1)  # get macOS major version
-cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
+cloudflareDOH="https://cloudflare-dns.com/dns-query"
+cloudflareIP="1.1.1.1,1.0.0.1"
+if [ -d "/Applications/Cloudflare WARP.app" ]; then
+  warp_cli="/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
+  warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
+fi
 outdatedFormulae=$(brew outdated 2>/dev/null)
 LAST_INSTALL="$HOME/.LAST_INSTALL"
 INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
@@ -315,11 +321,32 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
               echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
               if [ -d "/Applications/Cloudflare WARP.app" ]; then
-                open -a "Cloudflare WARP"
+                #open -a "Cloudflare WARP"
+                if [ "$warpCliStatus" == "Disconnected" ]; then
+                  #"$warp_cli" mode doh  # HTTPS
+                  "$warp_cli" mode warp  # WARP
+                  #"$warp_cli" mode warp+doh  # HTTPS + WARP
+                  "$warp_cli" dns families malware
+                  "$warp_cli" connect
+                fi
               else
-                curl -L --progress-bar -o "$HOME/Downloads/Cloudflare_WARP.pkg" "https://1111-releases.cloudflareclient.com/mac/latest"
-                sudo installer -pkg ~/Downloads/Cloudflare_WARP.pkg  -target / > /dev/null 2>&1
-                rm "$HOME/Downloads/Cloudflare_WARP.pkg"
+                brew install --cask cloudflare-warp > /dev/null 2>&1
+                #open -a "Cloudflare WARP"
+                if ! "$warp_cli" registration show >/dev/null 2>&1; then
+                  "$warp_cli" registration new
+                fi
+                osascript -e 'quit app "Cloudflare WARP"'
+                warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
+                if [ "$warpCliStatus" == "Disconnected" ]; then
+                  "$warp_cli" mode warp
+                  "$warp_cli" dns families malware
+                  "$warp_cli" connect
+                fi
+              fi
+              sleep 3  # Wait 3 seconds
+              warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
+              if [ "$warp_status" == "on" ]; then
+                echo -e "Your Internet is ${Orange}private${Reset}."
               fi
             elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
               aria2ConsoleLogHide  # for aria2
