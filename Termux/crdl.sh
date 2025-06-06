@@ -519,7 +519,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
           putDns="0"
         fi
         echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
-        pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
+        pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
         actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -593,7 +593,7 @@ findValidSnapshotInEachPossition() {
                   echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
               done
               echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
-              pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
+              pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
               actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
               actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
               crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -677,7 +677,7 @@ findValidSnapshot() {
                     echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
                 done
                 echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
-                pv "$HOME/$crUNZIP.zip" | bsdtar -xf - --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
+                pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
                 actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
