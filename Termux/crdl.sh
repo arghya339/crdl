@@ -355,13 +355,19 @@ crInstall() {
       INSTALL_STATUS=$?  # Capture exit status of the install command
     fi
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+    if [ $? != 0 ]; then
+      su -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
+    fi
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
-    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"  # -r=reinstall --force-uplow=downgrade
+    ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # copy apk to System dir
+    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # -r=reinstall --force-uplow=downgrade
     INSTALL_STATUS=$?  # Capture exit status of the install command
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+    if [ $? != 0 ]; then
+      ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
+    fi
     sleep 30 && rm -rf "$HOME/$crUNZIP" && rm "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
