@@ -315,6 +315,14 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
             DOWNLOAD_STATUS=$?
             echo
             if [ $DOWNLOAD_STATUS -eq "0" ]; then
+              if [ -d "/Applications/Cloudflare WARP.app" ]; then
+                warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
+                warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
+                if [ "$warpCliStatus" == "Connected" ] || [ "$warp_status" == "off" ]; then
+                  "$warp_cli" disconnect
+                  #osascript -e 'quit app "Cloudflare WARP"'
+                fi
+              fi
               break  # break the resuming download loop
             elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
               aria2ConsoleLogHide  # for aria2
