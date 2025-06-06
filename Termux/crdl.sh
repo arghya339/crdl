@@ -358,13 +358,11 @@ crInstall() {
     su -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    rm -rf "$HOME/$crUNZIP"
     ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir
-    rm -rf "/sdcard/ChromePublic.apk"
     ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"  # -r=reinstall --force-uplow=downgrade
     INSTALL_STATUS=$?  # Capture exit status of the install command
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
+    sleep 30 && rm -rf "$HOME/$crUNZIP" && rm "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
   elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
       rm "/sdcard/Download/ChromePublic.apk"
