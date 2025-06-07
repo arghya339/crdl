@@ -7,6 +7,7 @@ urls=(
   "https://chromewebstore.google.com/detail/adblocker-ultimate/ohahllgiabjaoigichmmfljhkcfikeof"  # AdBlocker Ultimate
   "https://chromewebstore.google.com/detail/sponsorblock-for-youtube/mnjggcdmjocbbbhaepdhchncahnbgone"  # SponsorBlock for YouTube
   "https://chromewebstore.google.com/detail/unhook-remove-youtube-rec/khncfooichmfjbepaaaebmommgaepoid"  # Unhook
+  "https://chromewebstore.google.com/detail/enhancer-for-youtube/ponfpcnoihfmfllpaingbgckeeldkhle"  # Enhancer for YouTube
   #"https://chromewebstore.google.com/detail/h264ify/aleakchihdccplidncghkekgioiakgal"  # h264ify
   "https://chromewebstore.google.com/detail/return-youtube-dislike/gebbhagfogifgggkldgodflihgfeippi"  # Return YouTube Dislike
   "https://chromewebstore.google.com/detail/thumbnail-rating-bar-for/cmlddjbnoehmihdmfhaacemlpgfbpoeb"  # Thumbnail Rating Bar for YouTube

@@ -96,7 +96,7 @@ ${White}𝒟𝑒𝓋𝑒𝓁𝑜𝓅𝑒𝓇: @𝒶𝓇𝑔𝒽𝓎𝒶𝟥𝟥�
 if ($PSVersionTable.PSEdition -eq "Desktop") {
     Write-Host "You are running Windows PowerShell (Version $($PSVersionTable.PSVersion))"
     Write-Host "[!]" @Cyan "Please set PowerShell as Default Profile for Windows Termianl"
-    Write-Host "[i]" @Blue "right-click on Windows Terminal 'title bar (tab row)' > Startup > Default profile > PowerShell > Save"
+    Write-Host "[i]" @Blue "right-click on Windows Terminal 'title bar (tab row)' > Settings > Startup > Default profile > PowerShell > Save"
 } elseif ($PSVersionTable.PSEdition -eq "Core") {
     Write-Host "$(pwsh -v)" @Green
 }
