@@ -14,7 +14,8 @@ urls=(
   "https://chromewebstore.google.com/detail/popup-blocker-strict/aefkmifgmaafnojlojpnekbpbmjiiogg"  # Popup Blocker (strict)
   "https://chromewebstore.google.com/detail/linkumori-urls-cleaner/kcpfnbjlimolkcjllfooaipdpdjmjigg"  # Clean URLs MV3 by Linkumori
   # "https://microsoftedge.microsoft.com/addons/detail/redirect-amp-to-html/abjhjmfkmdfggjomfpojjfcehhkambcc"  # Redirect AMP to HTML MV2
-  #"https://chromewebstore.google.com/detail/floccus-bookmarks-sync/fnaicdffflnofjppbagibeoednhnbjhg"  # floccus bookmarks sync
+  "https://chromewebstore.google.com/detail/floccus-bookmarks-sync/fnaicdffflnofjppbagibeoednhnbjhg"  # floccus bookmarks sync
+  "https://chromewebstore.google.com/detail/bookmarkhub-sync-bookmark/fohimdklhhcpcnpmmichieidclgfdmol"  # BookmarkHub
   #"https://chromewebstore.google.com/detail/bitwarden-password-manage/nngceckbapebfimnlniiiahkandclblb"  # Bitwarden Password Manager
   #"https://chromewebstore.google.com/detail/proton-pass-free-password/ghmbeldphafepmbegfdlkpapadhbakde"  # Proton Pass
   # "https://chromewebstore.google.com/detail/tabcloud/npecfdijgoblfcgagoijgmgejmcpnhof"  # TabCloud MV2
@@ -29,7 +30,7 @@ urls=(
   "https://chromewebstore.google.com/detail/ublacklist/pncfbmialoiaghdehhbnbhkkgmjanfhe"  # uBlacklist
   "https://chromewebstore.google.com/detail/temp-mail-disposable-temp/inojafojbhdpnehkhhfjalgjjobnhomj"  # Temp Mail
   #"https://chromewebstore.google.com/detail/scroll-to-top/hegiignepmecppikdlbohnnbfjdoaghj"  # Scroll To Top
-  #"https://chromewebstore.google.com/detail/ultrawideo/bfbnagnphiehemkdgmmficmjfddgfhpl"  # UltraWideo
+  "https://chromewebstore.google.com/detail/ultrawideo/bfbnagnphiehemkdgmmficmjfddgfhpl"  # UltraWideo
   #"https://chromewebstore.google.com/detail/seedr/abfimpkhacgimamjbiegeoponlepcbob"  # Seedr
   "https://chromewebstore.google.com/detail/user-agent-switcher-and-m/bhchdcejhohfmigjafbampogmaanbfkg"  # User-Agent Switcher and Manager
   ##"https://chromewebstore.google.com/detail/adguard-vpn-%E2%80%94-free-secure/hhdobjgopfphlmjbmnpglhfcgppchgje"  # AdGuard VPN
