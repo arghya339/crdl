@@ -83,6 +83,7 @@ simOperator2=$(getprop gsm.sim.operator.alpha | cut -d',' -f2)  # Get SIM2 Opera
 simCountry=$(getprop gsm.sim.operator.iso-country | cut -d',' -f1)  # Get SIM1 Country
 cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
+installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 crdl="$HOME/.crdl"
 mkdir -p "$crdl"
@@ -139,131 +140,35 @@ fi
 
 clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
-# --- bash pkg update function ---
-update_bash() {
-  if echo $outdatedPKG | grep -q "^bash/" 2>/dev/null; then
-    pkg upgrade bash -y > /dev/null 2>&1
+# --- pkg upgrade function ---
+pkgUpdate() {
+  local pkg=$1
+  if echo $outdatedPKG | grep -q "^$pkg/" 2>/dev/null; then
+    echo -e "$running Upgrading $pkg pkg.."
+    pkg upgrade "$pkg" -y > /dev/null 2>&1
   fi
 }
 
-# --- Check if bash is installed ---
-if which bash > /dev/null 2>&1; then
-  update_bash
-else
-  pkg install bash -y > /dev/null 2>&1
-fi
-
-# --- grep pkg update function ---
-update_grep() {
-  if echo $outdatedPKG | grep -q "^grep/" 2>/dev/null; then
-    pkg upgrade grep -y > /dev/null 2>&1
+# --- pkg install/update function ---
+pkgInstall() {
+  local pkg=$1
+  if echo "$installedPKG" | grep -q "$pkg" 2>/dev/null; then
+    pkgUpdate "$pkg"
+  else
+    echo -e "$running Installing $pkg pkg.."
+    pkg install "$pkg" -y > /dev/null 2>&1
   fi
 }
 
-# --- Check if grep is installed ----
-if [ -f "$PREFIX/bin/grep" ]; then
-  update_grep
-else
-  pkg install grep -y > /dev/null 2>&1
-fi
-
-# --- curl pkg update function ---
-update_curl() {
-  if echo $outdatedPKG | grep -q "^curl/" 2>/dev/null; then
-    pkg upgrade curl -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if curl is installed ----
-if [ -f "$PREFIX/bin/curl" ]; then
-  update_curl
-else
-  pkg install curl -y > /dev/null 2>&1
-fi
-
-# --- aria2 pkg update function ---
-update_aria2() {
-  if echo $outdatedPKG | grep -q "^aria2c/" 2>/dev/null; then
-    pkg upgrade aria2 -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if aria2 is installed ----
-if [ -f "$PREFIX/bin/aria2c" ]; then
-  update_aria2
-else
-  pkg install aria2 -y > /dev/null 2>&1
-fi
-
-# --- jq pkg update function ---
-update_jq() {
-  if echo $outdatedPKG | grep -q "^jq/" 2>/dev/null; then
-    pkg upgrade jq -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if jq is installed ---
-if [ -f "$PREFIX/bin/jq" ]; then
-    update_jq  # Check jq pkg updates by calling the function
-else
-    pkg install jq -y > /dev/null 2>&1
-fi
-
-# --- bsdtar pkg update function ---
-update_bsdtar() {
-  if echo $outdatedPKG | grep -q "^bsdtar/" 2>/dev/null; then
-    pkg upgrade bsdtar -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if bsdtar is installed ---
-if [ -f "$PREFIX/bin/bsdtar" ]; then
-  update_bsdtar  # Check bsdtar pkg updates by calling the function
-else
-  pkg install bsdtar -y > /dev/null 2>&1
-fi
-
-# --- pv pkg update function ---
-update_pv() {
-  if echo $outdatedPKG | grep -q "^pv/" 2>/dev/null; then
-    pkg upgrade pv -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if pipeviewer is installed ---
-if [ -f "$PREFIX/bin/pv" ]; then
-  update_pv
-else
-  pkg install pv -y > /dev/null 2>&1
-fi
-
-# --- bc pkg update function ---
-update_bc() {
-  if echo $outdatedPKG | grep -q "^bc/" 2>/dev/null; then
-    pkg upgrade bc -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if bc is installed ---
-if [ -f "$PREFIX/bin/bc" ]; then
-  update_bc
-else
-  pkg install bc -y > /dev/null 2>&1
-fi
-
-# --- pup pkg update function ---
-update_pup() {
-  if echo $outdatedPKG | grep -q "^pup/" 2>/dev/null; then
-    pkg upgrade pup -y > /dev/null 2>&1
-  fi
-}
-
-# --- Check if pup is installed ---
-if [ -f "$PREFIX/bin/pup" ]; then
-  update_pup
-else
-  pkg install pup -y > /dev/null 2>&1
-fi
+pkgInstall "bash"  # bash update
+pkgInstall "grep"  # grep update
+pkgInstall "curl"  # curl update
+pkgInstall "aria2"  # aria2 install/update
+pkgInstall "jq"  # jq install/update
+pkgInstall "bsdtar"  # bsdtar install/update
+pkgInstall "pv"  # pv install/update
+pkgInstall "bc"  # bc install/update
+pkgInstall "pup"  # pup install/update
 
 # --- Download and give execute (--x) permission to AAPT2 Binary ---
 if [ ! -f "$HOME/aapt2" ]; then
