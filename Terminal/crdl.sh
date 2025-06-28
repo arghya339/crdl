@@ -124,7 +124,6 @@ formulaeInstall "aria2"  # aria2 install/update
 formulaeInstall "jq"  # jq install/update
 #formulaeInstall "libarchive"  # libarchive (brew version of bsdtar: macOS's system utilities) install/update
 formulaeInstall "pv"  # pv install/update
-formulaeInstall "bc"  # bc (basicCalculator) install/update
 formulaeInstall "pup"  # pup install/update
 
 # Get active interfaces (those with 'status: active')
