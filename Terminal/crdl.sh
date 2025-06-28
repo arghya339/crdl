@@ -60,6 +60,7 @@ if [ -d "/Applications/Cloudflare WARP.app" ]; then
   warp_cli="/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
   warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
 fi
+formulaeList=$(brew list 2>/dev/null)
 outdatedFormulae=$(brew outdated 2>/dev/null)
 LAST_INSTALL="$HOME/.LAST_INSTALL"
 INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
@@ -96,134 +97,35 @@ else
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
 fi
 
-# --- bash formulae update function ---
-update_bash() {
-  if echo $outdatedFormulae | grep -q "^bash" 2>/dev/null; then
-    brew upgrade bash > /dev/null 2>&1
+# --- formulae upgrade function ---
+formulaeUpdate() {
+  local formulae=$1
+  if echo $outdatedFormulae | grep -q "^$formulae" 2>/dev/null; then
+    echo -e "$running Upgrading $formulae formulae.."
+    brew upgrade "$formulae" > /dev/null 2>&1
   fi
 }
 
-# --- Check if bash is installed ---
-if which bash > /dev/null 2>&1; then
-  update_bash
-else
-  brew install bash > /dev/null 2>&1
-fi
-
-# --- grep formulae update function ---
-update_grep() {
-  if echo $outdatedFormulae | grep -q "^grep" 2>/dev/null; then
-    brew upgrade grep > /dev/null 2>&1
+# --- formulae install/update function ---
+formulaeInstall() {
+  local formulae=$1
+  if echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
+    formulaeUpdate "$formulae"
+  else
+    echo -e "$running Installing $formulae formulae.."
+    brew install "$formulae" > /dev/null 2>&1
   fi
 }
 
-# --- Check if grep is installed ----
-if [ -f "/usr/bin/grep" ]; then
-  update_grep
-else
-  brew install grep > /dev/null 2>&1
-fi
-
-# --- curl formulae update function ---
-update_curl() {
-  if echo $outdatedFormulae | grep -q "^curl" 2>/dev/null; then
-    brew upgrade curl > /dev/null 2>&1
-  fi
-}
-
-# --- Check if curl is installed ----
-if which curl > /dev/null 2>&1; then
-  update_curl
-else
-  brew install curl > /dev/null 2>&1
-fi
-
-# --- aria2 formulae update function ---
-update_aria2() {
-  if echo $outdatedFormulae | grep -q "^aria2c" 2>/dev/null; then
-    brew upgrade aria2 > /dev/null 2>&1
-  fi
-}
-
-# --- Check if aria2 is installed ----
-if which aria2c > /dev/null 2>&1; then
-  update_aria2
-else
-  brew install aria2 > /dev/null 2>&1
-fi
-
-# --- jq formulae update function ---
-update_jq() {
-  if echo $outdatedFormulae | grep -q "^jq" 2>/dev/null; then
-    brew upgrade jq > /dev/null 2>&1
-  fi
-}
-
-# --- Check if jq is installed ---
-if which jq > /dev/null 2>&1; then
-    update_jq  # Check jq furmulae updates by calling the function
-else
-    brew install jq > /dev/null 2>&1
-fi
-
-# --- libarchive formulae update function ---
-update_libarchive() {
-  if echo $outdatedFormulae | grep -q "^libarchive" 2>/dev/null; then
-    brew upgrade libarchive > /dev/null 2>&1
-  fi
-}
-
-# bsdtar is part of macOS's system utilities
-<<comment
-# --- Check if libarchive (brew version of bsdtar) is installed ---
-if which libarchive > /dev/null 2>&1; then
-    update_libarchive  # Check libarchive furmulae updates by calling the function
-else
-    brew install libarchive > /dev/null 2>&1
-fi
-comment
-
-# --- pv update function ---
-update_pv() {
-  if echo $outdatedFormulae | grep -q "^pv" 2>/dev/null; then
-    brew upgrade pv > /dev/null 2>&1
-  fi
-}
-
-# --- Check if pipeviewer is installed ---
-if which pv > /dev/null 2>&1; then
-  update_pv
-else
-  brew install pv > /dev/null 2>&1
-fi
-
-# --- bc formulae update function ---
-update_bc() {
-  if echo $outdatedFormulae | grep -q "^bc" 2>/dev/null; then
-    brew upgrade bc > /dev/null 2>&1
-  fi
-}
-
-# --- Check if basicCalculator is installed ---
-if which bc > /dev/null 2>&1; then
-    update_bc  # Check bc furmulae updates by calling the function
-else
-    brew install bc > /dev/null 2>&1
-fi
-
-# --- pup formulae update function ---
-update_pup() {
-  if echo $outdatedFormulae | grep -q "^pup" 2>/dev/null; then
-    brew upgrade pup > /dev/null 2>&1
-  fi
-}
-
-# --- Check if pup is installed ---
-if which pup > /dev/null 2>&1; then
-    update_pup  # Check pup furmulae updates by calling the function
-else
-    brew install pup > /dev/null 2>&1
-fi
+formulaeInstall "bash"  # bash update
+formulaeInstall "grep"  # grep update
+formulaeInstall "curl"  # curl update
+formulaeInstall "aria2"  # aria2 install/update
+formulaeInstall "jq"  # jq install/update
+#formulaeInstall "libarchive"  # libarchive (brew version of bsdtar: macOS's system utilities) install/update
+formulaeInstall "pv"  # pv install/update
+formulaeInstall "bc"  # bc (basicCalculator) install/update
+formulaeInstall "pup"  # pup install/update
 
 # Get active interfaces (those with 'status: active')
 active_ifaces=$(ifconfig | awk '
