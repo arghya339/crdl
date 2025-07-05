@@ -62,10 +62,8 @@ if [ -d "/Applications/Cloudflare WARP.app" ]; then
 fi
 formulaeList=$(brew list 2>/dev/null)
 outdatedFormulae=$(brew outdated 2>/dev/null)
-LAST_INSTALL="$HOME/.LAST_INSTALL"
-INSTALLED_VERSION="$HOME/.INSTALLED_VERSION"
-installedPosition=$(cat "$LAST_INSTALL" 2>/dev/null)
-installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
+installedPosition=$(jq -r '.INSTALLED_POSITION' "$HOME/crdl.json" 2>/dev/null)
+installedVersion=$(jq -r '.INSTALLED_VERSION' "$HOME/crdl.json" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # Detect platform (Intel or ARM)
 if [[ $(uname -m) == "x86_64" ]]; then
@@ -74,14 +72,11 @@ else
     snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
-INSTALLED_SIZE="$HOME/.INSTALLED_SIZE"
-installedSize=$(cat "$INSTALLED_SIZE" 2>/dev/null)
+appSize=$(jq -r '.APP_SIZE' "$HOME/crdl.json" 2>/dev/null)
 if [ -d /Applications/Chromium.app ]; then
-  actualInstalledVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
+  appVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 fi
-INSTALL_TIME="$HOME/.INSTALL_TIME"
-installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
-
+installedTime=$(jq -r '.INSTALLED_TIME' "$HOME/crdl.json" 2>/dev/null)
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then
   echo -e "${bad} ${Red}macOS $productVersion is not supported by Chromium.${Reset}"  # Chromium required macOS 10.14+ (Catalina)
@@ -189,7 +184,7 @@ aria2ConsoleLogHide() {
   printf '\033[2J\033[3J\033[H'  # clear aria2 multi error log from console
   print_crdl  # call the print_crdl function 
   if [ -d /Applications/Chromium.app ]; then
-    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize - $installTime" && echo
+    echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   echo "Select Chromium Channel: $channel"
@@ -278,10 +273,17 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               case $opt in
                 y*|Y*|"")
                   crInstall
-                  timeIs=$(date "+%Y-%m-%d %H:%M")
-                  touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
-                  touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                  touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
+                  if [ ! -f "$HOME/crdl.json" ]; then
+                    jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > crdl.json  # Create new json file with {data} using jq null flags
+                    jq ".INSTALLED_VERSION: \"$crVersion\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data to existing json file by reading existing source json using jq
+                    jq ".APP_SIZE: \"$crSize\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                    timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME: \"$timeIs\"" crdl.json > temp.json && mv temp.json crdl.json
+                  else
+                    jq ".INSTALLED_POSITION = $branchPosition" crdl.json > temp.json && mv temp.json crdl.json  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
+                    jq ".INSTALLED_VERSION = \"$crVersion\"" crdl.json > temp.json && mv temp.json crdl.json
+                    jq ".APP_SIZE = \"$crSize\"" crdl.json > temp.json && mv temp.json crdl.json
+                    timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" crdl.json > temp.json && mv temp.json crdl.json
+                  fi
                   printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
@@ -337,10 +339,17 @@ findValidSnapshot() {
                 case $opt in
                     y*|Y*|"")
                       crInstall
-                      timeIs=$(date "+%Y-%m-%d %H:%M")
-                      touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
-                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                      echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
+                      if [ ! -f "$HOME/crdl.json" ]; then
+                        jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > crdl.json  # Create new json file with {data} using jq null flags
+                        jq ".INSTALLED_VERSION: \"$crVersion\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data to existing json file by reading existing source json using jq
+                        jq ".APP_SIZE: \"$crSize\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME: \"$timeIs\"" crdl.json > temp.json && mv temp.json crdl.json
+                      else
+                        jq ".INSTALLED_POSITION = $pos" crdl.json > temp.json && mv temp.json crdl.json  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
+                        jq ".INSTALLED_VERSION = \"$crVersion\"" crdl.json > temp.json && mv temp.json crdl.json
+                        jq ".APP_SIZE = \"$crSize\"" crdl.json > temp.json && mv temp.json crdl.json
+                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" crdl.json > temp.json && mv temp.json crdl.json
+                      fi
                       sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
                     n*|N*)
@@ -517,7 +526,7 @@ while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   print_crdl  # Call the print crdl shape function
   if [ -d /Applications/Chromium.app ]; then
-    echo -e "$info INSTALLED: $actualInstalledVersion - $installedSize - $installTime" && echo
+    echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
