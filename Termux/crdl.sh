@@ -194,7 +194,7 @@ if [ $arch == "arm64-v8a" ]; then
     # Prefer 32-bit apk if device is usually low on memory (RAM).
     if [ -f $AndroidDesktop ]; then
       snapshotPlatform="AndroidDesktop_arm64"
-    elif [ $(echo "$memTotalGB -le 4" | bc -l) -eq 1 ] && [ $arch32 == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+    elif [ $(echo "$memTotalGB <= 4" | bc -l) -eq 1 ] && [ $arch32 == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
       snapshotPlatform="Android"
     else
       snapshotPlatform="Android_Arm64"  # For ARM64
