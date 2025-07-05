@@ -174,6 +174,7 @@ if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f "$crdlJson" ]; the
         case $crx in
             y*|Y*|"")
               jq -n "{ \"AndroidDesktop\": 1 }" > "$crdlJson"
+              AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
               echo -e "$info crdl Extensions config are store in a '$crdlJson' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}jq${Reset} ${Yellow}'del(.AndroidDesktop)' \"${Reset}${Cyan}\$HOME${Reset}${Yellow}/.crdl.json\" >${Reset} temp.json && ${Green}mv${Reset} temp.json \$HOME/.crdl.json" && sleep 10
               ;;
             n*|N*)
