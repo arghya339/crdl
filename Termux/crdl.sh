@@ -794,7 +794,7 @@ comment
 while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
-  if [ -f "$LAST_INSTALL" ]; then
+  if [ -f "$crdlJson" ]; then
     echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
