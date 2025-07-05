@@ -192,7 +192,7 @@ memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "
 # --- Detect arch (ARM or ARM64 or x86_64) ---
 if [ $arch == "arm64-v8a" ]; then
     # Prefer 32-bit apk if device is usually low on memory (RAM).
-    if [ -f $AndroidDesktop ]; then
+    if [ $AndroidDesktop == 1 ]; then
       snapshotPlatform="AndroidDesktop_arm64"
     elif [ "$(echo "$memTotalGB <= 4" | bc -l)" -eq 1 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
       snapshotPlatform="Android"
