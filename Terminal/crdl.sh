@@ -63,8 +63,8 @@ fi
 formulaeList=$(brew list 2>/dev/null)
 outdatedFormulae=$(brew outdated 2>/dev/null)
 crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
-installedPosition=$(jq -r '.INSTALLED_POSITION' "$HOME/crdl.json" 2>/dev/null)
-installedVersion=$(jq -r '.INSTALLED_VERSION' "$HOME/crdl.json" 2>/dev/null)
+installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
+installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # Detect platform (Intel or ARM)
 if [[ $(uname -m) == "x86_64" ]]; then
@@ -73,11 +73,11 @@ else
     snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
-appSize=$(jq -r '.APP_SIZE' "$HOME/crdl.json" 2>/dev/null)
+appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
 if [ -d /Applications/Chromium.app ]; then
   appVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 fi
-installedTime=$(jq -r '.INSTALLED_TIME' "$HOME/crdl.json" 2>/dev/null)
+installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then
   echo -e "${bad} ${Red}macOS $productVersion is not supported by Chromium.${Reset}"  # Chromium required macOS 10.14+ (Catalina)
