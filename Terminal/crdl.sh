@@ -340,7 +340,7 @@ findValidSnapshot() {
                     y*|Y*|"")
                       crInstall
                       if [ ! -f "$HOME/crdl.json" ]; then
-                        jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > crdl.json  # Create new json file with {data} using jq null flags
+                        jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > crdl.json  # Create new json file with {data} using jq null flags
                         jq ".INSTALLED_VERSION: \"$crVersion\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data to existing json file by reading existing source json using jq
                         jq ".APP_SIZE: \"$crSize\"" crdl.json > temp.json && mv temp.json crdl.json  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
                         timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME: \"$timeIs\"" crdl.json > temp.json && mv temp.json crdl.json
