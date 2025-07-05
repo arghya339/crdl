@@ -87,19 +87,14 @@ installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 crdl="$HOME/.crdl"
 mkdir -p "$crdl"
-FIRST_INSTALL="$crdl/.FIRST_INSTALL"
-LAST_INSTALL="$crdl/.LAST_INSTALL"
-INSTALLED_VERSION="$crdl/.INSTALLED_VERSION"
-installedPosition=$(cat "$LAST_INSTALL" 2>/dev/null)
-installedVersion=$(cat "$INSTALLED_VERSION" 2>/dev/null)
-AndroidDesktop="$crdl/.AndroidDesktop_arm64"
+crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
+installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
+installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
+AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
-INSTALLED_SIZE="$crdl/.INSTALLED_SIZE"
-installedSize=$(cat "$INSTALLED_SIZE" 2>/dev/null)
-ACTUAL_INSTALL="$crdl/.ACTUAL_INSTALL"
-actualInstalledVersion=$(cat "$ACTUAL_INSTALL" 2>/dev/null)
-INSTALL_TIME="$crdl/.INSTALL_TIME"
-installTime=$(cat "$INSTALL_TIME" 2>/dev/null)
+appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
+appVersion=$(jq -r '.APP_VERSION' "$crdlJson" 2>/dev/null)
+installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
 if su -c "id" >/dev/null 2>&1; then
   if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
     su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
@@ -175,13 +170,13 @@ if [ ! -f "$HOME/aapt2" ]; then
   curl -L "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" > /dev/null 2>&1 && chmod +x "$HOME/aapt2"
 fi
 
-if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f $AndroidDesktop ] && [ ! -f "$LAST_INSTALL" ]; then
+if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f "$crdlJson" ]; then
   echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
   read -r -p "Select: " crx
         case $crx in
             y*|Y*|"")
-              touch "$AndroidDesktop"
-              echo -e "$info crdl Extensions config are store in a '$AndroidDesktop' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}rm${Reset} '\$HOME/.crdl/.AndroidDesktop_arm64'" && sleep 10
+              jq -n "{ \"AndroidDesktop\": 1 }" > "$crdlJson"
+              echo -e "$info crdl Extensions config are store in a '$crdlJson' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}jq${Reset} ${Yellow}'del(.INSTALLED_POSITION)' \"${Reset}${Cyan}\$HOME${Reset}${Yellow}/.crdl.json\" >${Reset} temp.json && ${Green}mv${Reset} temp.json \$HOME/.crdl.json" && sleep 10
               ;;
             n*|N*)
               echo -e "$notice AndroidDesktopChromium skipped."
@@ -210,23 +205,15 @@ elif [ $arch == "x86_64" ]; then
     snapshotPlatform="AndroidDesktop_x64" # For x86_64
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
-if [ ! -f "$FIRST_INSTALL" ]; then
-  touch "$FIRST_INSTALL"  # create FIRST_INSTALL file if it doesn't exist
-fi
-# Get crdl Script First Access time in 'YYYY-MM-DD HH:MM' format
-crdlAccessTime=$(stat -c "%x" $FIRST_INSTALL | awk '{print $1, substr($2,1,5)}')
-# Get current time in the same format
-currentTime=$(date "+%Y-%m-%d %H:%M")
 
 # --- Shizuku Setup first time ---
-if ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 && [ ! -f "$LAST_INSTALL" ] && [ "$crdlAccessTime" == "$currentTime" ]; then
+if [[ ( ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 ) && ( ! -f "$HOME/rish" || ! -f "$HOME/rish_shizuku.dex" ) ]]; then
   echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
   termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
   am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
-  if [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; then
-    curl -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish" > /dev/null 2>&1 && chmod +x "$HOME/rish"
-    sleep 0.5 && curl -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex" > /dev/null 2>&1
-  fi
+  curl -sL --progress-bar -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish"
+  [ ! -x "$HOME/rish" ] && chmod +x "$HOME/rish"
+  sleep 0.5 && curl -sL --progress-bar -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex"
   echo -e "$info Please start Shizuku by following guide. Then rerun script by running ${Cyan}~${Reset} ${Green}crdl${Reset}" && sleep 1
   if [ $Android -le 10 ]; then
     am start -n com.android.settings/.Settings\$DevelopmentSettingsDashboardActivity > /dev/null 2>&1  # Open Developer options
@@ -331,8 +318,8 @@ crInstall() {
 aria2ConsoleLogHide() {
   clear  # clear aria2 multi error log from console
   print_crdl  # call the print_crdl function 
-  if [ -f "$LAST_INSTALL" ]; then
-    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize - $installTime" && echo
+  if [ -f "$crdlJson" ]; then
+    echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   echo "Select Chromium Channel: $channel"
@@ -431,25 +418,33 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         fi
         echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
         pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-        actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-        actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+        appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+        appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-        echo && echo -e "$question Do you want to install Chromium_v$actualVersion.apk? [Y/n]"
+        echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]"
         read -r -p "Select: " opt
               case $opt in
                 y*|Y*|"")
                   mkConfig() {
-                    touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
-                    touch "$LAST_INSTALL" && echo "$branchPosition" > "$LAST_INSTALL"
-                    touch "$ACTUAL_INSTALL" && echo "${actualVersion}(${actualVersionCode})" > "$ACTUAL_INSTALL"
-                    touch "$INSTALLED_SIZE" && echo "$crSize" > "$INSTALLED_SIZE"
-                    if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                      curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                    if [ ! -f "$crdlJson" ]; then
+                      jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
+                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                    else
+                      jq ".INSTALLED_POSITION = $branchPosition" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
+                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                     fi
                     clear && exit 0
                   }
                   crInstall
-                  timeIs=$(date "+%Y-%m-%d %H:%M")
+                  if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
+                    curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                  fi
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                     if [ $INSTALL_STATUS -eq 0 ]; then
                       mkConfig
@@ -505,25 +500,33 @@ findValidSnapshotInEachPossition() {
               done
               echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
               pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-              actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-              actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+              appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+              appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
               crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-              echo && echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
+              echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]"
               read -r -p "Select: " opt
               case $opt in
                   y*|Y*|"")
                     mkConfig() {
-                      touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
-                      echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                      echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
-                      echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                      if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                        curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                      if [ ! -f "$crdlJson" ]; then
+                        jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
+                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      else
+                        jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
+                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                       fi
                       sleep 3 && clear && exit 0
                     }
                     crInstall
-                    timeIs=$(date "+%Y-%m-%d %H:%M")
+                    if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
+                      curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                    fi
                     if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                       if [ $INSTALL_STATUS -eq 0 ]; then
                         mkConfig
@@ -589,25 +592,33 @@ findValidSnapshot() {
                 done
                 echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
                 pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-                actualVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-                actualVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+                appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+                appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-                echo && echo -e "$question Do you want to install Chromium_v$crVersion.apk? [Y/n]"
+                echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]"
                 read -r -p "Select: " opt
                 case $opt in
                     y*|Y*|"")
                       mkConfig() {
-                        touch "$INSTALL_TIME" && echo "$timeIs" > "$INSTALL_TIME"
-                        echo "$pos" | tee "$LAST_INSTALL" > /dev/null && echo "$crVersion" | tee "$INSTALLED_VERSION" > /dev/null
-                        echo "${actualVersion}(${actualVersionCode})" | tee "$ACTUAL_INSTALL" > /dev/null
-                        echo "$crSize" | tee "$INSTALLED_SIZE" > /dev/null
-                        if [ ! -f "$LAST_INSTALL" ] && [ -f "$AndroidDesktop" ]; then
-                          curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                        if [ ! -f "$crdlJson" ]; then
+                          jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
+                          jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                          jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                          jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                          timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        else
+                          jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
+                          jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                          jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                          jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                          timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                         fi
                         sleep 3 && clear && exit 0
                       }
                       crInstall
-                      timeIs=$(date "+%Y-%m-%d %H:%M")
+                      if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
+                        curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+                      fi
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
                         if [ $INSTALL_STATUS -eq 0 ]; then
                           mkConfig
@@ -784,7 +795,7 @@ while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
   if [ -f "$LAST_INSTALL" ]; then
-    echo -e "$info INSTALLED: Chromium v$actualInstalledVersion - $installedSize - $installTime" && echo
+    echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
   read -r -p "Select Chromium Channel: " channel
