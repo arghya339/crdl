@@ -176,7 +176,7 @@ if [ $arch == "arm64-v8a" ] && [ $Android -ge "9" ] && [ ! -f "$crdlJson" ]; the
         case $crx in
             y*|Y*|"")
               jq -n "{ \"AndroidDesktop\": 1 }" > "$crdlJson"
-              echo -e "$info crdl Extensions config are store in a '$crdlJson' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}jq${Reset} ${Yellow}'del(.INSTALLED_POSITION)' \"${Reset}${Cyan}\$HOME${Reset}${Yellow}/.crdl.json\" >${Reset} temp.json && ${Green}mv${Reset} temp.json \$HOME/.crdl.json" && sleep 10
+              echo -e "$info crdl Extensions config are store in a '$crdlJson' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}jq${Reset} ${Yellow}'del(.AndroidDesktop)' \"${Reset}${Cyan}\$HOME${Reset}${Yellow}/.crdl.json\" >${Reset} temp.json && ${Green}mv${Reset} temp.json \$HOME/.crdl.json" && sleep 10
               ;;
             n*|N*)
               echo -e "$notice AndroidDesktopChromium skipped."
@@ -207,7 +207,7 @@ fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 
 # --- Shizuku Setup first time ---
-if [[ ( ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 ) && ( ! -f "$HOME/rish" || ! -f "$HOME/rish_shizuku.dex" ) ]]; then
+if ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 && { [[ ! -f "$HOME/rish" ]] || [[ ! -f "$HOME/rish_shizuku.dex" ]]; }; then
   echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
   termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
   am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
