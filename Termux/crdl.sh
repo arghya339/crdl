@@ -426,17 +426,13 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   mkConfig() {
                     if [ ! -f "$crdlJson" ]; then
                       jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                     else
                       jq ".INSTALLED_POSITION = $branchPosition" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                     fi
+                    jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                    jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                    jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                    timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                     clear && exit 0
                   }
                   crInstall
@@ -508,17 +504,13 @@ findValidSnapshotInEachPossition() {
                     mkConfig() {
                       if [ ! -f "$crdlJson" ]; then
                         jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                       else
                         jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                       fi
+                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                       sleep 3 && clear && exit 0
                     }
                     crInstall
@@ -600,17 +592,13 @@ findValidSnapshot() {
                       mkConfig() {
                         if [ ! -f "$crdlJson" ]; then
                           jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                          jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                          jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                          jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                          timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                         else
                           jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                          jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                          jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                          jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                          timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                         fi
+                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
+                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
+                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
                         sleep 3 && clear && exit 0
                       }
                       crInstall
