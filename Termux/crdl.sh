@@ -85,8 +85,6 @@ cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-crdl="$HOME/.crdl"
-mkdir -p "$crdl"
 crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
 installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
 installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
