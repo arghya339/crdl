@@ -143,6 +143,7 @@ if [ $Android -le 9 ]; then
     echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
     termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
   fi
+  rm $PREFIX/bin/crdl && rm $HOME/crdl.sh
   exit 1
 fi
 
@@ -160,6 +161,7 @@ if [ $arch == "x86" ]; then
       echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
       termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
     fi
+    rm $PREFIX/bin/crdl && rm $HOME/crdl.sh
     exit 1
 fi
 
