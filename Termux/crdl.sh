@@ -111,21 +111,35 @@ elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
   pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
 fi
 
+# Latest Chromium required Android 10+ (The last Chromium app that supports Android 8-9 is v139.0.7230.0 & Android 7.0 is v119.0.6045.0 [universal] & Android 6.0 is v106.0.5249.0 [armeabi-v7a, x86]).
 # --- Checking Android Version ---
-if [ $Android -le 7 ]; then
-  echo -e "${bad} ${Red}Android $Android is not supported by Chromium.${Reset}"  # Chromium required Android 8+
+if [ $Android -le 9 ]; then
+  echo -e "${bad} ${Red}Android $Android is not supported by Chromium.${Reset}"
+  if [ $Android -eq 9 ]; then
+    echo -e "$info Find Chromium alternative as Brave."  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
+    termux-open "https://github.com/brave/brave-browser/releases/latest/"
+  elif [ $Android -eq 8 ] || [ $Android -eq 7 ]; then
+    echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
+    termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
+  else
+    echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
+    termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+  fi
   exit 1
 fi
 
 # --- Checking device arch ---
 if [ $arch == "x86" ]; then
-    echo -e "$bad ${Red} x86 (32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
+    echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
     termux-open-url "https://chromium.googlesource.com/chromium/src/+/0267e3c2/docs/android_build_instructions.md"
     if [ $Android -ge 9 ]; then
-      echo -e "$info Find Chromium alternative as BraveMonox86.apk"
+      echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
       termux-open "https://github.com/brave/brave-browser/releases/latest/"
+    elif [ $Android -eq 8 ] || [ $Android -eq 7 ]; then
+      echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
+      termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
     else
-      echo -e "$info Find Chromium alternative as Firefox"
+      echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
       termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
     fi
     exit 1
