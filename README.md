@@ -14,7 +14,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - written in bash shell script.
 - Custom channel support (e.g. extended, stable, beta, dev, canary, last canary).
 - Support macOS 10+ and Android 10+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+.
-- Also support Android 9~8 (arm64-v8a, armeabi-v7a, x86_64) and Android 7 (arm64-v8a, armeabi-v7a) and Android 6~5 (armeabi-v7a).
+- Also support Android 9-8 (arm64-v8a, armeabi-v7a, x86_64) and Android 7 (arm64-v8a, armeabi-v7a) and Android 6-5 (armeabi-v7a).
 - AndroidDesktopChromium (arm64, x64) [Extensions](https://chromewebstore.google.com/category/extensions) support
 - Built in Updating Checks feature.
 - Support auto resuming Chromium downloads
@@ -91,6 +91,42 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ## How it works (_[Demo on YouTube](https://youtube.com/)_)
 
 ![image](docs/images/Result_Android.png)
+
+## Install Extensions from Chrome Web Store on AndroidDesktop Mobile
+### Prerequisites
+  - AndroidDesktop Chromium 140.0.7280.0+
+
+### Configure Browser Desktop Site Settings
+  - Open **Chromium** browser.
+  - Tap the **More icon** (three vertical dots) in the top-right corner.
+  - Select **Settings** from the Chromium menu.
+  - Scroll down and tap on **Site settings**.
+  - Tap on **Desktop site**.
+  - Select **Request Desktop view** options.
+  - Make sure **When the window is narrow, request mobile view** is checked.
+
+### Enable Device Auto-Rotate
+  - Open device **Settings**.
+  - Navigate to **Display** to find **Auto-rotate screen**.
+  > Note: Exact location may vary by Android OEM & version.
+  - or, Turn on **Auto-rotate** or Turn off **Rotation-lock** from device control center.
+
+### Install Chrome Extension from Chrome Web Store
+  - Open **Chromium** browser.
+  - Go to the **[Chrome Web Store](https://chromewebstore.google.com/)** page for the extension you want to install.
+  - **Rotate your mobile device to landscape mode**. 
+  > This action should trigger the browser to display the desktop version of the Chrome Web Store page.
+  - Once the page loads in desktop view, you will see the **Add to Chrome** button. Tap it to install the extension.
+
+## Managing Extensions (Update)
+### Access the Extensions Page
+  - Open **Chromium** browser.
+  - In the address bar, type **[chrome://extensions](chrome://extensions)** and press **Enter**.
+
+### Update Extensions
+  - On the **[chrome://extensions](chrome://extensions)** page, look for the **Developer mode** toggle in the top-right corner. **Enable Developer mode** if it's not already on.
+  - Once **Developer mode** is enabled, you will see an **`Update`** button near the top.
+  - Tap the **Update** button to check for and install updates for all your installed extensions.
 
 ![image](docs/images/AndroidChromium_Extensions1.png)
 
