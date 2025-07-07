@@ -111,26 +111,8 @@ elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
   pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
 fi
 
-# Latest Chromium required Android 10+ (The last Chromium app that supports Android 8-9 is v139.0.7230.0 & Android 7.0 is v119.0.6045.0 [universal] & Android 6.0 is v106.0.5249.0 [armeabi-v7a, x86]).
-# v139.0.7230.0: 1471513 ~> | Android_Arm64/Android: 1471509 | AndroidDesktop_arm64: 1471504 | AndroidDesktop_x64: 1471508
-# v119.0.6045.0: 1204232 ~> | Android_Arm64: 1204197 | Android: 1204232 | 
-# v106.0.5249.0: 1036826 ~> | Android: 1036780 | 
-<<comment
-  pkg install pv bsdtar -y > /dev/null 2>&1 && \
-  branchPosition="1471509" && \
-  snapshotPlatform="Android" && \
-  if [ "$snapshotPlatform" = "AndroidDesktop_arm64" ] || [ "$snapshotPlatform" = "AndroidDesktop_x64" ]; then \
-    crUNZIP="chrome-android-desktop"; \
-  else \
-    crUNZIP="chrome-android"; \
-  fi && \
-  curl -L --progress-bar -C - -o "/sdcard/Download/$crUNZIP.zip" "https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip" && \
-  pv "/sdcard/Download/$crUNZIP.zip" | bsdtar -xf - -C "/sdcard/Download" --include "$crUNZIP/apks/ChromePublic.apk" && \
-  rm "/sdcard/Download/$crUNZIP.zip" && \
-  termux-open --view "/sdcard/Download/$crUNZIP/apks/ChromePublic.apk"
-comment
-
 # --- Checking Android Version ---
+# Latest Chromium required Android 10+
 if [ $Android -le 9 ]; then
   echo -e "${bad} ${Red}Android $Android is not supported by Chromium.${Reset}"
   if [ $Android -eq 9 ]; then
@@ -143,7 +125,7 @@ if [ $Android -le 9 ]; then
     echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
     termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
   fi
-  rm $PREFIX/bin/crdl && rm $HOME/.crdl.sh
+  curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh" && bash "$HOME/.crdl.sh"
   exit 1
 fi
 

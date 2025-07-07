@@ -14,6 +14,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - written in bash shell script.
 - Custom channel support (e.g. extended, stable, beta, dev, canary, last canary).
 - Support macOS 10+ and Android 10+ (arm64-v8a, armeabi-v7a, x86_64) and Windows 10+.
+- Also support Android 9~8 (arm64-v8a, armeabi-v7a, x86_64) and Android 7 (arm64-v8a, armeabi-v7a) and Android 6~5 (armeabi-v7a).
 - AndroidDesktopChromium (arm64, x64) [Extensions](https://chromewebstore.google.com/category/extensions) support
 - Built in Updating Checks feature.
 - Support auto resuming Chromium downloads
@@ -42,6 +43,12 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   crdl
   ```
 > This script was tested on an arm64-v8a device running Android 14 with Termux v0.118.2 with bash v5.2.37(1).
+
+### Android 9~5
+- Open [Termux](https://github.com/termux/termux-app/releases/) and run the script with the following command:
+  ```
+  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/odcrdl.sh && bash "$HOME/.crdl.sh"
+  ```
 
 ### macOS
   - Open macOS Terminal and run the script with the following command:
