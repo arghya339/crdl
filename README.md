@@ -98,7 +98,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 
 ### Configure Browser Desktop Site Settings
   - Open **Chromium** browser.
-  - Tap the **More icon** (three vertical dots) in the top-right corner.
+  - Tap the three vertical dots **More** icon (⋮) in the top-right corner of Chromium.
   - Select **Settings** from the Chromium menu.
   - Scroll down and tap on **Site settings**.
   - Tap on **Desktop site**.
@@ -116,6 +116,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   - Go to the **[Chrome Web Store](https://chromewebstore.google.com/)** page for the extension you want to install.
   - **Rotate your mobile device to landscape mode**. 
   > This action should trigger the browser to display the desktop version of the Chrome Web Store page.
+  - Pull to Refresh or Tap the three-dot **More** icon (⋮) in the top-right corner of Chromium. Tap the refresh icon (🔄) at the top of that menu.
   - Once the page loads in desktop view, you will see the **Add to Chrome** button. Tap it to install the extension.
 
 ## Managing Extensions (Update)
