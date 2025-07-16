@@ -88,7 +88,7 @@ if [ $Android -eq 7 ] && [ $arch == "x86_64" ]; then
   echo -e "${bad} ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
   echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
   termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
-elif [ ( $Android -eq 6 || $Android -eq 5 ) && ( $arch == "armeabi-v8a" || $arch == "x86_64" ) ]; then
+elif [[ ( $Android -eq 6 || $Android -eq 5 ) && ( $arch == "armeabi-v8a" || $arch == "x86_64" ) ]]; then
   echo -e "${bad} ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
   echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
   termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
