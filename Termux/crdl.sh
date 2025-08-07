@@ -224,7 +224,8 @@ LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 # --- Shizuku Setup first time ---
 if ! $HOME/rish -c "id" >/dev/null 2>&1 && ! su -c "id" >/dev/null 2>&1 && { [[ ! -f "$HOME/rish" ]] || [[ ! -f "$HOME/rish_shizuku.dex" ]]; }; then
   echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
-  termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
+  #termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
+  termux-open-url "https://github.com/RikkaApps/Shizuku/releases/latest"
   am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
   curl -sL --progress-bar -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish"
   [ ! -x "$HOME/rish" ] && chmod +x "$HOME/rish"
