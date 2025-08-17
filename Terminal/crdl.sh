@@ -520,7 +520,7 @@ comment
 while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   print_crdl  # Call the print crdl shape function
-  if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has(INSTALLED_POSITION)' "$crdlJson" >/dev/null; then
+  if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
     echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
   fi
   echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
