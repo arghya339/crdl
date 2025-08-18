@@ -329,7 +329,7 @@ findValidSnapshot() {
       case $opt in
         y*|Y*|"")
           crInstall
-          if [ "$AndroidDesktop" == 1 ]; then
+          if [ "$AndroidDesktop" -eq 1 ]; then
             curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
           fi
           if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then

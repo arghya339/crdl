@@ -454,7 +454,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                     clear && exit 0
                   }
                   crInstall
-                  if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
+                  if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ "$AndroidDesktop" -eq 1 ]; then
                     curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
                   fi
                   if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
@@ -475,93 +475,6 @@ else
     echo -e "${bad} No direct download URL found." && sleep 1
 fi
 }
-
-<<comment
-# --- Fallback to Chromium snapshots using the list of branch positions from Stable releases ---
-findValidSnapshotInEachPossition() {
-  echo -e "$running Fetching list of all Stable branch positions.."
-  range="70"
-  branchDataAll=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=$snapshotPlatform&num=$range")
-  positions=$(echo "$branchDataAll" | jq -r '.[].chromium_main_branchPosition' | sort -nu -r)
-
-  # Iterate through each unique branch position in descending order
-  for pos in $positions; do
-      echo -e "$running Checking for snapshot at branch position: $pos"
-      checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
-      if curl --head --silent --fail "$checkUrl" > /dev/null; then
-          # Get version for this position
-          version=$(echo "$branchDataAll" | jq -r --arg pos "$pos" 'map(select(.chromium_main_branchPosition == ($pos | tonumber))) | .[0].version')
-          echo -e "$info Version info for position $pos: $version"
-          if [ "$version" == "null" ] || [ -z "$version" ]; then
-              version="Unknown"
-          fi
-          echo -e "$good Found valid snapshot for Chromium version $crVersion at position: $pos" && echo
-          if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
-              echo -e "$notice Already installed: $installedVersion"
-              sleep 3 && clear && exit 0
-          else
-              crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-              echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
-              while true; do
-                  curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$checkUrl"
-                  DOWNLOAD_STATUS=$?
-                  if [ $DOWNLOAD_STATUS -eq "0" ]; then
-                    break  # break the resuming download loop
-                  fi
-                  echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
-              done
-              echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
-              pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-              appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-              appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-              crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-              echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]"
-              read -r -p "Select: " opt
-              case $opt in
-                  y*|Y*|"")
-                    mkConfig() {
-                      if [ ! -f "$crdlJson" ]; then
-                        jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                      else
-                        jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                      fi
-                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                      jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      sleep 3 && clear && exit 0
-                    }
-                    crInstall
-                    if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
-                      curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
-                    fi
-                    if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                      if [ $INSTALL_STATUS -eq 0 ]; then
-                        mkConfig
-                      else
-                        echo -e "$bad installation failed!" && sleep 1
-                      fi
-                    else
-                      mkConfig
-                    fi
-                    ;;
-                  n*|N*)
-                    echo -e "$notice Chromium installation skipped."
-                    rm -rf "$HOME/$crUNZIP" && sleep 1
-                    ;;
-                  *)
-                    echo -e "$info Invalid choice. Installation skipped."
-                    rm -rf "$HOME/$crUNZIP" && sleep 2
-                    ;;
-              esac
-              sleep 3 && break
-          fi
-      else
-          echo -e "$notice No valid snapshot found at position: $pos"
-      fi
-  done
-}
-comment
 
 # --- Find valid snapshot by searching downward from branch position ---
 findValidSnapshot() {
@@ -620,7 +533,7 @@ findValidSnapshot() {
                         sleep 3 && clear && exit 0
                       }
                       crInstall
-                      if [ -f "$crdlJson" ] && [ "$installedPosition" == null ] && [ "$AndroidDesktop" == 1 ]; then
+                      if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ "$AndroidDesktop" -eq 1 ]; then
                         curl -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh > /dev/null 2>&1 && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
                       fi
                       if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
