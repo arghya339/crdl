@@ -245,7 +245,7 @@ crInstall() {
     if [ $? != 0 ]; then
       ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
     fi
-    sleep 30 && rm -rf "$HOME/$crUNZIP" && rm "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
+    if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP" && rm "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm '/data/local/tmp/ChromePublic.apk'"; fi  # Cleanup temp APK
   elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ] || [ $arch == "x86_64" ]; then
     if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
       rm "/sdcard/Download/ChromePublic.apk"
