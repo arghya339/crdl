@@ -184,12 +184,25 @@ if [ ! -f "$HOME/aapt2" ]; then
   curl -L "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" > /dev/null 2>&1 && chmod +x "$HOME/aapt2"
 fi
 
+config() {
+  local key="$1"
+  local value="$2"
+  
+  if [ ! -f "$crdlJson" ]; then
+    jq -n "{}" > "$crdlJson"
+  fi
+
+  if ! jq -e --arg key "$key" 'has($key)' "$crdlJson" >/dev/null; then
+    jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
+  fi
+}
+
 if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
   echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
   read -r -p "Select: " crx
         case $crx in
             y*|Y*|"")
-              jq -n "{ \"AndroidDesktop\": 1 }" > "$crdlJson"
+              config "AndroidDesktop" "1"
               AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
               echo -e "$info crdl Extensions config are store in a '$crdlJson' file. \nif you don't need AndroidDesktopChromium, please remove this file by running following command in Termux ${Cyan}~${Reset} ${Green}jq${Reset} ${Yellow}'del(.AndroidDesktop)' \"${Reset}${Cyan}\$HOME${Reset}${Yellow}/.crdl.json\" >${Reset} temp.json && ${Green}mv${Reset} temp.json \$HOME/.crdl.json" && sleep 10
               ;;
@@ -442,15 +455,11 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               case $opt in
                 y*|Y*|"")
                   mkConfig() {
-                    if [ ! -f "$crdlJson" ]; then
-                      jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                    else
-                      jq ".INSTALLED_POSITION = $branchPosition" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                    fi
-                    jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                    jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                    jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                    timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                    config "INSTALLED_POSITION" "$branchPosition"
+                    config "INSTALLED_VERSION" "$crVersion"
+                    config "APP_VERSION" "${appVersion}(${appVersionCode})"
+                    config "APP_SIZE" "$crSize"
+                    config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
                     clear && exit 0
                   }
                   crInstall
@@ -521,16 +530,12 @@ findValidSnapshot() {
                 case $opt in
                     y*|Y*|"")
                       mkConfig() {
-                        if [ ! -f "$crdlJson" ]; then
-                          jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                        else
-                          jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                        fi
-                        jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                        jq ".APP_VERSION = \"${appVersion}(${appVersionCode})\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                        timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                        sleep 3 && clear && exit 0
+                        config "INSTALLED_POSITION" "$pos"
+                        config "INSTALLED_VERSION" "$crVersion"
+                        config "APP_VERSION" "${appVersion}(${appVersionCode})"
+                        config "APP_SIZE" "$crSize"
+                        config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
+                        clear && exit 0
                       }
                       crInstall
                       if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ "$AndroidDesktop" -eq 1 ]; then

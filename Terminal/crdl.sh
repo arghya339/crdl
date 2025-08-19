@@ -166,6 +166,19 @@ done <<< "$all_services"
 active_list=$(IFS=, ; echo "${active_services[*]}")
 inactive_list=$(IFS=, ; echo "${inactive_services[*]}")
 
+config() {
+  local key="$1"
+  local value="$2"
+  
+  if [ ! -f "$crdlJson" ]; then
+    jq -n "{}" > "$crdlJson"
+  fi
+
+  if ! jq -e --arg key "$key" 'has($key)' "$crdlJson" >/dev/null; then
+    jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
+  fi
+}
+
 # --- install Chromium function ---
 crInstall() {
   if [ -d "/Applications/Chromium.app" ]; then
@@ -274,14 +287,10 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
               case $opt in
                 y*|Y*|"")
                   crInstall
-                  if [ ! -f "$crdlJson" ]; then
-                    jq -n "{ \"INSTALLED_POSITION\": "$branchPosition" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                  else
-                    jq ".INSTALLED_POSITION = $branchPosition" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                  fi
-                  jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                  jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                  timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
+                  config "INSTALLED_POSITION" "$branchPosition"
+                  config "INSTALLED_VERSION" "$crVersion"
+                  config "APP_SIZE" "$crSize"
+                  config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
                   printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
@@ -337,15 +346,11 @@ findValidSnapshot() {
                 case $opt in
                     y*|Y*|"")
                       crInstall
-                      if [ ! -f "$crdlJson" ]; then
-                        jq -n "{ \"INSTALLED_POSITION\": "$pos" }" > "$crdlJson"  # Create new json file with {data} using jq null flags
-                      else
-                        jq ".INSTALLED_POSITION = $pos" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Change key value: Reads content of existing json and assigns key new value then redirect new json data to temp.json then rename it to crdl.json
-                      fi
-                      jq ".INSTALLED_VERSION = \"$crVersion\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data to existing json file by reading existing source json using jq
-                      jq ".APP_SIZE = \"$crSize\"" "$crdlJson" > temp.json && mv temp.json $crdlJson  # Add new data: first read data from existing josn file then merge & add new data (key: value) to temp.json then rename it to crdl.json by mv command
-                      timeIs=$(date "+%Y-%m-%d %H:%M") && jq ".INSTALLED_TIME = \"$timeIs\"" "$crdlJson" > temp.json && mv temp.json $crdlJson
-                      sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
+                      config "INSTALLED_POSITION" "$pos"
+                      config "INSTALLED_VERSION" "$crVersion"
+                      config "APP_SIZE" "$crSize"
+                      config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
+                      printf '\033[2J\033[3J\033[H' && exit 0
                       ;;
                     n*|N*)
                       echo -e "$notice Chromium installation skipped."
