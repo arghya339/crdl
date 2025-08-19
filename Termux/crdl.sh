@@ -191,12 +191,8 @@ config() {
   if [ ! -f "$crdlJson" ]; then
     jq -n "{}" > "$crdlJson"
   fi
-
-  if ! jq -e --arg key "$key" 'has($key)' "$crdlJson" >/dev/null; then
-    jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
-  else
-    jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
-  fi
+  
+  jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
 }
 
 if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
