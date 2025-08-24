@@ -253,7 +253,10 @@ crInstall() {
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
     echo -e $notice "${Yellow}MIUI Optimization detected! Please manually install Chromium from${Reset} Files: $Model > ${Blue}Download${Reset} > ChromePublic.apk"
     sleep 3 && rm -rf "$HOME/$crUNZIP"
-    am start -n com.google.android.documentsui/com.android.documentsui.files.FilesActivity > /dev/null 2>&1  # Open Android Files
+    am start -n "com.google.android.documentsui/com.android.documentsui.files.FilesActivity" > /dev/null 2>&1  # Open Android Files by Google
+    if [ $? -ne 0 ] || [ $? -eq 2 ]; then
+      am start -n "com.android.documentsui/com.android.documentsui.files.FilesActivity" > /dev/null 2>&1  # Open Android Files
+    fi
   elif [ $Android -le 7 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
