@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 urls=(
+  "https://github.com/arghya339/crdl?tab=readme-ov-file#install-extensions-from-chrome-web-store-on-androiddesktop-mobile"  # Docs
   "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"  # uBlock Origin Lite
   "https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"  # AdGuard AdBlocker
   "https://chromewebstore.google.com/detail/adblocker-ultimate/ohahllgiabjaoigichmmfljhkcfikeof"  # AdBlocker Ultimate
