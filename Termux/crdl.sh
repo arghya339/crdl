@@ -339,12 +339,12 @@ crInstall() {
   elif [ $Android -le 6 ]; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    sleep 30 && rm -rf "$HOME/$crUNZIP/" && rm -f "/sdcard/ChromePublic.apk"
+    sleep 30
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/" && rm -f "/sdcard/ChromePublic.apk"
   else
     termux-open --view "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    sleep 30 && rm -rf "$HOME/$crUNZIP/"
+    sleep 30
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/"
   fi
 }
 
