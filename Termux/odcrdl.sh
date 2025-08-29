@@ -62,10 +62,10 @@ if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
       termux-setup-storage  # ask Termux Storage permissions
       sleep 3  # wait 3 seconds
       if ls /sdcard/ 2>/dev/null | grep -q "^Android" || ls "$HOME/storage/shared/" 2>/dev/null | grep -q "^Android"; then
-        break
         if [ "$Android" -lt 8 ]; then
           exit 0  # Exit the script
         fi
+        break
       fi
       ((count++))
     done
@@ -85,8 +85,8 @@ if [ "$Android" -ge 6 ]; then
     # other Android applications also can be Access Termux app data (files).
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
     echo -e "$notice 'allow-external-apps = true' line has been uncommented (enabled) in Termux \$HOME/.termux/termux.properties."
-    if [ "$Android" -eq 6 ]; then
-      termux-reload-settings  # reload (restart) Termux settings required for Android 6 after enabled allow-external-apps
+    if [ "$Android" -eq 7 ] || [ "$Android" -eq 6 ]; then
+      termux-reload-settings  # reload (restart) Termux settings required for Android 6 after enabled allow-external-apps, also required for Android 7 due to 'Package installer has stopped' err
     fi
   fi
 fi
@@ -286,25 +286,19 @@ crInstall() {
       ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
     fi
     if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP" && rm -f "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"; fi  # Cleanup temp APK
-  elif [ $OEM == "Xiaomi" ] || [ $OEM == "Poco" ]; then
-    if [ -f "/sdcard/Download/ChromePublic.apk" ]; then
-      rm -f "/sdcard/Download/ChromePublic.apk"
-    fi
-    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/Download/ChromePublic.apk"
-    echo -e $notice "${Yellow}MIUI Optimization detected! Please manually install Chromium from${Reset} Files: $Model > ${Blue}Download${Reset} > ChromePublic.apk"
-    sleep 3 && rm -rf "$HOME/$crUNZIP"
-    am start -n "com.google.android.documentsui/com.android.documentsui.files.FilesActivity" > /dev/null 2>&1  # Open Android Files by Google
-    if [ $? -ne 0 ] || [ $? -eq 2 ]; then
-      am start -n "com.android.documentsui/com.android.documentsui.files.FilesActivity" > /dev/null 2>&1  # Open Android Files
-    fi
   elif [ $Android -le 6 ]; then
-    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
-    sleep 30
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/" && rm -f "/sdcard/ChromePublic.apk"
+    if [ $Android -eq 6 ] || [ $Android -eq 5 ]; then
+      cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
+      am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
+      sleep 30 && rm -f "/sdcard/ChromePublic.apk"
+    else
+      am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1
+      sleep 15
+    fi
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/"
   else
     termux-open --view "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
-    sleep 30
+    sleep 15
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/"
   fi
 }
