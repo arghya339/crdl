@@ -101,7 +101,6 @@ Model=$(getprop ro.product.model)  # Get device model
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
 socOEM=$(getprop ro.soc.manufacturer)  # Get SOC Manufacturer
-OEM=$(getprop ro.product.manufacturer)  # Get Device Manufacturer
 apMode=$(getprop persist.radio.airplane_mode_on)  # Get AirPlane Mode Status (0=OFF; 1=ON)
 networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
 networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
