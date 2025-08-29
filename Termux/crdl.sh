@@ -366,7 +366,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
     echo -e "${good} Found valid snapshot at: $branchPosition" && echo
     if [ "$installedPosition" == "$branchPosition" ]; then
         echo -e "$notice Already installed: $installedPosition"
-        sleep 3 && clear && exit 0
+        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && sleep 3 && clear && exit 0
     else
         crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
         echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
@@ -509,7 +509,7 @@ findValidSnapshot() {
             echo -e "${good} Found valid snapshot at: $pos" && echo
             if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
                 echo -e "$notice Already installed: $installedVersion"
-                sleep 3 && clear && exit 0
+                if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && sleep 3 && clear && exit 0
             else
                 crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
                 echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
