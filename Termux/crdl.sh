@@ -72,8 +72,10 @@ if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
 fi
 
 # --- enabled allow-external-apps ---
+isOverwriteTermuxProp=0
 if [ "$Android" -eq 6 ] && [ ! -f "$HOME/.termux/termux.properties" ]; then
   mkdir -p "$HOME/.termux" && echo "allow-external-apps = true" > "$HOME/.termux/termux.properties"
+  isOverwriteTermuxProp=1
   echo -e "$notice 'termux.properties' file has been created successfully & 'allow-external-apps = true' line has been add (enabled) in Termux \$HOME/.termux/termux.properties."
   termux-reload-settings
 fi
@@ -83,6 +85,7 @@ if [ "$Android" -ge 6 ]; then
     # termux-open utility can send an Android Intent from Termux to Android system to open apk package file in pm.
     # other Android applications also can be Access Termux app data (files).
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
+    isOverwriteTermuxProp=1
     echo -e "$notice 'allow-external-apps = true' line has been uncommented (enabled) in Termux \$HOME/.termux/termux.properties."
     if [ "$Android" -eq 7 ] || [ "$Android" -eq 6 ]; then
       termux-reload-settings  # reload (restart) Termux settings required for Android 6 after enabled allow-external-apps, also required for Android 7 due to 'Package installer has stopped' err
@@ -458,7 +461,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                     config "APP_VERSION" "${appVersion}(${appVersionCode})"
                     config "APP_SIZE" "$crSize"
                     config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                    clear && exit 0
+                    if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && clear && exit 0
                   }
                   crInstall
                   if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ "$AndroidDesktop" -eq 1 ]; then
@@ -533,7 +536,7 @@ findValidSnapshot() {
                         config "APP_VERSION" "${appVersion}(${appVersionCode})"
                         config "APP_SIZE" "$crSize"
                         config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                        clear && exit 0
+                        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && clear && exit 0
                       }
                       crInstall
                       if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ "$AndroidDesktop" -eq 1 ]; then
@@ -745,6 +748,7 @@ while true; do
             directDl  # Call the direct download function
             ;;
           [Qq]*)
+            if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             break  # break the loop
             ;;
