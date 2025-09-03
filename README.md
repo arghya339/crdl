@@ -35,7 +35,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ## Usage
 ### Android
   - Open [Termux](https://github.com/termux/termux-app/releases/) and run the script with the following command:
-  ```
+  ```sh
   curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/crdl.sh && bash "$HOME/.crdl.sh"
   ```
   Run crdl with these commands in Termux:
