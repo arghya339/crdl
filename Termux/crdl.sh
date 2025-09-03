@@ -291,6 +291,80 @@ if ! "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -f "$HOME/rish_shizuku.dex" ]; th
   fi
 fi
 
+apkInstall() {
+  if su -c "id" >/dev/null 2>&1; then
+    su -c "cp '$output_path' '/data/local/tmp/$assetsName'"
+    # Temporary Disable SELinux Enforcing during installation if it not in Permissive
+    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+      su -c "pm install -i com.android.vending '/data/local/tmp/$assetsName'"
+      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+    else
+      su -c "pm install -i com.android.vending '/data/local/tmp/$assetsName'"
+    fi
+    su -c "rm -f '/data/local/tmp/$assetsName'"
+  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+    ~/rish -c "cp '$output_path' '/data/local/tmp/$assetsName'"
+    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$assetsName'" > /dev/null 2>&1  # -r=reinstall --force-uplow=downgrade
+    $HOME/rish -c "rm -f '/data/local/tmp/$assetsName'"
+  elif [ $Android -le 6 ]; then
+    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${output_path}"
+  else
+    termux-open --view "$output_path"  # open file in pm
+  fi
+}
+
+# --- Create crdl shortcut on Laucher Home ---
+if [ ! -f "$HOME/.shortcuts/crdl" ] || [ ! -f "$HOME/.termux/widget/dynamic_shortcuts/crdl" ]; then
+  echo -e "$notice Please wait few seconds! Creating crdl shortcut to access crdl from Launcher Widget."
+  mkdir -p ~/.shortcuts  # create $HOME/.shortcuts dir if it not exist
+  echo -e "#!/usr/bin/bash\nbash \$PREFIX/bin/crdl" > ~/.shortcuts/crdl  # create crdl shortcut script
+  mkdir -p ~/.termux/widget/dynamic_shortcuts
+  echo -e "#!/usr/bin/bash\nbash \$PREFIX/bin/crdl" > ~/.termux/widget/dynamic_shortcuts/crdl  # create crdl dynamic shortcut script
+  chmod +x ~/.termux/widget/dynamic_shortcuts/crdl  # give execute (--x) permissions to crdl script
+  if ! am start -n com.termux.widget/com.termux.widget.TermuxLaunchShortcutActivity > /dev/null 2>&1; then
+    # Download Termux:Widget app from GitHub
+    tag=$(curl -s https://api.github.com/repos/termux/termux-widget/releases/latest | jq -r '.tag_name | sub("^v"; "")')
+    assetsName="termux-widget-app_v$tag+github.debug.apk"
+    dlUrl="https://github.com/termux/termux-widget/releases/download/v$tag/$fileName"
+    output_path="/sdcard/Download/$assetsName"
+    while true; do
+      curl -L --progress-bar -C - -o "$output_path" "$dlUrl"
+      if [ $? -eq 0 ]; then
+        break
+      fi
+      echo -e "$notice Download failed! Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+    done
+    apkInstall  # Install Termux:Widget app using apkInstall functions
+    [ -f "$output_path" ] && rm -f "$output_path"  # if Termux:Widget app package exist then remove it 
+  fi
+  if su -c "id" >/dev/null 2>&1; then
+    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+      su -c 'pm grant com.termux android.permission.POST_NOTIFICATIONS'
+      su -c "cmd deviceidle whitelist +com.termux"
+      su -c "cmd appops set com.termux SYSTEM_ALERT_WINDOW allow"
+      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+    else
+      su -c 'pm grant com.termux android.permission.POST_NOTIFICATIONS'
+      su -c "cmd deviceidle whitelist +com.termux"
+      su -c "cmd appops set com.termux SYSTEM_ALERT_WINDOW allow"
+    fi
+  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+    ~/rish -c 'pm grant com.termux android.permission.POST_NOTIFICATIONS'
+    ~/rish -c "cmd deviceidle whitelist +com.termux"
+    $HOME/rish -c "cmd appops set com.termux REQUEST_INSTALL_PACKAGES allow"
+    $HOME/rish -c "cmd appops set com.termux SYSTEM_ALERT_WINDOW allow"
+  else
+    echo -e "$info Please manually turn on: ${Green}Display over other apps → Termux → Allow display over other apps${Reset}" && sleep 6
+    am start -a android.settings.action.MANAGE_OVERLAY_PERMISSION &> /dev/null  # open manage overlay permission settings
+  fi
+  echo -e "$info Please Disabled: ${Green}Battery optimization → Not optimized → All apps → Termux → Don't optiomize → DONE${Reset}" && sleep 6
+  am start -n com.android.settings/.Settings\$HighPowerApplicationsActivity &> /dev/null
+  echo -e "$info From Termux:Widget app tap on ${Green}crdl → Add to home screen${Reset}. Opening Termux:Widget app in 6 seconds.." && sleep 6
+  am start -n com.termux.widget/com.termux.widget.TermuxCreateShortcutActivity > /dev/null 2>&1  # open Termux:Widget app shortcut create activity (screen/view) to add shortcut on Launcher Home
+fi
+
 if [ $snapshotPlatform == "AndroidDesktop_arm64" ] || [ $snapshotPlatform == "AndroidDesktop_x64" ]; then
   crUNZIP="chrome-android-desktop"
 else
@@ -447,7 +521,9 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
           putDns="0"
         fi
         echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
+        termux-wake-lock
         pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
+        termux-wake-unlock
         appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
         appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
@@ -522,7 +598,9 @@ findValidSnapshot() {
                     echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
                 done
                 echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
+                termux-wake-lock
                 pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
+                termux-wake-unlock
                 appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
                 appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)

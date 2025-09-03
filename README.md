@@ -42,40 +42,43 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   ```
   crdl
   ```
+> [!NOTE]
 > This script was tested on an arm64-v8a device running Android 14 with Termux v0.118.2 with bash v5.2.37(1).
 
 ### Android 9~5
 - Open [Termux](https://github.com/termux/termux-app/releases/) and run the script with the following command:
-  ```
+  ```sh
   curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/odcrdl.sh && bash "$HOME/.crdl.sh"
   ```
 
 ### macOS
   - Open macOS Terminal and run the script with the following command:
-  ```
+  ```sh
   curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Terminal/crdl.sh && bash "$HOME/.crdl.sh"
   ```
   Run crdl with these commands in Terminal:
   ```
   crdl
   ```
+> [!NOTE]
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
 ### Windows
   - Open Windows Terminal (Admin) / Microsoft PowerShell (Admin) and run the script with the following command:
 
-  ```
+  ```pwsh
   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1"; Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
   ```
   Run crdl with these commands in Windows PowerShell (Admin):
-  ```
+  ```pwsh
   Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
   ```
   Run crdl with these commands in Microsoft PowerShell (Admin):
   ```
   & .crdl.ps1
   ```
-  > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
+> [!NOTE]  
+> This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
 
 ### Linux
 - [Flathub](https://flathub.org/setup) - [Chromium](https://flathub.org/apps/org.chromium.Chromium)
