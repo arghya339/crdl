@@ -326,7 +326,7 @@ if [ ! -f "$HOME/.shortcuts/crdl" ] || [ ! -f "$HOME/.termux/widget/dynamic_shor
     # Download Termux:Widget app from GitHub
     tag=$(curl -s https://api.github.com/repos/termux/termux-widget/releases/latest | jq -r '.tag_name | sub("^v"; "")')
     assetsName="termux-widget-app_v$tag+github.debug.apk"
-    dlUrl="https://github.com/termux/termux-widget/releases/download/v$tag/$fileName"
+    dlUrl="https://github.com/termux/termux-widget/releases/download/v$tag/$assetsName"
     output_path="/sdcard/Download/$assetsName"
     while true; do
       curl -L --progress-bar -C - -o "$output_path" "$dlUrl"
