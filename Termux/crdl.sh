@@ -810,11 +810,11 @@ while true; do
       toast_pid=$!  # get toast process id
     fi
     channel=""  # reset (clear) index value to empty
-    channel=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test" | jq -r .index)  # show radio button popup dialog
+    channel=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test,Quit" | jq -r .index)  # show radio button popup dialog
     [ -n $toast_pid ] && kill $toast_pid 2>/dev/null  # stop toast process
     # show Selected channel name using toast
     if [ "$channel" != "null" ]; then  # if usr chose cancel or ok then index == null
-      channels=("Stable" "Beta" "Dev" "Canary" "Canary Test")  # channels arrays
+      channels=("Stable" "Beta" "Dev" "Canary" "Canary Test" "Quit")  # channels arrays
       selected="${channels[$channel]}"  # select index pos value by index num
       termux-toast "Selected: $selected"  # show toast messages
     fi
@@ -850,7 +850,7 @@ while true; do
             echo && tInfo
             directDl  # Call the direct download function
             ;;
-          [Qq]*|"null")
+          [Qq]*)
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             break  # break the loop
