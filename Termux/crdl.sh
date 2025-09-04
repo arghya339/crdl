@@ -858,7 +858,11 @@ while true; do
             break  # break the loop
             ;;
           *)
-            echo -e "$info Invalid option. Please select a valid channel." && sleep 3
+            if [ $foundTermuxAPI -eq 1 ]; then
+              termux-toast "Invalid option! Please select a valid channel."
+            else
+              echo -e "$info Invalid option! Please select a valid channel." && sleep 3
+            fi
             ;;
         esac
 done
