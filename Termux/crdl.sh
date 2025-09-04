@@ -859,7 +859,7 @@ while true; do
             ;;
           *)
             if [ $foundTermuxAPI -eq 1 ]; then
-              termux-toast "Invalid option! Please select a valid channel."
+              termux-toast -g bottom "Invalid option! Please select a valid channel."
             else
               echo -e "$info Invalid option! Please select a valid channel." && sleep 3
             fi
