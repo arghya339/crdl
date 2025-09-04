@@ -850,7 +850,7 @@ while true; do
             echo && tInfo
             directDl  # Call the direct download function
             ;;
-          [Qq]*|null)
+          [Qq]*|"null")
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             break  # break the loop
