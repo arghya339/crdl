@@ -233,8 +233,11 @@ config() {
 }
 
 if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
-  echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]"
-  read -r -p "Select: " crx
+  if [ $foundTermuxAPI -eq 1 ]; then
+    crx=$(termux-dialog confirm -t "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" | jq -r '.text')
+  else
+    echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]\n" && read crx
+  fi
         case $crx in
             y*|Y*|"")
               config "AndroidDesktop" "1"
