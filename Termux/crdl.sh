@@ -853,6 +853,7 @@ while true; do
           [Qq]*|5)
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
+            [ $foundTermuxAPI -eq 1 ] && channel=""
             [ $foundTermuxAPI -eq 1 ] && termux-api-stop >/dev/null 2>&1
             break  # break the loop
             ;;
