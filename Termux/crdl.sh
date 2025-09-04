@@ -141,6 +141,12 @@ elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
   pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # off
   pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
 fi
+# Check if TermuxAPI available
+if termux-api-start > /dev/null 2>&1; then
+  foundTermuxAPI=1
+else
+  foundTermuxAPI=0
+fi
 
 # --- Checking Android Version ---
 # Latest Chromium required Android 10+
@@ -795,37 +801,56 @@ comment
 while true; do
   clear  # clear Terminal
   print_crdl  # Call the print crdl shape function
-  if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
-    echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
+  if [ $foundTermuxAPI -eq 1 ]; then
+    if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
+      while true; do
+        termux-toast -g top -b white -c black "↓ $appVersion - $appSize - $installedTime"
+        sleep 3  # wait for toast disappear
+      done &  # run in background
+      toast_pid=$!  # get toast process id
+    fi
+    channel=""  # reset (clear) index value to empty
+    channel=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test" | jq -r .index)  # show radio button popup dialog
+    [ -n $toast_pid ] && kill $toast_pid 2>/dev/null  # stop toast process
+    # show Selected channel name using toast
+    if [ "$channel" != "null" ]; then  # if usr chose cancel or ok then index == null
+      channels=("Stable" "Beta" "Dev" "Canary" "Canary Test")  # channels arrays
+      selected="${channels[$channel]}"  # select index pos value by index num
+      termux-toast "Selected: $selected"  # show toast messages
+    fi
+  else
+    if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
+      echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
+    fi
+    echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
+    read -r -p "Select Chromium Channel: " channel
   fi
-  echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
-  read -r -p "Select Chromium Channel: " channel
         case "$channel" in
-          [Ss]*)
+          [Ss]*|0)
             channel="Stable"
             echo && sInfo  # Call the Chromium Stable info function
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
             ;;
-          [Bb]*)
+          [Bb]*|1)
             channel="Beta"
             echo && bInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Dd]*)
+          [Dd]*|2)
             channel="Dev"
             echo && dInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Cc]*)
+          [Cc]*|3)
             channel="Canary"
             echo && cInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Tt]*)
+          [Tt]*|4)
             echo && tInfo
             directDl  # Call the direct download function
             ;;
-          [Qq]*)
+          [Qq]*|null)
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             break  # break the loop
