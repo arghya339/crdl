@@ -234,7 +234,7 @@ config() {
 
 if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
   if [ $foundTermuxAPI -eq 1 ]; then
-    crx=$(termux-dialog confirm -t "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" | jq -r '.text')
+    crx=$(termux-dialog confirm -t "Install Chromium Extensions" -i "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" | jq -r '.text')
   else
     echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]\n" && read crx
   fi
@@ -537,7 +537,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
         crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
         if [ $foundTermuxAPI -eq 1 ]; then
-          opt=$(termux-dialog confirm -t "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
+          opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
         else
           echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]\c" && read opt
         fi
@@ -617,7 +617,7 @@ findValidSnapshot() {
                 appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
                 crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
                 if [ $foundTermuxAPI -eq 1 ]; then
-                  opt=$(termux-dialog confirm -t "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
+                  opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
                 else
                   echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]" && read -r -p "Select: " opt
                 fi
