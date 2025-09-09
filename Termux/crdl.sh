@@ -363,6 +363,7 @@ if [ ! -f "$HOME/.shortcuts/crdl" ] || [ ! -f "$HOME/.termux/widget/dynamic_shor
     ~/rish -c 'pm grant com.termux android.permission.POST_NOTIFICATIONS'
     ~/rish -c "cmd deviceidle whitelist +com.termux"
     $HOME/rish -c "cmd appops set com.termux REQUEST_INSTALL_PACKAGES allow"
+    $HOME/rish -c "cmd appops set com.termux.widget REQUEST_INSTALL_PACKAGES allow"
     $HOME/rish -c "cmd appops set com.termux SYSTEM_ALERT_WINDOW allow"
   else
     echo -e "$info Please manually turn on: ${Green}Display over other apps → Termux → Allow display over other apps${Reset}" && sleep 6
