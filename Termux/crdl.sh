@@ -144,6 +144,8 @@ fi
 # Check if TermuxAPI available
 if termux-api-start > /dev/null 2>&1; then
   foundTermuxAPI=1
+  grep -q "^# hide-soft-keyboard-on-startup = true" "$HOME/.termux/termux.properties" && sed -i '/hide-soft-keyboard-on-startup = true/s/# //' "$HOME/.termux/termux.properties"
+  grep -q "^# soft-keyboard-toggle-behaviour = enable/disable" "$HOME/.termux/termux.properties" && sed -i '/soft-keyboard-toggle-behaviour = enable\/disable/s/# //' "$HOME/.termux/termux.properties"
 else
   foundTermuxAPI=0
 fi
