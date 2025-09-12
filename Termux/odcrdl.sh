@@ -267,11 +267,11 @@ crInstall() {
     # Temporary Disable SELinux Enforcing during installation if it not in Permissive
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
       su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-      su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
       INSTALL_STATUS=$?  # Capture exit status of the install command
       su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
     else
-      su -c "pm install -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
       INSTALL_STATUS=$?  # Capture exit status of the install command
     fi
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
@@ -282,7 +282,7 @@ crInstall() {
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
     ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # copy apk to System dir
-    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # -r=reinstall --force-uplow=downgrade
+    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # -r=reinstall
     INSTALL_STATUS=$?  # Capture exit status of the install command
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
     if [ $? != 0 ]; then
