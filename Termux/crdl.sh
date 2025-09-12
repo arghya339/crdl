@@ -236,9 +236,9 @@ config() {
 
 if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
   if [ $foundTermuxAPI -eq 1 ]; then
-    crx=$(termux-dialog confirm -t "Install Chromium Extensions" -i "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" | jq -r '.text')
+    crx=$(termux-dialog confirm -t "Install Chrome Extensions" -i "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" | jq -r '.text')
   else
-    echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]\n" && read crx
+    echo -e "$question Do you want to install Extensions supported AndroidDesktop Chromium.apk? [Y/n]: \c" && read crx
   fi
         case $crx in
             y*|Y*|"")
@@ -542,7 +542,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         if [ $foundTermuxAPI -eq 1 ]; then
           opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
         else
-          echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]\c" && read opt
+          echo; echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]: \c" && read opt
         fi
               case $opt in
                 y*|Y*|"")
@@ -622,7 +622,7 @@ findValidSnapshot() {
                 if [ $foundTermuxAPI -eq 1 ]; then
                   opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
                 else
-                  echo && echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]" && read -r -p "Select: " opt
+                  echo; echo -e "$question Do you want to install Chromium_v$appVersion.apk? [Y/n]: \c" && read opt
                 fi
                 case $opt in
                     y*|Y*|"")
