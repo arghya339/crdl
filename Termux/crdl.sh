@@ -303,6 +303,10 @@ if ! "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -f "$HOME/rish_shizuku.dex" ]; th
   fi
 fi
 
+if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$HOME/adb" ]; then
+  curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb" && chmod +x ~/adb
+fi
+
 apkInstall() {
   if su -c "id" >/dev/null 2>&1; then
     su -c "cp '$output_path' '/data/local/tmp/$assetsName'"
@@ -319,6 +323,9 @@ apkInstall() {
     ~/rish -c "cp '$output_path' '/data/local/tmp/$assetsName'"
     ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$assetsName'" > /dev/null 2>&1  # -r=reinstall --force-uplow=downgrade
     $HOME/rish -c "rm -f '/data/local/tmp/$assetsName'"
+  elif "$HOME/adb" shell "id" >/dev/null 2>&1; then
+    ~/adb shell pm install -r -i com.android.vending "$output_path" > /dev/null 2>&1
+    #~/adb shell cmd package install -r -i com.android.vending "$output_path" > /dev/null 2>&1
   elif [ $Android -le 6 ]; then
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${output_path}"
   else
@@ -414,6 +421,14 @@ crInstall() {
       ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
     fi
     if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP" && rm -f "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"; fi  # Cleanup temp APK
+  elif "$HOME/adb" shell "id" >/dev/null 2>&1; then
+    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
+    ~/adb shell pm install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
+    #~/adb shell cmd package install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
+    INSTALL_STATUS=$?  # Capture exit status of the install command
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
+    [ $? != 0 ] && ~/adb shell "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
+    if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP"; rm -f "/sdcard/ChromePublic.apk"; fi  # Cleanup
   elif [ $Android -le 6 ]; then
     if [ $Android -eq 6 ] || [ $Android -eq 5 ]; then
       cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
