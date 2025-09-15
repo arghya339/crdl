@@ -152,7 +152,7 @@ clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 # --- pkg upgrade function ---
 pkgUpdate() {
   local pkg=$1
-  if echo $outdatedPKG | grep -q "^$pkg/" 2>/dev/null; then
+  if echo "$outdatedPKG" | grep -q "^$pkg/" 2>/dev/null; then
     echo -e "$running Upgrading $pkg pkg.."
     pkg upgrade "$pkg" -y > /dev/null 2>&1
   fi
@@ -169,9 +169,16 @@ pkgInstall() {
   fi
 }
 
-pkgInstall "bash"  # bash update
+pkgInstall "dpkg"  # dpkg update
+pkgInstall "termux-core"  # it's contains basic essential cli utilities, such as: ls, cp, mv, rm, mkdir, cat, echo, etc.
+pkgInstall "termux-tools"  # it's provide essential commands, sush as: termux-change-repo, termux-setup-storage, termux-open, termux-share, etc.
+pkgInstall "termux-keyring"  # it's use during pkg install/update to verify digital signature of the pkg and remote repository
+pkgInstall "termux-am"  # termux am (activity manager) update
+pkgInstall "termux-am-socket"  # termux am socket (when run: am start -n activity ,termux-am take & send to termux-am-stcket and it's send to Termux Core to execute am command) update
 pkgInstall "grep"  # grep update
+pkgInstall "gawk"  # gnu awk update
 pkgInstall "curl"  # curl update
+pkgInstall "libcurl"  # curl lib update
 pkgInstall "jq"  # jq install/update
 pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
