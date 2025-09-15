@@ -96,7 +96,7 @@ fi
 # --- formulae upgrade function ---
 formulaeUpdate() {
   local formulae=$1
-  if echo $outdatedFormulae | grep -q "^$formulae" 2>/dev/null; then
+  if echo "$outdatedFormulae" | grep -q "^$formulae" 2>/dev/null; then
     echo -e "$running Upgrading $formulae formulae.."
     brew upgrade "$formulae" > /dev/null 2>&1
   fi
