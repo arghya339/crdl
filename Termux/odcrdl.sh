@@ -177,6 +177,7 @@ pkgInstall "termux-am"  # termux am (activity manager) update
 pkgInstall "termux-am-socket"  # termux am socket (when run: am start -n activity ,termux-am take & send to termux-am-stcket and it's send to Termux Core to execute am command) update
 pkgInstall "grep"  # grep update
 pkgInstall "gawk"  # gnu awk update
+pkgInstall "sed"  # sed update
 pkgInstall "curl"  # curl update
 pkgInstall "libcurl"  # curl lib update
 pkgInstall "jq"  # jq install/update
