@@ -60,8 +60,6 @@ if [ -d "/Applications/Cloudflare WARP.app" ]; then
   warp_cli="/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
   warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
 fi
-formulaeList=$(brew list 2>/dev/null)
-outdatedFormulae=$(brew outdated 2>/dev/null)
 crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
 installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
 installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
@@ -92,6 +90,8 @@ if brew --version >/dev/null 2>&1; then
 else
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > /dev/null 2>&1
 fi
+formulaeList=$(brew list 2>/dev/null)
+outdatedFormulae=$(brew outdated 2>/dev/null)
 
 # --- formulae upgrade function ---
 formulaeUpdate() {
