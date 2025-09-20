@@ -36,7 +36,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ### Android
   - Open [Termux](https://github.com/termux/termux-app/releases/) and type following command then press `Enter` key twice:
   ```sh
-  pkg update && pkg install --only-upgrade apt bash -y
+  pkg update && pkg install --only-upgrade apt bash coreutils -y
   ```
   run the script with the following command:
   ```sh
@@ -52,7 +52,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ### Android 9~5
   - Open [Termux](https://github.com/termux/termux-app/releases/) and type following command then press `Enter` key twice:
   ```sh
-  pkg update && pkg install --only-upgrade apt bash -y
+  pkg update && pkg install --only-upgrade apt bash coreutils -y
   ```
   run the script with the following command:
   ```sh
