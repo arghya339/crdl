@@ -226,7 +226,6 @@ pkgInstall "sed"  # sed update
 pkgInstall "curl"  # curl update
 pkgInstall "libcurl"  # curl lib update
 pkgInstall "aria2"  # aria2 install/update
-pkgInstall "openssl"  # openssl install/update
 pkgInstall "jq"  # jq install/update
 pkgInstall "pup"  # pup install/update
 pkgInstall "bsdtar"  # bsdtar install/update

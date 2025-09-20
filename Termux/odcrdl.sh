@@ -185,7 +185,6 @@ pkgInstall "gawk"  # gnu awk update
 pkgInstall "sed"  # sed update
 pkgInstall "curl"  # curl update
 pkgInstall "libcurl"  # curl lib update
-pkgInstall "openssl"  # openssl install/update
 pkgInstall "jq"  # jq install/update
 pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
