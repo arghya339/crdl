@@ -106,6 +106,7 @@ arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
 pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
+echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
 installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
@@ -154,7 +155,8 @@ pkgUpdate() {
   local pkg=$1
   if echo "$outdatedPKG" | grep -q "^$pkg/" 2>/dev/null; then
     echo -e "$running Upgrading $pkg pkg.."
-    pkg install --only-upgrade "$pkg" -y > /dev/null 2>&1
+    output=$(pkg install --only-upgrade "$pkg" -y 2>/dev/null)
+    echo "$output" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; yes "N" | pkg install --only-upgrade "$pkg" -y > /dev/null 2>&1; }
   fi
 }
 
@@ -170,16 +172,21 @@ pkgInstall() {
 }
 
 pkgInstall "dpkg"  # dpkg update
+pkgInstall "libgnutls"  # pm apt & dpkg use it to securely download packages from repositories over HTTPS
+pkgInstall "coreutils"  # It provides basic file, shell, & text manipulation utilities. such as: ls, cp, mv, rm, mkdir, cat, echo, etc.
 pkgInstall "termux-core"  # it's contains basic essential cli utilities, such as: ls, cp, mv, rm, mkdir, cat, echo, etc.
 pkgInstall "termux-tools"  # it's provide essential commands, sush as: termux-change-repo, termux-setup-storage, termux-open, termux-share, etc.
 pkgInstall "termux-keyring"  # it's use during pkg install/update to verify digital signature of the pkg and remote repository
 pkgInstall "termux-am"  # termux am (activity manager) update
 pkgInstall "termux-am-socket"  # termux am socket (when run: am start -n activity ,termux-am take & send to termux-am-stcket and it's send to Termux Core to execute am command) update
+pkgInstall "inetutils"  # ping utils is provided by inetutils
+pkgInstall "util-linux"  # it provides: kill, killall, uptime, uname, chsh, lscpu
 pkgInstall "grep"  # grep update
 pkgInstall "gawk"  # gnu awk update
 pkgInstall "sed"  # sed update
 pkgInstall "curl"  # curl update
 pkgInstall "libcurl"  # curl lib update
+pkgInstall "openssl"  # openssl install/update
 pkgInstall "jq"  # jq install/update
 pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
@@ -262,10 +269,6 @@ if ! "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -f "$HOME/rish_shizuku.dex" ]; th
   fi
 fi
 
-if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$HOME/adb" ]; then
-  curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb" && chmod +x ~/adb
-fi
-
 if [ $snapshotPlatform == "AndroidDesktop_arm64" ] || [ $snapshotPlatform == "AndroidDesktop_x64" ]; then
   crUNZIP="chrome-android-desktop"
 else
@@ -302,14 +305,6 @@ crInstall() {
       ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
     fi
     if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP" && rm -f "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"; fi  # Cleanup temp APK
-  elif "$HOME/adb" -s $(~/adb devices | grep "emulator-*" | awk '{print $1}') shell "id" >/dev/null 2>&1; then
-    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    ~/adb -s $(~/adb devices | grep "emulator-*" | cut -f1) shell pm install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
-    #~/adb -s $(~/adb devices | grep "emulator-*" | awk '{print $1}') shell cmd package install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
-    INSTALL_STATUS=$?  # Capture exit status of the install command
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    [ $? != 0 ] && ~/adb -s $(~/adb devices | grep "emulator-*" | awk '{print $1}') shell "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP"; rm -f "/sdcard/ChromePublic.apk"; fi  # Cleanup
   elif [ $Android -le 6 ]; then
     if [ $Android -eq 6 ] || [ $Android -eq 5 ]; then
       cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
