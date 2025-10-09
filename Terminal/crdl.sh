@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+shopt -s extglob  # Enable extended glob patterns at top of this script
+
 # Chromium is an open-source browser project, developed and maintained by Google
 # Easy Script to download and run latest Chromium macOS build
 # Use: ~ curl -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Terminal/crdl.sh" && bash "$HOME/.crdl.sh"
