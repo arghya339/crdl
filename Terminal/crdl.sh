@@ -642,7 +642,7 @@ menu() {
 # --- Main Menu ---
 while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
-  options=(Extended Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
+  options=("Extended" "Stable" "Beta" "Dev" "Canary" "Canary Test"); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
         case "$channel" in
           [Ee]*)
             channel="Extended"
