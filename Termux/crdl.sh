@@ -1001,11 +1001,11 @@ while true; do
             echo && cInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Tt]*|4)
+          Canary\ Test|4)
             echo && tInfo
             directDl  # Call the direct download function
             ;;
-          [Qq]*|5)
+          5)
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             [ $foundTermuxAPI -eq 1 ] && channel=""
