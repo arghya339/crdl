@@ -975,7 +975,7 @@ while true; do
     if [ "$channel_index" != "null" ]; then  # if usr chose cancel or ok then index == null
       channels=("Stable" "Beta" "Dev" "Canary" "Canary Test" "Quit")  # channels arrays
       channel="${channels[$channel_index]}"  # select index pos value by index num
-      termux-toast "Selected: $channel"  # show toast messages
+      [ "$channel" == "Quit" ] && termux-toast "Script exited !!" || termux-toast "Selected: $channel"  # show toast messages
     fi
   else
     options=(Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
