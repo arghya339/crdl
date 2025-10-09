@@ -981,31 +981,31 @@ while true; do
     options=(Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
   fi
         case "$channel" in
-          [Ss]*|0)
+          [Ss]*)
             channel="Stable"
             echo && sInfo  # Call the Chromium Stable info function
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
             ;;
-          [Bb]*|1)
+          [Bb]*)
             channel="Beta"
             echo && bInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Dd]*|2)
+          [Dd]*)
             channel="Dev"
             echo && dInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          Canary|3)
+          Canary)
             channel="Canary"
             echo && cInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          Canary\ Test|4)
+          Canary\ Test)
             echo && tInfo
             directDl  # Call the direct download function
             ;;
-          5)
+          Quit)
             if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
             clear  # clear Termianl
             [ $foundTermuxAPI -eq 1 ] && channel=""
