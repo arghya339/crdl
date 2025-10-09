@@ -996,7 +996,7 @@ while true; do
             echo && dInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Cc]*|3)
+          Canary|3)
             channel="Canary"
             echo && cInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
