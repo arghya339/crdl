@@ -968,14 +968,14 @@ while true; do
       done &  # run in background
       toast_pid=$!  # get toast process id
     fi
-    channel=""  # reset (clear) index value to empty
-    channel=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test,Quit" | jq -r .index)  # show radio button popup dialog
+    channel_index=""  # reset (clear) index value to empty
+    channel_index=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test,Quit" | jq -r .index)  # show radio button popup dialog
     [ -n $toast_pid ] && kill $toast_pid 2>/dev/null  # stop toast process
     # show Selected channel name using toast
-    if [ "$channel" != "null" ]; then  # if usr chose cancel or ok then index == null
+    if [ "$channel_index" != "null" ]; then  # if usr chose cancel or ok then index == null
       channels=("Stable" "Beta" "Dev" "Canary" "Canary Test" "Quit")  # channels arrays
-      selected="${channels[$channel]}"  # select index pos value by index num
-      termux-toast "Selected: $selected"  # show toast messages
+      channel="${channels[$channel_index]}"  # select index pos value by index num
+      termux-toast "Selected: $channel"  # show toast messages
     fi
   else
     options=(Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
