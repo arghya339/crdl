@@ -42,8 +42,8 @@ print_crdl() {
   printf "${skyBlue} _/_/_/  ${Reset}${Blue}_/         ${Reset}  ${White}_/      ${Reset} ${Cyan} _/_/_/  _/    ${Reset}\n"   
   printf "${skyBlue}         ${Reset}${Blue}           ${Reset}  ${White}        ${Reset} ${Cyan}               ${Reset}\n"   
   printf "${White}𝒟𝑒𝓋𝑒𝓁𝑜𝓅𝑒𝓇: @𝒶𝓇𝑔𝒽𝓎𝒶𝟥𝟥𝟫 ${Reset}${Blue} ${Reset} ${White}_/_/_/_/_/${Reset}${Cyan}               ${Reset}\n"
-  printf '\n'
-  printf '\n'   
+  #printf '\n'
+  echo
 }
 
 # --- Checking Internet Connection ---
@@ -205,6 +205,54 @@ aria2ConsoleLogHide() {
   echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
 }
 
+# Y/n prompt function
+confirmPrompt() {
+  Prompt=${1}
+  local -n prompt_buttons=$2
+  Selected=${3:-0}  # :- set value as 0 if unset
+  maxLen=50
+  
+  # breaks long prompts into multiple lines (50 characters per line)
+  lines=()  # empty array
+  while [ -n "$Prompt" ]; do
+    lines+=("${Prompt:0:$maxLen}")  # take first 50 characters from $Prompt starting at index 0
+    Prompt="${Prompt:$maxLen}"  # removes first 50 characters from $Prompt by starting at 50 to 0
+  done
+  
+  # print all-lines except last-line
+  last_line_index=$(( ${#lines[@]} - 1 ))  # ${#lines[@]} = number of elements in lines array
+  for (( i=0; i<last_line_index; i++ )); do
+    echo -e "${lines[i]}"
+  done
+  last_line="${lines[$last_line_index]}"
+  
+  echo -ne '\033[?25l'  # Hide cursor
+  while true; do
+    show_prompt() {
+      echo -ne "\r\033[K"  # n=noNewLine r=returnCursorToStartOfLine \033[K=clearLine
+      echo -ne "$last_line "
+      [ $Selected -eq 0 ] && echo -ne "${whiteBG}➤ ${prompt_buttons[0]} $Reset   ${prompt_buttons[1]}" || echo -ne "  ${prompt_buttons[0]}  ${whiteBG}➤ ${prompt_buttons[1]} $Reset"  # highlight selected bt with white bg
+    }; show_prompt
+
+    read -rsn1 key
+    case $key in
+      $'\E')
+      # /bin/bash -c 'read -r -p "Type any ESC key: " input && printf "You Entered: %q\n" "$input"'  # q=safelyQuoted
+        read -rsn2 -t 0.1 key2  # -r=readRawInput -s=silent(noOutput) -t=timeout -n2=readTwoChar | waits upto 0.1s=100ms to read key 
+        case $key2 in 
+          '[C') Selected=1 ;;  # right arrow key
+          '[D') Selected=0 ;;  # left arrow key
+        esac
+        ;;
+      [Yy]*) Selected=0; show_prompt; break ;;
+      [Nn]*) Selected=1; show_prompt; break ;;
+      "") break ;;  # Enter key
+    esac
+  done
+  echo -e '\033[?25h' # Show cursor
+  return $Selected  # return Selected int index from this fun
+}
+
 # --- Direct Download Function ---
 directDl() {
 downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-mac.zip"
@@ -280,8 +328,7 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
         pv "$HOME/chrome-mac.zip" | tar -xf - -C "$HOME" && rm "$HOME/chrome-mac.zip"
         chmod -R +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version 2>/dev/null)
         crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
-        echo && echo -e "$question Do you want to install $actualVersion? [Y/n]"
-        read -r -p "Select: " opt
+        buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install $actualVersion?" "buttons" && opt=Yes || opt=No
               case $opt in
                 y*|Y*|"")
                   crInstall
@@ -292,7 +339,6 @@ if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
                   printf '\033[2J\033[3J\033[H' && exit 0
                   ;;
                 n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
-                *) echo -e "$info Invalid choice! installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 2 ;;
               esac
     fi
 else
@@ -339,8 +385,7 @@ findValidSnapshot() {
                 pv "$HOME/chrome-mac.zip" | tar -xf - -C "$HOME" && rm "$HOME/chrome-mac.zip"
                 chmod -R +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version 2>/dev/null)
                 crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
-                echo && echo -e "$question Do you want to install Chromium_v$crVersion.dmg? [Y/n]"
-                read -r -p "Select: " opt
+                buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install Chromium_v$crVersion.dmg?" "buttons" && opt=Yes || opt=No
                 case $opt in
                     y*|Y*|"")
                       crInstall
@@ -353,10 +398,6 @@ findValidSnapshot() {
                     n*|N*)
                       echo -e "$notice Chromium installation skipped."
                       rm -rf "$HOME/chrome-mac" && sleep 1
-                      ;;
-                    *)
-                      echo -e "$info Invalid choice. Installation skipped."
-                      rm -rf "$HOME/chrome-mac" && sleep 2 
                       ;;
                 esac
                 sleep 3 && break  # Break the searching loop
@@ -519,15 +560,89 @@ comment
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
 
+menu() {
+  local -n menu_options=$1
+  local -n menu_buttons=$2
+  
+  selected_option=0
+  selected_button=0
+  
+  show_menu() {
+    printf '\033[2J\033[3J\033[H'  # clear
+    print_crdl  # call print_crdl function
+    if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
+      echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
+    fi
+    echo "Navigate with [↑] [↓] [←] [→]"
+    echo -e "Select with [↵]\n"
+    for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
+      if [ $i -eq $selected_option ]; then
+        echo -e "${whiteBG}➤ ${menu_options[$i]} $Reset"
+      else
+        [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${menu_options[$i]}" || echo "$(($i + 1)). ${menu_options[$i]}"
+      fi
+    done
+    echo
+    for ((i=0; i<=$((${#menu_buttons[@]} - 1)); i++)); do
+      if [ $i -eq $selected_button ]; then
+        [ $i -eq 0 ] && echo -ne "${whiteBG}➤ ${menu_buttons[$i]} $Reset" || echo -ne "  ${whiteBG}➤ ${menu_buttons[$i]} $Reset"
+      else
+        [ $i -eq 0 ] && echo -n "  ${menu_buttons[$i]}" || echo -n "   ${menu_buttons[$i]}"
+      fi
+    done
+    echo
+  }
+
+  printf '\033[?25l'
+  while true; do
+    show_menu
+    read -rsn1 key
+    case $key in
+      $'\E')  # ESC
+        # /bin/bash -c 'read -r -p "Type any ESC key: " input && printf "You Entered: %q\n" "$input"'  # q=safelyQuoted
+        read -rsn2 -t 0.1 key2
+        case "$key2" in
+          '[A')  # Up arrow
+            selected_option=$((selected_option - 1))
+            [ $selected_option -lt 0 ] && selected_option=$((${#menu_options[@]} - 1))
+            ;;
+          '[B')  # Down arrow
+            selected_option=$((selected_option + 1))
+            [ $selected_option -ge ${#menu_options[@]} ] && selected_option=0
+            ;;
+          '[C')  # Right arrow
+            [ $selected_button -lt $((${#menu_buttons[@]} - 1)) ] && selected_button=$((selected_button + 1))
+            ;;
+          '[D')  # Left arrow
+            [ $selected_button -gt 0 ] && selected_button=$((selected_button - 1))
+            ;;
+        esac
+        ;;
+      '')  # Enter key
+        break
+        ;;
+      [0-9])
+        if [ $key -eq 0 ]; then
+          selected_option=$((${#options[@]} - 1))
+        elif [ $key -gt ${#options[@]} ]; then
+          selected_option=0
+        else
+          selected_option=$(($key - 1))
+        fi
+        show_menu; sleep 0.5; break
+       ;;
+    esac
+  done
+  printf '\033[?25h'
+
+  [ $selected_button -eq 0 ] && { printf '\033[2J\033[3J\033[H'; selected=$selected_option; }
+  [ $selected_button -eq $((${#menu_buttons[@]} - 1)) ] && { printf '\033[2J\033[3J\033[H'; echo "Script exited !!"; exit 0; }
+}
+
 # --- Main Menu ---
 while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
-  print_crdl  # Call the print crdl shape function
-  if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
-    echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
-  fi
-  echo -e "E. Extended \nS. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
-  read -r -p "Select Chromium Channel: " channel
+  options=(Extended Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
         case "$channel" in
           [Ee]*)
             channel="Extended"
@@ -549,21 +664,14 @@ while true; do
             echo && dInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Cc]*)
+          Canary)
             channel="Canary"
             echo && cInfo
             echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
             ;;
-          [Tt]*)
+          Canary\ Test)
             echo && tInfo
             directDl  # Call the direct download function
-            ;;
-          [Qq]*)
-            printf '\033[2J\033[3J\033[H' # clear Terminal
-            break  # break the loop
-            ;;
-          *)
-            echo -e "$info Invalid option. Please select a valid channel." && sleep 3
             ;;
         esac
 done
