@@ -33,7 +33,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Windows 10 1809 (build 17763) or later (Windows 11) with working internet connection.
 
 ## Usage
-### Android
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
   - Open [Termux](https://github.com/termux/termux-app/releases/) and type following command then press `Enter` key twice:
   ```sh
   pkg update && pkg install --only-upgrade apt bash coreutils openssl -y
@@ -59,7 +59,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/odcrdl.sh && bash "$HOME/.crdl.sh"
   ```
 
-### macOS
+![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
   - Open macOS Terminal and run the script with the following command:
   ```sh
   curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Terminal/crdl.sh && bash "$HOME/.crdl.sh"
@@ -71,7 +71,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 > [!NOTE]
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
-### Windows
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
   - Open Windows Terminal (Admin) / Microsoft PowerShell (Admin) and run the script with the following command:
 
   ```pwsh
@@ -88,7 +88,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 > [!NOTE]  
 > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
 
-### Linux
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 - [Flathub](https://flathub.org/setup) - [Chromium](https://flathub.org/apps/org.chromium.Chromium)
 
 ## Chromium update notification
