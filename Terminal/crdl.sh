@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Chromium is an open-source browser project, developed and maintained by Google
 # Easy Script to download and run latest Chromium macOS build
