@@ -877,11 +877,90 @@ comment
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
 }
 
+menu() {
+  local -n menu_options=$1
+  local -n menu_buttons=$2
+  
+  selected_option=0
+  selected_button=0
+  
+  show_menu() {
+    printf '\033[2J\033[3J\033[H'  # clear
+    print_crdl  # call print_crdl function
+    if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
+      echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
+    fi
+    echo "Navigate with [↑] [↓] [←] [→]"
+    echo -e "Select with [↵]\n"
+    for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
+      if [ $i -eq $selected_option ]; then
+        echo -e "${whiteBG}➤ ${menu_options[$i]} $Reset"
+      else
+        [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${menu_options[$i]}" || echo "$(($i + 1)). ${menu_options[$i]}"
+      fi
+    done
+    echo
+    for ((i=0; i<=$((${#menu_buttons[@]} - 1)); i++)); do
+      if [ $i -eq $selected_button ]; then
+        [ $i -eq 0 ] && echo -ne "${whiteBG}➤ ${menu_buttons[$i]} $Reset" || echo -ne "  ${whiteBG}➤ ${menu_buttons[$i]} $Reset"
+      else
+        [ $i -eq 0 ] && echo -n "  ${menu_buttons[$i]}" || echo -n "   ${menu_buttons[$i]}"
+      fi
+    done
+    echo
+  }
+
+  printf '\033[?25l'
+  while true; do
+    show_menu
+    read -rsn1 key
+    case $key in
+      $'\E')  # ESC
+        # /bin/bash -c 'read -r -p "Type any ESC key: " input && printf "You Entered: %q\n" "$input"'  # q=safelyQuoted
+        read -rsn2 -t 0.1 key2
+        case "$key2" in
+          '[A')  # Up arrow
+            selected_option=$((selected_option - 1))
+            [ $selected_option -lt 0 ] && selected_option=$((${#menu_options[@]} - 1))
+            ;;
+          '[B')  # Down arrow
+            selected_option=$((selected_option + 1))
+            [ $selected_option -ge ${#menu_options[@]} ] && selected_option=0
+            ;;
+          '[C')  # Right arrow
+            [ $selected_button -lt $((${#menu_buttons[@]} - 1)) ] && selected_button=$((selected_button + 1))
+            ;;
+          '[D')  # Left arrow
+            [ $selected_button -gt 0 ] && selected_button=$((selected_button - 1))
+            ;;
+        esac
+        ;;
+      '')  # Enter key
+        break
+        ;;
+      [0-9])
+        if [ $key -eq 0 ]; then
+          selected_option=$((${#options[@]} - 1))
+        elif [ $key -gt ${#options[@]} ]; then
+          selected_option=0
+        else
+          selected_option=$(($key - 1))
+        fi
+        show_menu; sleep 0.5; break
+       ;;
+    esac
+  done
+  printf '\033[?25h'
+
+  [ $selected_button -eq 0 ] && { printf '\033[2J\033[3J\033[H'; selected=$selected_option; }
+  [ $selected_button -eq $((${#menu_buttons[@]} - 1)) ] && { printf '\033[2J\033[3J\033[H'; echo "Script exited !!"; exit 0; }
+}
+
 # --- Main Menu ---
 while true; do
-  clear  # clear Terminal
-  print_crdl  # Call the print crdl shape function
   if [ $foundTermuxAPI -eq 1 ]; then
+    clear  # clear Terminal
+    print_crdl  # Call the print crdl shape function
     if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
       while true; do
         termux-toast -g top -b white -c black "↓ $appVersion - $appSize - $installedTime"
@@ -899,11 +978,7 @@ while true; do
       termux-toast "Selected: $selected"  # show toast messages
     fi
   else
-    if [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
-      echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
-    fi
-    echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
-    read -r -p "Select Chromium Channel: " channel
+    options=(Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
   fi
         case "$channel" in
           [Ss]*|0)
@@ -940,8 +1015,6 @@ while true; do
           *)
             if [ $foundTermuxAPI -eq 1 ]; then
               termux-toast -g bottom "Invalid option! Please select a valid channel." && sleep 0.5
-            else
-              echo -e "$info Invalid option! Please select a valid channel." && sleep 3
             fi
             ;;
         esac
