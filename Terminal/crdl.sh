@@ -576,8 +576,7 @@ menu() {
     if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
       echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
     fi
-    echo "Navigate with [↑] [↓] [←] [→]"
-    echo -e "Select with [↵]\n"
+    echo -e "Navigate with [↑] [↓] [←] [→] || Select with [↵]\n"
     for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
       if [ $i -eq $selected_option ]; then
         echo -e "${whiteBG}➤ ${menu_options[$i]} $Reset"
