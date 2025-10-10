@@ -567,7 +567,7 @@ menu() {
   local -n menu_options=$1
   local -n menu_buttons=$2
   
-  selected_option=0
+  selected_option=1  # Select Stable by default
   selected_button=0
   
   if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
