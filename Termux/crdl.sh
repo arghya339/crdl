@@ -510,8 +510,17 @@ aria2ConsoleLogHide() {
   if [ -f "$crdlJson" ]; then
     echo -e "$info INSTALLED: Chromium v$appVersion - $appSize - $installedTime" && echo
   fi
-  echo -e "S. Stable \nB. Beta \nD. Dev \nC. Canary \nT. Canary Test \nQ. Quit \n"
-  echo "Select Chromium Channel: $channel"
+  echo "Navigate with [↑] [↓] [←] [→]"
+  echo -e "Select with [↵]\n"
+  for ((i=0; i<=$((${#options[@]} - 1)); i++)); do
+    if [ $i -eq $channel ]; then
+      echo -e "${whiteBG}➤ ${options[$i]} $Reset"
+    else
+      [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${options[$i]}" || echo "$(($i + 1)). ${options[$i]}"
+    fi
+  done
+  echo
+  echo -e "${whiteBG}➤ ${buttons[0]} $Reset   ${buttons[1]}"
   echo && echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
   echo -e "${good} Found valid snapshot at: $branchPosition" && echo
   echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
