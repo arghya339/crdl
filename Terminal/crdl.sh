@@ -570,12 +570,16 @@ menu() {
   selected_option=0
   selected_button=0
   
+  if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
+    INSTALLED=1
+  else
+    INSTALLED=0
+  fi
+
   show_menu() {
     printf '\033[2J\033[3J\033[H'  # clear
     print_crdl  # call print_crdl function
-    if [ -d /Applications/Chromium.app ] && [ -f "$crdlJson" ] && jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1; then
-      echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime" && echo
-    fi
+    [ $INSTALLED -eq 1 ] && { echo -e "$info INSTALLED: $appVersion - $appSize - $installedTime"; echo; }
     echo -e "Navigate with [↑] [↓] [←] [→] || Select with [↵]\n"
     for ((i=0; i<=$((${#menu_options[@]} - 1)); i++)); do
       if [ $i -eq $selected_option ]; then
