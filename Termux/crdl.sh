@@ -953,11 +953,11 @@ menu() {
         ;;
       [0-9])
         if [ $key -eq 0 ]; then
-          selected_option=$((${#options[@]} - 1))
-        elif [ $key -gt ${#options[@]} ]; then
+          selected_option=$((${#menu_options[@]} - 1))
+        elif [ $key -gt ${#menu_options[@]} ]; then
           selected_option=0
         else
-          selected_option=$(($key - 1))
+          selected_option=$((key - 1))
         fi
         show_menu; sleep 0.5; break
        ;;
