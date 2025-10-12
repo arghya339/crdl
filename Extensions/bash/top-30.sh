@@ -2,6 +2,15 @@
 
 urls=(
   "https://github.com/arghya339/crdl?tab=readme-ov-file#install-extensions-from-chrome-web-store-on-androiddesktop-mobile"  # Docs
+  "chrome://flags/#android-pinned-tabs-tablet-tab-strip"  # Android pinned tabs on tablet tab strip in the tabbed layout = Disabled
+  "chrome://flags/#tab-group-parity-bottom-sheet-android"  # Tab Group Parity Bottom Sheet = Disabled
+  "chrome://flags/#tab-strip-incognito-migration"  # Tab Strip Incognito switcher migration to toolbar = Disabled
+  "chrome://flags/#android-open-incognito-as-window"  # Open incognito tabs in new window = Disabled
+  "chrome://flags/#reader-mode-distill-in-app"  # Reader Mode distillation in app = Disabled
+  "chrome://extensions"  # Chrome Extensions
+  "chrome://flags/#enable-android-window-popup-large-screen"  # Enable desktop-like behavior of window popup web API in desktop windowing on Android. = Enabled
+  "chrome://flags/#new-tab-page-customization-v2"  # Customize the new tab page V2 = Enabled
+  "chrome://flags/#new-tab-page-customization-toolbar-button"  # New tab page customization toolbar button = Enabled
   "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"  # uBlock Origin Lite
   "https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"  # AdGuard AdBlocker
   "https://chromewebstore.google.com/detail/adblocker-ultimate/ohahllgiabjaoigichmmfljhkcfikeof"  # AdBlocker Ultimate
@@ -12,7 +21,7 @@ urls=(
   "https://chromewebstore.google.com/detail/return-youtube-dislike/gebbhagfogifgggkldgodflihgfeippi"  # Return YouTube Dislike
   "https://chromewebstore.google.com/detail/thumbnail-rating-bar-for/cmlddjbnoehmihdmfhaacemlpgfbpoeb"  # Thumbnail Rating Bar for YouTube
   "https://chromewebstore.google.com/detail/popup-blocker-strict/aefkmifgmaafnojlojpnekbpbmjiiogg"  # Popup Blocker (strict)
-  "https://chromewebstore.google.com/detail/linkumori-urls-cleaner/kcpfnbjlimolkcjllfooaipdpdjmjigg"  # Clean URLs MV3 by Linkumori
+  #"https://chromewebstore.google.com/detail/linkumori-urls-cleaner/kcpfnbjlimolkcjllfooaipdpdjmjigg"  # Clean URLs MV3 by Linkumori
   # "https://github.com/prem-k-r/CRXtract"  # download the extension CRX file
   # "https://microsoftedge.microsoft.com/addons/detail/redirect-amp-to-html/abjhjmfkmdfggjomfpojjfcehhkambcc"  # Redirect AMP to HTML MV2
   "https://chromewebstore.google.com/detail/floccus-bookmarks-sync/fnaicdffflnofjppbagibeoednhnbjhg"  # floccus bookmarks sync
@@ -24,6 +33,7 @@ urls=(
   "https://chromewebstore.google.com/detail/dark-reader/eimadpbcbfnmbkopoojfekhnkhdbieeh"  # Dark Reader
   "https://chromewebstore.google.com/detail/picture-in-picture-extens/hkgfoiooedgoejojocmhlaklaeopbecg"  # Picture-in-Picture
   "https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo"  # Tampermonkey
+  "https://greasyfork.org/en/scripts/10096-general-url-cleaner"  # General URL Cleaner
   "https://greasyfork.org/en/scripts/371641-video-background-play-fix/"  # Video Background Play Fix
   "https://chromewebstore.google.com/detail/uautopagerize/kdplapeciagkkjoignnkfpbfkebcfbpb"  # uAutoPagerize
   "https://chromewebstore.google.com/detail/wot-website-security-safe/bhmmomiinigofkjcapegjjndpbikblnp"  # WOT: Website Security Checker
@@ -44,7 +54,7 @@ urls=(
   # "https://chromewebstore.google.com/detail/cookie-autodelete/fhcgjolkccmbidfldomjliifgaodjagh"  # Cookie AutoDelete MV2
   "https://chromewebstore.google.com/detail/i-dont-care-about-cookies/fihnjjcciajhdojfnbdddfaoknhalnja"  # I don't care about cookies
   # "https://chromewebstore.google.com/detail/absolute-enable-right-cli/jdocbkpgdakpekjlhemmfcncgdjeiika"  # Absolute Enable Right Click & Copy MV2
-  "https://chromewebstore.google.com/detail/dont-f-with-paste/nkgllhigpcljnhoakjkgaieabnkmgdkb"  # Don't F*** With Paste
+  #"https://chromewebstore.google.com/detail/dont-f-with-paste/nkgllhigpcljnhoakjkgaieabnkmgdkb"  # Don't F*** With Paste
 )
 
 # Launch Chromium if not already running
