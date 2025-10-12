@@ -27,6 +27,7 @@ Blue="\033[94m"
 skyBlue="\033[38;5;117m"
 Cyan="\033[96m"
 White="\033[37m"
+whiteBG="\e[47m\e[30m"
 Yellow="\033[93m"
 Reset="\033[0m"
 
