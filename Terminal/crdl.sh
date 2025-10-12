@@ -268,7 +268,7 @@ installPrompt () {
       config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
       printf '\033[2J\033[3J\033[H' && exit 0
       ;;
-    n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
+    n*|N*) echo -e "$notice Chromium installation skipped!"; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
   esac
 }
 
