@@ -374,14 +374,14 @@ apkInstall() {
       INSTALL_STATUS=$?
     fi
     su -c "rm -f '/data/local/tmp/$fileName'"
-    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ "$activityClass" == "$chromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
     [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     ~/rish -c "cp '$apkPath' '/data/local/tmp/$fileName'"
     ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$fileName'" > /dev/null 2>&1  # -r=reinstall
     INSTALL_STATUS=$?
     $HOME/rish -c "rm -f '/data/local/tmp/$fileName'"
-    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ "$activityClass" == "$chromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
     [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
     ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell cp $apkPath /data/local/tmp/$fileName
@@ -389,7 +389,7 @@ apkInstall() {
     #~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell cmd package install -r -i com.android.vending "/data/local/tmp/$fileName" > /dev/null 2>&1
     INSTALL_STATUS=$?
     ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "rm -f '/data/local/tmp/$fileName'"
-    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ "$activityClass" == "$chromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
     [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif [ $Android -le 6 ]; then
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${apkPath}"
