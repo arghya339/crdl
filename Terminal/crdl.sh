@@ -8,7 +8,7 @@ shopt -s extglob  # Enable extended glob patterns at top of this script
 # Developer github.com/arghya339
 
 # --- Downloading latest crdl.sh file from GitHub ---
-curl -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Terminal/crdl.sh" > /dev/null 2>&1
+curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Terminal/crdl.sh"
 
 if [ ! -f "/usr/local/bin/crdl" ]; then
   ln -s $HOME/.crdl.sh /usr/local/bin/crdl  # symlink (shortcut of .crdl.sh)
@@ -69,15 +69,13 @@ installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # Detect platform (Intel or ARM)
 if [[ $(uname -m) == "x86_64" ]]; then
-    snapshotPlatform="Mac"  # For Intel (x86_64) 
+  snapshotPlatform="Mac"  # For Intel (x86_64) 
 else
-    snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
+  snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
-if [ -d /Applications/Chromium.app ]; then
-  appVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
-fi
+[ -d /Applications/Chromium.app ] && appVersion=$(/Applications/Chromium.app/Contents/MacOS/Chromium --version)
 installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
 # --- Check OS version ---
 if [ $productVersion -le 10 ]; then
@@ -85,7 +83,7 @@ if [ $productVersion -le 10 ]; then
   exit 1
 fi
 
-echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
+printf '\033[2J\033[3J\033[H'; echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- Check if brew is installed ---
 if brew --version >/dev/null 2>&1; then
@@ -126,21 +124,12 @@ formulaeInstall "pv"  # pv install/update
 formulaeInstall "pup"  # pup install/update
 
 # Get active interfaces (those with 'status: active')
-active_ifaces=$(ifconfig | awk '
-  /^[a-z]/ { iface=$1; sub(":", "", iface) }
-  /status: active/ { print iface }
-')
+active_ifaces=$(ifconfig | awk '/^[a-z]/ { iface=$1; sub(":", "", iface) } /status: active/ { print iface }')
 
 # Build list of active service names based on active interfaces
 active_services=()
 while IFS= read -r device; do
-  service=$(networksetup -listnetworkserviceorder | awk -v dev="$device" '
-    $0 ~ "Device: " dev {
-      sub(/^.*\) /, "", prev)
-      print prev
-    }
-    { prev = $0 }
-  ')
+  service=$(networksetup -listnetworkserviceorder | awk -v dev="$device" '$0 ~ "Device: " dev { sub(/^.*\) /, "", prev); print prev } { prev = $0 }')
   [ -n "$service" ] && active_services+=("$service")
 done <<< "$active_ifaces"
 
@@ -182,16 +171,16 @@ config() {
 
 # --- install Chromium function ---
 crInstall() {
+  local appPath=$1
+
   if [ -d "/Applications/Chromium.app" ]; then
-    sudo cp -R $HOME/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Copy with replace an app
-    sleep 15 && rm -rf "$HOME/chrome-mac"
-    open -a "Chromium" # open Chromium app after update
+    osascript -e 'quit app "Chromium"'  # Close Chromium if running
+    sudo cp -R $appPath /Applications/ 2>/dev/null && { rm -rf "$HOME/chrome-mac"; open -a "Chromium"; }  # Copy with replace an app & open Chromium app after update
   else
-    sudo cp -Rn ~/chrome-mac/Chromium.app /Applications/ 2>/dev/null  # Skips if already exists
-    sleep 15 && rm -rf "$HOME/chrome-mac"
-    curl -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh > /dev/null 2>&1 && bash "$HOME/top-50.sh" && rm "$HOME/top-50.sh"
+    sudo cp -Rn $appPath /Applications/ 2>/dev/null && { rm -rf "$HOME/chrome-mac"; open -a "Chromium"; }  # Skips if already exists
+    curl -L --progress-bar -o "$HOME/top-50.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh && bash "$HOME/top-50.sh" && rm -f "$HOME/top-50.sh"
   fi
-  echo -e "$good $actualVersion successfully installed! Please restart Chromium.app to take effect." && sleep 3
+  echo -e "$good $actualVersion successfully installed!"; sleep 3
 }
 
 # for aria2 due to this cl tool doesn't support --console-log-level=hide flag
@@ -221,7 +210,7 @@ confirmPrompt() {
   Prompt=${1}
   local -n prompt_buttons=$2
   Selected=${3:-0}  # :- set value as 0 if unset
-  maxLen=50
+  maxLen=70
   
   # breaks long prompts into multiple lines (50 characters per line)
   lines=()  # empty array
@@ -264,220 +253,200 @@ confirmPrompt() {
   return $Selected  # return Selected int index from this fun
 }
 
+installPrompt () {
+  local appPath=$1
+
+  chmod -R +x $appPath && actualVersion=$($appPath/Contents/MacOS/Chromium --version 2>/dev/null)
+  crSize=$(du -sk "$appPath" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
+  buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install $actualVersion?" "buttons" && opt=Yes || opt=No
+  case $opt in
+    y*|Y*|"")
+      crInstall "$appPath"  # Call cr Install function
+      config "INSTALLED_POSITION" "$branchPosition"
+      config "INSTALLED_VERSION" "$crVersion"
+      config "APP_SIZE" "$crSize"
+      config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
+      printf '\033[2J\033[3J\033[H' && exit 0
+      ;;
+    n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
+  esac
+}
+
+extrct() {
+  local archivePath=$1
+
+  echo && echo -e "$running Extrcting ${Red}chrome-mac.zip${Reset}"
+  pv "$archivePath" | tar -xf - -C "$HOME" && rm -f "$archivePath"
+  installPrompt "$HOME/chrome-mac/Chromium.app"  # Call install Prompt function
+}
+
+dl() {
+  local dlUrl=$1
+  crdlSize=$(curl -sIL $dlUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
+  echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$dlUrl${Reset} $crdlSize"
+
+  while true; do
+    if [ "$channel" == "Extended" ] || [ "$channel" == "Stable" ] || [ "$channel" == "Beta" ] || [ "$channel" == "Dev" ]; then
+      curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$dlUrl"
+      DOWNLOAD_STATUS=$?
+    else
+      aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$dlUrl"
+      DOWNLOAD_STATUS=$?
+      echo  # White Space
+    fi
+    if [ $DOWNLOAD_STATUS -eq 0 ]; then
+      if [ -d "/Applications/Cloudflare WARP.app" ]; then
+        warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
+        warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
+        if [ "$warpCliStatus" == "Connected" ] || [ "$warp_status" == "on" ]; then
+          "$warp_cli" disconnect
+          #osascript -e 'quit app "Cloudflare WARP"'
+        fi
+      fi
+      break  # break resuming download loop
+    elif [ $DOWNLOAD_STATUS -eq 6 ] || [ $DOWNLOAD_STATUS -eq 19 ]; then
+      if [ "$channel" != "Extended" ] || [ "$channel" != "Stable" ] || [ "$channel" != "Beta" ] || [ "$channel" != "Dev" ]; then
+        aria2ConsoleLogHide  # for aria2
+      fi
+      echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
+      echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
+      if [ -d "/Applications/Cloudflare WARP.app" ]; then
+        #open -a "Cloudflare WARP"
+        if [ "$warpCliStatus" == "Disconnected" ]; then
+          #"$warp_cli" mode doh  # HTTPS
+          "$warp_cli" mode warp  # WARP
+          #"$warp_cli" mode warp+doh  # HTTPS + WARP
+          "$warp_cli" dns families malware
+          "$warp_cli" connect
+        fi
+      else
+        brew install --cask cloudflare-warp > /dev/null 2>&1
+        #open -a "Cloudflare WARP"
+        ! "$warp_cli" registration show >/dev/null 2>&1 && "$warp_cli" registration new
+        osascript -e 'quit app "Cloudflare WARP"'
+        warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
+        if [ "$warpCliStatus" == "Disconnected" ]; then
+          "$warp_cli" mode warp
+          "$warp_cli" dns families malware
+          "$warp_cli" connect
+        fi
+      fi
+      sleep 3  # Wait 3 seconds
+      warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
+      [ "$warp_status" == "on" ] && echo -e "Your Internet is ${Orange}private${Reset}."
+    elif [ $DOWNLOAD_STATUS -eq 56 ] || [ $DOWNLOAD_STATUS -eq 1 ]; then
+      if [ "$channel" != "Extended" ] || [ "$channel" != "Stable" ] || [ "$channel" != "Beta" ] || [ "$channel" != "Dev" ]; then
+        aria2ConsoleLogHide  # for aria2
+      fi
+      echo -e "$bad $active_list signal are very unstable!"
+      echo -e "$info Please switch Network service to $inactive_list"
+      [ $productVersion -ge 13 ] && open "x-apple.systempreferences:com.apple.Network-Settings.extension" || open "/System/Library/PreferencePanes/Network.prefPane"
+    fi
+    echo -e "$notice Download failed! retrying in 5 seconds.."; sleep 5  # wait 5 seconds
+  done
+  extrct "$HOME/chrome-mac.zip"  # Call extract function
+}
+
 # --- Direct Download Function ---
 directDl() {
-downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-mac.zip"
-# Prefer the direct download link if available
-if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
+  downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/chrome-mac.zip"
+  if curl --head --silent --fail "$downloadUrl" >/dev/null 2>&1; then
     echo -e "${good} Found valid snapshot at: $branchPosition" && echo
     if [ "$installedPosition" == "$branchPosition" ]; then
-        echo -e "$notice Already installed: $installedPosition"
-        sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
+      echo -e "$notice Already installed: $installedPosition"
+      sleep 3; printf '\033[2J\033[3J\033[H'; exit 0
     else
-        crdlSize=$(curl -sIL $downloadUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-        echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
-        while true; do
-            #curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$downloadUrl"
-            aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$downloadUrl"
-            DOWNLOAD_STATUS=$?
-            echo
-            if [ $DOWNLOAD_STATUS -eq "0" ]; then
-              if [ -d "/Applications/Cloudflare WARP.app" ]; then
-                warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
-                warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
-                if [ "$warpCliStatus" == "Connected" ] || [ "$warp_status" == "on" ]; then
-                  "$warp_cli" disconnect
-                  #osascript -e 'quit app "Cloudflare WARP"'
-                fi
-              fi
-              break  # break the resuming download loop
-            elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
-              aria2ConsoleLogHide  # for aria2
-              echo -e "$bad Default resolver of $active_list failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
-              echo -e "$info Connect Cloudflare 1.1.1.1 with WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-              if [ -d "/Applications/Cloudflare WARP.app" ]; then
-                #open -a "Cloudflare WARP"
-                if [ "$warpCliStatus" == "Disconnected" ]; then
-                  #"$warp_cli" mode doh  # HTTPS
-                  "$warp_cli" mode warp  # WARP
-                  #"$warp_cli" mode warp+doh  # HTTPS + WARP
-                  "$warp_cli" dns families malware
-                  "$warp_cli" connect
-                fi
-              else
-                brew install --cask cloudflare-warp > /dev/null 2>&1
-                #open -a "Cloudflare WARP"
-                if ! "$warp_cli" registration show >/dev/null 2>&1; then
-                  "$warp_cli" registration new
-                fi
-                osascript -e 'quit app "Cloudflare WARP"'
-                warpCliStatus=$("$warp_cli" status | head -1 | awk '{printf "%s\n", $3}' 2>/dev/null)
-                if [ "$warpCliStatus" == "Disconnected" ]; then
-                  "$warp_cli" mode warp
-                  "$warp_cli" dns families malware
-                  "$warp_cli" connect
-                fi
-              fi
-              sleep 3  # Wait 3 seconds
-              warp_status=$(curl -s https://www.cloudflare.com/cdn-cgi/trace | awk -F'=' '/ip|colo|warp/ {printf "%s: %s\n", $1, $2}' | awk -F':' '/warp/ {print $2}')
-              if [ "$warp_status" == "on" ]; then
-                echo -e "Your Internet is ${Orange}private${Reset}."
-              fi
-            elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
-              aria2ConsoleLogHide  # for aria2
-              echo -e "$bad $active_list signal are very unstable!"
-              echo -e "$info Please switch Network service to $inactive_list"
-              if [ $productVersion -ge "13" ]; then
-                open "x-apple.systempreferences:com.apple.Network-Settings.extension"
-              else
-                open "/System/Library/PreferencePanes/Network.prefPane"
-              fi
-            fi
-            echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
-        done
-        echo && echo -e "$running Extrcting ${Red}chrome-mac.zip${Reset}"
-        pv "$HOME/chrome-mac.zip" | tar -xf - -C "$HOME" && rm "$HOME/chrome-mac.zip"
-        chmod -R +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version 2>/dev/null)
-        crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}')
-        buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install $actualVersion?" "buttons" && opt=Yes || opt=No
-              case $opt in
-                y*|Y*|"")
-                  crInstall
-                  config "INSTALLED_POSITION" "$branchPosition"
-                  config "INSTALLED_VERSION" "$crVersion"
-                  config "APP_SIZE" "$crSize"
-                  config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                  printf '\033[2J\033[3J\033[H' && exit 0
-                  ;;
-                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/chrome-mac/"; sleep 1 ;;
-              esac
+      dl "$downloadUrl"  # Call dl function
     fi
-else
-    echo -e "${bad} No direct download URL found." && sleep 1
-fi
+  else
+    echo -e "${bad} No direct download URL found!"; sleep 1
+  fi
 }
 
 # --- Find valid snapshot by searching downward from branch position ---
 findValidSnapshot() {
-    local position=$1
-    local maxPosition=$2
-    local range=500
+  local position=$1
+  local maxPosition=$2
+  local range=500
 
-    # Validate inputs are integers
-    if ! [[ "$position" =~ ^[0-9]+$ ]] || ! [[ "$maxPosition" =~ ^[0-9]+$ ]]; then
-        echo -e "${bad} Invalid positions: $position (branch) or $maxPosition (max)"
-        exit 1
-    fi
+  echo -e "${running} Searching downward from $position (max attempts: $range)"
 
-    echo -e "${running} Searching downward from $position (max attempts: $range)"
-
-    # Search downward starting from branchPosition
-    for ((pos = position; pos >= position - range; pos--)); do
-        [ "$pos" -lt 0 ] && break  # Stop if we go below 0
+  # Search downward starting from branchPosition
+  for ((pos = position; pos >= position - range; pos--)); do
+    [ "$pos" -lt 0 ] && break  # Stop if we go below 0
         
-        checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-mac.zip"
-        if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
-            echo -e "${good} Found valid snapshot at: $pos" && echo
-            if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
-                echo -e "$notice Already installed: $installedVersion"
-                sleep 3 && printf '\033[2J\033[3J\033[H' && exit 0
-            else
-                crdlSize=$(curl -sIL $checkUrl | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }')
-                echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
-                while true; do
-                    curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$checkUrl"
-                    DOWNLOAD_STATUS=$?
-                    if [ $DOWNLOAD_STATUS -eq "0" ]; then
-                      break  # break the resuming download loop
-                    fi
-                    echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
-                done
-                echo && echo -e "$running Extracting ${Red}chrome-mac.zip${Reset}"
-                pv "$HOME/chrome-mac.zip" | tar -xf - -C "$HOME" && rm "$HOME/chrome-mac.zip"
-                chmod -R +x $HOME/chrome-mac/Chromium.app && actualVersion=$($HOME/chrome-mac/Chromium.app/Contents/MacOS/Chromium --version 2>/dev/null)
-                crSize=$(du -sk "$HOME/chrome-mac/Chromium.app" | awk '{total_bytes = $1 * 1024; printf "%.2f MB\n", total_bytes / 1000000}') 
-                buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install Chromium_v$crVersion.dmg?" "buttons" && opt=Yes || opt=No
-                case $opt in
-                    y*|Y*|"")
-                      crInstall
-                      config "INSTALLED_POSITION" "$pos"
-                      config "INSTALLED_VERSION" "$crVersion"
-                      config "APP_SIZE" "$crSize"
-                      config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                      printf '\033[2J\033[3J\033[H' && exit 0
-                      ;;
-                    n*|N*)
-                      echo -e "$notice Chromium installation skipped."
-                      rm -rf "$HOME/chrome-mac" && sleep 1
-                      ;;
-                esac
-                sleep 3 && break  # Break the searching loop
-            fi
-        else
-          echo -e "$notice No valid snapshot found at position: $pos"
-        fi
-    done
+    checkUrl="$branchUrl/$snapshotPlatform/$pos/chrome-mac.zip"
+    if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
+      echo -e "${good} Found valid snapshot at: $pos" && echo
+      if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
+        echo -e "$notice Already installed: $installedVersion"
+        sleep 3; printf '\033[2J\033[3J\033[H'; exit 0
+      else
+        branchPosition="$pos"
+        dl "$checkUrl"  # Call dl function
+        sleep 3; break  # Break the searching loop
+      fi
+    else
+      echo -e "$notice No valid snapshot found at position: $pos"
+    fi
+  done
 }
 
 # --- Fetch the last Chromium Extended version info ---
 eInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Extended&platform=Mac&num=2")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Extended Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Extended&platform=Mac&num=2")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Extended Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Stable version info ---
 sInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Mac&num=2")
-    crVersion=$(echo "$branchData" | jq -r '.[1].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
-    echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Mac&num=2")
+  crVersion=$(echo "$branchData" | jq -r '.[1].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
+  echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Beta version info ---
 bInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Mac&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Mac&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Dev version info ---
 dInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Mac&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Mac&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Canary version ---
 cInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Mac&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Mac&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the Chromium Canary Test version info ---
 tInfo() {
   printf "🕊️ ${Yellow}Please wait few seconds! fetching crVersion..${Reset}"
-  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
-  branchPosition=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
+  branchData=$(curl -sL "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
+  branchPosition=$(curl -sL "$branchUrl/$snapshotPlatform/LAST_CHANGE")
   
   n="500"  # Initialize n=500
   while true; do
-    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
-      | sed 's/^[·[:space:]]*//' | wc -l)
-    if [ "$count" -ge 1 ]; then
-      break  # break the loop if count > 1
-    fi
+    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | sed 's/^[·[:space:]]*//' | wc -l)
+    [ "$count" -ge 1 ] && break  # break the loop if count > 1
     n=$((n + 500))  # if ! count > 1; then n=n+500
   done
 
   # Get the Chromium Canary Test commit time string (e.g., "30 seconds / 30 minutes / 36 hours / 2 days ago")
-  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
-    | head -1 | sed 's/^[·[:space:]]*//')
+  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | head -1 | sed 's/^[·[:space:]]*//')
 
   # Parse the time string into minutes
   if [[ "$time_str" =~ ([0-9]+)[[:space:]]+second ]]; then
@@ -495,9 +464,7 @@ tInfo() {
     commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -515,9 +482,7 @@ tInfo() {
     fi
     diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
     major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -526,9 +491,7 @@ comment
     commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -n 2 | tail -n 1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -554,18 +517,14 @@ comment
     fi
     diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
     major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
 comment
   fi
 
-  if [ "$crVersion" == " . . . " ]; then
-    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
-  fi
+  [ "$crVersion" == " . . . " ] && crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   printf "\r\033[K"
 
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
@@ -657,36 +616,36 @@ menu() {
 while true; do
   printf '\033[2J\033[3J\033[H'  # fully clear the screen and reset scrollback
   options=("Extended" "Stable" "Beta" "Dev" "Canary" "Canary Test"); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
-        case "$channel" in
-          [Ee]*)
-            channel="Extended"
-            echo && eInfo  # Call the Chromium Extended info function
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
-            ;;
-          [Ss]*)
-            channel="Stable"
-            echo && sInfo  # Call the Chromium Stable info function
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
-            ;;
-          [Bb]*)
-            channel="Beta"
-            echo && bInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          [Dd]*)
-            channel="Dev"
-            echo && dInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          Canary)
-            channel="Canary"
-            echo && cInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          Canary\ Test)
-            echo && tInfo
-            directDl  # Call the direct download function
-            ;;
-        esac
+  case "$channel" in
+    [Ee]*)
+      channel="Extended"
+      echo && eInfo  # Call the Chromium Extended info function
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+      ;;
+    [Ss]*)
+      channel="Stable"
+      echo && sInfo  # Call the Chromium Stable info function
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+      ;;
+    [Bb]*)
+      channel="Beta"
+      echo && bInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    [Dd]*)
+      channel="Dev"
+      echo && dInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    Canary)
+      channel="Canary"
+      echo && cInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    Canary\ Test)
+      echo && tInfo
+      directDl  # Call the direct download function
+      ;;
+  esac
 done
 #####################################################################################
