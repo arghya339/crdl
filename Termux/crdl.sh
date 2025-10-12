@@ -74,12 +74,6 @@ fi
 
 # --- enabled allow-external-apps ---
 isOverwriteTermuxProp=0
-if [ "$Android" -eq 6 ] && [ ! -f "$HOME/.termux/termux.properties" ]; then
-  mkdir -p "$HOME/.termux" && echo "allow-external-apps = true" > "$HOME/.termux/termux.properties"
-  isOverwriteTermuxProp=1
-  echo -e "$notice 'termux.properties' file has been created successfully & 'allow-external-apps = true' line has been add (enabled) in Termux \$HOME/.termux/termux.properties."
-  termux-reload-settings
-fi
 if [ "$Android" -ge 6 ]; then
   if grep -q "^# allow-external-apps" "$HOME/.termux/termux.properties"; then
     # other Android applications can send commands into Termux.
@@ -88,9 +82,9 @@ if [ "$Android" -ge 6 ]; then
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
     isOverwriteTermuxProp=1
     echo -e "$notice 'allow-external-apps = true' line has been uncommented (enabled) in Termux \$HOME/.termux/termux.properties."
-    if [ "$Android" -eq 7 ] || [ "$Android" -eq 6 ]; then
+    #if [ "$Android" -eq 7 ] || [ "$Android" -eq 6 ]; then
       termux-reload-settings  # reload (restart) Termux settings required for Android 6 after enabled allow-external-apps, also required for Android 7 due to 'Package installer has stopped' err
-    fi
+    #fi
   fi
 fi
 
@@ -105,9 +99,6 @@ Model=$(getprop ro.product.model)  # Get device model
 arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
 arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
 socOEM=$(getprop ro.soc.manufacturer)  # Get SOC Manufacturer
-apMode=$(getprop persist.radio.airplane_mode_on)  # Get AirPlane Mode Status (0=OFF; 1=ON)
-networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
-networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
 networkName1=$(getprop gsm.operator.alpha | cut -d',' -f1)  # Get SIM1 Carrier name
 networkName2=$(getprop gsm.operator.alpha | cut -d',' -f2)  # Get SIM2 Carrier name
 simOperator1=$(getprop gsm.sim.operator.alpha | cut -d',' -f1)  # Get SIM1 Operator name
@@ -122,11 +113,14 @@ memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
 installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
 installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
+AndroidDesktop=0
 AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
 appVersion=$(jq -r '.APP_VERSION' "$crdlJson" 2>/dev/null)
 installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
+chromiumActivityClass="org.chromium.chrome/com.google.android.apps.chrome.Main"
+Download="/sdcard/Download"  # Download dir
 if su -c "id" >/dev/null 2>&1; then
   if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
     su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
@@ -157,10 +151,7 @@ fi
 # Latest Chromium required Android 10+
 if [ $Android -le 9 ]; then
   echo -e "${bad} ${Red}Android $Android is not supported by Chromium.${Reset}"
-  if [ $Android -eq 9 ]; then
-    echo -e "$info Find Chromium alternative as Brave."  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
-    termux-open "https://github.com/brave/brave-browser/releases/latest/"
-  elif [ $Android -eq 8 ] || [ $Android -eq 7 ]; then
+  if [ $Android -ge 7 ]; then
     echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
     termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
   else
@@ -173,20 +164,20 @@ fi
 
 # --- Checking device arch ---
 if [ $arch == "x86" ]; then
-    echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
-    termux-open-url "https://chromium.googlesource.com/chromium/src/+/0267e3c2/docs/android_build_instructions.md"
-    if [ $Android -ge 9 ]; then
-      echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
-      termux-open "https://github.com/brave/brave-browser/releases/latest/"
-    elif [ $Android -eq 8 ] || [ $Android -eq 7 ]; then
-      echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
-      termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
-    else
-      echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
-      termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
-    fi
-    rm $PREFIX/bin/crdl && rm $HOME/.crdl.sh
-    exit 1
+  echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
+  termux-open-url "https://chromium.googlesource.com/chromium/src/+/0267e3c2/docs/android_build_instructions.md"
+  if [ $Android -ge 10 ]; then
+    echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
+    termux-open "https://github.com/brave/brave-browser/releases/latest/"
+  elif [ $Android -ge 7 ]; then
+    echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
+    termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
+  else
+    echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
+    termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+  fi
+  rm -f $PREFIX/bin/crdl && rm -f $HOME/.crdl.sh
+  exit 1
 fi
 
 clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
@@ -235,7 +226,7 @@ pkgInstall "bc"  # bc install/update
 
 # --- Download and give execute (--x) permission to AAPT2 Binary ---
 if [ ! -f "$HOME/aapt2" ]; then
-  curl -L "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" > /dev/null 2>&1 && chmod +x "$HOME/aapt2"
+  curl -sL "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" && chmod +x "$HOME/aapt2"
 fi
 
 config() {
@@ -317,18 +308,18 @@ fi
 memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a basicCalculator
 # --- Detect arch (ARM or ARM64 or x86_64) ---
 if [ $arch == "arm64-v8a" ]; then
-    # Prefer 32-bit apk if device is usually low on memory (RAM).
-    if [ $AndroidDesktop == 1 ]; then
-      snapshotPlatform="AndroidDesktop_arm64"
-    elif [ "$(echo "$memTotalGB <= 4" | bc -l)" -eq 1 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
-      snapshotPlatform="Android"
-    else
-      snapshotPlatform="Android_Arm64"  # For ARM64
-    fi
+  # Prefer 32-bit apk if device is usually low on memory (RAM).
+  if [ $AndroidDesktop -eq 1 ]; then
+    snapshotPlatform="AndroidDesktop_arm64"
+  elif [ "$(echo "$memTotalGB <= 4" | bc -l)" -eq 1 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+    snapshotPlatform="Android"
+  else
+    snapshotPlatform="Android_Arm64"  # For ARM64
+  fi
 elif [ $arch == "armeabi-v7a" ]; then
-    snapshotPlatform="Android"  # For ARM
+  snapshotPlatform="Android"  # For ARM
 elif [ $arch == "x86_64" ]; then
-    snapshotPlatform="AndroidDesktop_x64" # For x86_64
+  snapshotPlatform="AndroidDesktop_x64" # For x86_64
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 
@@ -364,29 +355,50 @@ if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$HOME/adb
   curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb" && chmod +x ~/adb
 fi
 
+# --- apk installation function ---
 apkInstall() {
+  local apkPath=$1
+  local activityClass=$2
+  local fileName=$(basename "$apkPath" 2>/dev/null)
+  
   if su -c "id" >/dev/null 2>&1; then
-    su -c "cp '$output_path' '/data/local/tmp/$assetsName'"
+    su -c "cp '$apkPath' '/data/local/tmp/$fileName'"
     # Temporary Disable SELinux Enforcing during installation if it not in Permissive
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
       su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-      su -c "pm install -i com.android.vending '/data/local/tmp/$assetsName'"
+      su -c "pm install -i com.android.vending '/data/local/tmp/$fileName'"
+      INSTALL_STATUS=$?
       su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
     else
-      su -c "pm install -i com.android.vending '/data/local/tmp/$assetsName'"
+      su -c "pm install -i com.android.vending '/data/local/tmp/$fileName'"
+      INSTALL_STATUS=$?
     fi
-    su -c "rm -f '/data/local/tmp/$assetsName'"
+    su -c "rm -f '/data/local/tmp/$fileName'"
+    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    ~/rish -c "cp '$output_path' '/data/local/tmp/$assetsName'"
-    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$assetsName'" > /dev/null 2>&1  # -r=reinstall --force-uplow=downgrade
-    $HOME/rish -c "rm -f '/data/local/tmp/$assetsName'"
+    ~/rish -c "cp '$apkPath' '/data/local/tmp/$fileName'"
+    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$fileName'" > /dev/null 2>&1  # -r=reinstall
+    INSTALL_STATUS=$?
+    $HOME/rish -c "rm -f '/data/local/tmp/$fileName'"
+    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
-    ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell pm install -r -i com.android.vending "$output_path" > /dev/null 2>&1
-    #~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell cmd package install -r -i com.android.vending "$output_path" > /dev/null 2>&1
+    ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell cp $apkPath /data/local/tmp/$fileName
+    ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell pm install -r -i com.android.vending "/data/local/tmp/$fileName" > /dev/null 2>&1
+    #~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell cmd package install -r -i com.android.vending "/data/local/tmp/$fileName" > /dev/null 2>&1
+    INSTALL_STATUS=$?
+    ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "rm -f '/data/local/tmp/$fileName'"
+    [ "$activityClass" == "$hromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
+    [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif [ $Android -le 6 ]; then
-    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${output_path}"
+    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://${apkPath}"
+    sleep 15
+    am start -n $activityClass > /dev/null 2>&1 && rm -f "$apkPath"
   else
-    termux-open --view "$output_path"  # open file in pm
+    termux-open --view "$apkPath"  # open file in pm
+    sleep 15
+    am start -n $activityClass > /dev/null 2>&1 && rm -f "$apkPath"
   fi
 }
 
@@ -403,16 +415,12 @@ if [ ! -f "$HOME/.shortcuts/crdl" ] || [ ! -f "$HOME/.termux/widget/dynamic_shor
     tag=$(curl -s https://api.github.com/repos/termux/termux-widget/releases/latest | jq -r '.tag_name | sub("^v"; "")')
     assetsName="termux-widget-app_v$tag+github.debug.apk"
     dlUrl="https://github.com/termux/termux-widget/releases/download/v$tag/$assetsName"
-    output_path="/sdcard/Download/$assetsName"
+    apk_path="$Download/$assetsName"
     while true; do
-      curl -L --progress-bar -C - -o "$output_path" "$dlUrl"
-      if [ $? -eq 0 ]; then
-        break
-      fi
-      echo -e "$notice Download failed! Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+      curl -L --progress-bar -C - -o "$apk_path" "$dlUrl"
+      [ $? -eq 0 ] && break || { echo -e "$notice Download failed! Retrying in 5 seconds.."; sleep 5; }
     done
-    apkInstall  # Install Termux:Widget app using apkInstall functions
-    [ -f "$output_path" ] && rm -f "$output_path"  # if Termux:Widget app package exist then remove it 
+    apkInstall "$apk_path" "com.termux.widget/com.termux.widget.TermuxLaunchShortcutActivity"  # Install Termux:Widget app using apkInstall function
   fi
   if su -c "id" >/dev/null 2>&1; then
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
@@ -448,61 +456,6 @@ else
   crUNZIP="chrome-android"
 fi
 
-# --- install Chromium function ---
-crInstall() {
-  if su -c "id" >/dev/null 2>&1; then
-    su -c "cp '$HOME/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
-    rm -rf "$HOME/$crUNZIP"
-    # Temporary Disable SELinux Enforcing during installation if it not in Permissive
-    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
-      INSTALL_STATUS=$?  # Capture exit status of the install command
-      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-    else
-      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
-      INSTALL_STATUS=$?  # Capture exit status of the install command
-    fi
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    if [ $? != 0 ]; then
-      su -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    fi
-    su -c "rm -f '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
-  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    ~/rish -c "cp '/sdcard/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # copy apk to System dir
-    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # -r=reinstall
-    INSTALL_STATUS=$?  # Capture exit status of the install command
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    if [ $? != 0 ]; then
-      ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    fi
-    if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP" && rm -f "/sdcard/ChromePublic.apk" && $HOME/rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"; fi  # Cleanup temp APK
-  elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
-    cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-    ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell pm install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
-    #~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell cmd package install -r -i com.android.vending "/sdcard/ChromePublic.apk" > /dev/null 2>&1
-    INSTALL_STATUS=$?  # Capture exit status of the install command
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    [ $? != 0 ] && ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    if [ $INSTALL_STATUS -eq 0 ]; then rm -rf "$HOME/$crUNZIP"; rm -f "/sdcard/ChromePublic.apk"; fi  # Cleanup
-  elif [ $Android -le 6 ]; then
-    if [ $Android -eq 6 ] || [ $Android -eq 5 ]; then
-      cp "$HOME/$crUNZIP/apks/ChromePublic.apk" "/sdcard/ChromePublic.apk"
-      am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file:///sdcard/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
-      sleep 30 && rm -f "/sdcard/ChromePublic.apk"
-    else
-      am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://$HOME/$crUNZIP/apks/ChromePublic.apk" > /dev/null 2>&1
-      sleep 15
-    fi
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/"
-  else
-    termux-open --view "$HOME/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
-    sleep 15
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$HOME/$crUNZIP/"
-  fi
-}
-
 # for aria2 due to this cl tool doesn't support --console-log-level=hide flag
 aria2ConsoleLogHide() {
   clear  # clear aria2 multi error log from console
@@ -526,252 +479,225 @@ aria2ConsoleLogHide() {
   echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
 }
 
+installPrompt() {
+  local apkPath=$1
+
+  appVersion=$($HOME/aapt2 dump badging $apkPath 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+  appVersionCode=$($HOME/aapt2 dump badging $apkPath 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+  crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s $apkPath 2>/dev/null)/1000000}" 2>/dev/null)
+
+  if [ $foundTermuxAPI -eq 1 ]; then
+    opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
+  else
+    buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install Chromium_v$appVersion.apk?" "buttons" && opt=Yes || opt=No
+  fi
+
+  case $opt in
+    y*|Y*|"")
+      mkConfig() {
+        config "INSTALLED_POSITION" "$branchPosition"
+        config "INSTALLED_VERSION" "$crVersion"
+        config "APP_VERSION" "${appVersion}(${appVersionCode})"
+        config "APP_SIZE" "$crSize"
+        config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
+        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
+        clear; exit 0
+      }
+      apkInstall "$apkPath" "$chromiumActivityClass"  # Call apkInstall function
+      if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ $AndroidDesktop -eq 1 ]; then
+        curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
+      fi
+      if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+        [ $INSTALL_STATUS -eq 0 ] && mkConfig || { echo -e "$bad installation failed!"; sleep 1; }
+      else
+        mkConfig
+      fi
+      ;;
+    n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$Download/$crUNZIP/"; sleep 1 ;;
+  esac
+}
+
+extract() {
+  local archivePath=$1
+
+  if [ $putDns -eq 1 ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
+    if su -c "id" >/dev/null 2>&1; then
+     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+        su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+        su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+        su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+      else
+        su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+      fi
+    elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+      ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+    fi
+    putDns=0
+  fi
+  echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
+  termux-wake-lock
+  pv "$archivePath" | bsdtar -xf - -C "$Download" --include "$crUNZIP/apks/ChromePublic.apk" && rm -f "$archivePath"
+  termux-wake-unlock
+  apk_path="$Download/$crUNZIP/apks/ChromePublic.apk"
+  installPrompt "$apk_path"  # Call install prompt function
+}
+
+dl() {
+  local dlUrl=$1
+
+  crdlSize=$(curl -sIL $dlUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
+  echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$dlUrl${Reset} $crdlSize"
+  archive_path="$Download/$crUNZIP.zip"
+  while true; do
+    if [ "$channel" == "Stable" ] || [ "$channel" == "Beta" ] || [ "$channel" == "Dev" ]; then
+      curl -L --progress-bar -C - -o "$archive_path" "$dlUrl"
+      DOWNLOAD_STATUS=$?
+    else
+      aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "$crUNZIP.zip" -d "$Download" "$dlUrl"
+      DOWNLOAD_STATUS=$?
+      echo  # White space
+    fi
+    if [ $DOWNLOAD_STATUS -eq 0 ]; then
+      extract "$archive_path"  # Call extract function
+      break  # break the resuming download loop
+    elif [ $DOWNLOAD_STATUS -eq 6 ] || [ $DOWNLOAD_STATUS -eq 19 ]; then
+      if [ "$channel" != "Stable" ] || [ "$channel" != "Beta" ] || [ "$channel" != "Dev" ]; then
+        aria2ConsoleLogHide  # for aria2
+      fi
+      echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
+      echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
+      if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+        if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+          su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+          su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+          su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+        else
+          su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+        fi
+        putDns="1"
+      elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+        ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+        putDns="1"
+      else
+        am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
+        if [ $simCountry != "in" ]; then
+          termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
+        else
+          termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"
+          sleep 0.5 && termux-open "https://github.com/Aefyr/SAI/releases/latest/"
+        fi
+      fi
+    elif [ $DOWNLOAD_STATUS -eq 56 ] || [ $DOWNLOAD_STATUS -eq 1 ]; then
+      if [ "$channel" != "Stable" ] || [ "$channel" != "Beta" ] || [ "$channel" != "Dev" ]; then
+        aria2ConsoleLogHide  # for aria2
+      fi
+      echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
+      apMode=$(getprop persist.radio.airplane_mode_on)  # Get AirPlane Mode Status (0=OFF; 1=ON)
+      [ $apMode -eq 1 ] && echo -e "$notice Please turn off Airplane mode!"
+      am start -a android.settings.WIRELESS_SETTINGS > /dev/null 2>&1
+      networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
+      networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
+      if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
+        echo -e "$info If Mobile data is turned on for SIM1, please switch Mobile data to SIM2: $simOperator2"
+        am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
+      elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
+        echo -e "$info If Mobile data is turned on for SIM2, please switch Mobile data to SIM1: $simOperator1"
+        am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
+      else
+        echo -e "$info Please connect to Wi-Fi if there is a network available near you."
+        am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
+      fi
+      if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
+        if [ $socOEM == "Mediatek" ] && su -c "id" >/dev/null 2>&1; then
+          echo -e "$info Please select Network Type: LTE/NR"
+          su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
+        fi
+        if [ $socOEM != "Mediatek" ]; then
+          echo -e "$info Please select Network Type: LTE/NR"
+          am start -n com.android.phone/.settings.RadioInfo > /dev/null 2>&1  # Open Redio Info
+        fi
+      fi
+    fi
+    echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
+  done
+}
+
 # --- Direct Download Function ---
 directDl() {
-downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
-# Prefer the direct download link if available
-if [ -n "$downloadUrl" ] && [ "$downloadUrl" != "null" ]; then
+  downloadUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots/$snapshotPlatform/$branchPosition/$crUNZIP.zip"
+  if curl --head --silent --fail "$downloadUrl" >/dev/null 2>&1; then
     echo -e "${good} Found valid snapshot at: $branchPosition" && echo
     if [ "$installedPosition" == "$branchPosition" ]; then
-        echo -e "$notice Already installed: $installedPosition"
-        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && sleep 3 && clear && exit 0
+      echo -e "$notice Already installed: $installedPosition"
+      if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
+      sleep 3; clear; exit 0
     else
-        crdlSize=$(curl -sIL $downloadUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-        echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$downloadUrl${Reset} $crdlSize"
-        while true; do
-            #curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$downloadUrl"
-            aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "$crUNZIP.zip" -d "$HOME" "$downloadUrl"
-            DOWNLOAD_STATUS=$?
-            echo
-            if [ $DOWNLOAD_STATUS -eq "0" ]; then
-              break  # break the resuming download loop
-            elif [ $DOWNLOAD_STATUS -eq "6" ] || [ $DOWNLOAD_STATUS -eq "19" ]; then
-              aria2ConsoleLogHide  # for aria2
-              echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
-              echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-              if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
-                if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-                  su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-                  su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-                  su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-                else
-                  su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-                fi
-                putDns="1"
-              elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
-                ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-                putDns="1"
-              else
-                am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
-                if [ $simCountry != "in" ]; then
-                  termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
-                else
-                  termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"
-                  sleep 0.5 && termux-open "https://github.com/Aefyr/SAI/releases/latest/"
-                fi
-              fi
-            elif [ $DOWNLOAD_STATUS -eq "56" ] || [ $DOWNLOAD_STATUS -eq "1" ]; then
-              aria2ConsoleLogHide  # for aria2
-              echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
-              if [ $apMode == 1 ]; then
-                echo -e "$notice Please turn off Airplane mode!"
-              fi
-              am start -a android.settings.WIRELESS_SETTINGS > /dev/null 2>&1
-              if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
-                echo -e "$info If Mobile data is turned on for SIM1, please switch Mobile data to SIM2: $simOperator2"
-                am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
-              elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
-                echo -e "$info If Mobile data is turned on for SIM2, please switch Mobile data to SIM1: $simOperator1"
-                am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
-              else
-                echo -e "$info Please connect to Wi-Fi if there is a network available near you."
-                am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
-              fi
-              if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
-                if [ $socOEM == "Mediatek" ] && su -c "id" >/dev/null 2>&1; then
-                  echo -e "$info Please select Network Type: LTE/NR"
-                  su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
-                fi
-                if [ $socOEM != "Mediatek" ]; then
-                  echo -e "$info Please select Network Type: LTE/NR"
-                  am start -n com.android.phone/.settings.RadioInfo > /dev/null 2>&1  # Open Redio Info
-                fi
-              fi
-            fi
-            echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
-        done
-        if [ "$putDns" == "1" ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
-          if su -c "id" >/dev/null 2>&1; then
-            if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-              su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-              su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
-              su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-            else
-              su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
-            fi
-          elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-            ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
-          fi
-          putDns="0"
-        fi
-        echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
-        termux-wake-lock
-        pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-        termux-wake-unlock
-        appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-        appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-        crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-        if [ $foundTermuxAPI -eq 1 ]; then
-          opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
-        else
-          buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install Chromium_v$appVersion.apk?" "buttons" && opt=Yes || opt=No
-        fi
-              case $opt in
-                y*|Y*|"")
-                  mkConfig() {
-                    config "INSTALLED_POSITION" "$branchPosition"
-                    config "INSTALLED_VERSION" "$crVersion"
-                    config "APP_VERSION" "${appVersion}(${appVersionCode})"
-                    config "APP_SIZE" "$crSize"
-                    config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                    if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && clear && exit 0
-                  }
-                  crInstall
-                  if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ $AndroidDesktop -eq 1 ]; then
-                    curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
-                  fi
-                  if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                    if [ $INSTALL_STATUS -eq 0 ]; then
-                      mkConfig
-                    else
-                      echo -e "$bad installation failed!" && sleep 1
-                    fi
-                  else
-                    mkConfig
-                  fi
-                  ;;
-                n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$HOME/$crUNZIP/"; sleep 1 ;;
-              esac
+      dl "$downloadUrl"  # Call dl function
     fi
-else
-    echo -e "${bad} No direct download URL found." && sleep 1
-fi
+  else
+    echo -e "${bad} No direct download URL found!"; sleep 1
+  fi
 }
 
 # --- Find valid snapshot by searching downward from branch position ---
 findValidSnapshot() {
-    local position=$1
-    local maxPosition=$2
-    local range=500
+  local position=$1
+  local maxPosition=$2
+  local range=500
 
-    # Validate inputs are integers
-    if ! [[ "$position" =~ ^[0-9]+$ ]] || ! [[ "$maxPosition" =~ ^[0-9]+$ ]]; then
-        echo -e "${bad} Invalid positions: $position (branch) or $maxPosition (max)"
-        exit 1
+  echo -e "${running} Searching downward from $position (max attempts: $range)"
+
+  # Search downward starting from branchPosition
+  for ((pos = position; pos >= position - range; pos--)); do
+    [ "$pos" -lt 0 ] && break  # Stop if we go below 0
+    checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
+    if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
+      echo -e "${good} Found valid snapshot at: $pos" && echo
+      if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
+        echo -e "$notice Already installed: $installedVersion"
+        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
+        sleep 3; clear; exit 0
+      else
+        branchPosition="$pos"
+        dl "$checkUrl"  # Call dl function
+        sleep 3; break  # Break the searching loop
+      fi
+    else
+      echo -e "$notice No valid snapshot found at position: $pos"
     fi
-
-    echo -e "${running} Searching downward from $position (max attempts: $range)"
-
-    # Search downward starting from branchPosition
-    for ((pos = position; pos >= position - range; pos--)); do
-        [ "$pos" -lt 0 ] && break  # Stop if we go below 0
-        
-        checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
-        if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
-            echo -e "${good} Found valid snapshot at: $pos" && echo
-            if [ "$installedPosition" == "$pos" ] && [ "$installedVersion" == "$crVersion" ]; then
-                echo -e "$notice Already installed: $installedVersion"
-                if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && sleep 3 && clear && exit 0
-            else
-                crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-                echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
-                while true; do
-                    curl -L --progress-bar -C - -o "$HOME/$crUNZIP.zip" "$checkUrl"
-                    DOWNLOAD_STATUS=$?
-                    if [ $DOWNLOAD_STATUS -eq "0" ]; then
-                      break  # break the resuming download loop
-                    fi
-                    echo -e "$notice Retrying in 5 seconds.." && sleep 5  # wait 5 seconds
-                done
-                echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
-                termux-wake-lock
-                pv "$HOME/$crUNZIP.zip" | bsdtar -xf - -C "$HOME" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$HOME/$crUNZIP.zip"
-                termux-wake-unlock
-                appVersion=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-                appVersionCode=$($HOME/aapt2 dump badging $HOME/$crUNZIP/apks/ChromePublic.apk 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
-                crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s "$HOME/$crUNZIP/apks/ChromePublic.apk" 2>/dev/null)/1000000}" 2>/dev/null)
-                if [ $foundTermuxAPI -eq 1 ]; then
-                  opt=$(termux-dialog confirm -t "Install Chromium" -i "Do you want to install Chromium_v$appVersion.apk?" | jq -r '.text')
-                else
-                  buttons=("<Yes>" "<No>"); echo; confirmPrompt "Do you want to install Chromium_v$appVersion.apk?" "buttons" && opt=Yes || opt=No
-                fi
-                case $opt in
-                    y*|Y*|"")
-                      mkConfig() {
-                        config "INSTALLED_POSITION" "$pos"
-                        config "INSTALLED_VERSION" "$crVersion"
-                        config "APP_VERSION" "${appVersion}(${appVersionCode})"
-                        config "APP_SIZE" "$crSize"
-                        config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
-                        if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi && clear && exit 0
-                      }
-                      crInstall
-                      if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ $AndroidDesktop -eq 1 ]; then
-                        curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
-                      fi
-                      if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-                        if [ $INSTALL_STATUS -eq 0 ]; then
-                          mkConfig
-                        else
-                          echo -e "$bad installation failed!" && sleep 1
-                        fi
-                      else
-                        mkConfig
-                      fi
-                      ;;
-                    n*|N*)
-                      echo -e "$notice Chromium installation skipped."
-                      rm -rf "$HOME/chrome-android" && sleep 1
-                      ;;
-                esac
-                sleep 3 && break  # Break the searching loop
-            fi
-        else
-          echo -e "$notice No valid snapshot found at position: $pos"
-        fi
-    done
+  done
 }
 
 # --- Fetch the last Chromium Stable version info ---
 sInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Android&num=2")
-    crVersion=$(echo "$branchData" | jq -r '.[1].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
-    echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform=Android&num=2")
+  crVersion=$(echo "$branchData" | jq -r '.[1].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[1].chromium_main_branch_position')
+  echo -e "$info Last Chromium Stable Releases Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Beta version info ---
 bInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Android&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Beta&platform=Android&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Beta Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Dev version info ---
 dInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Android&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Dev&platform=Android&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Dev Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the last Chromium Canary version ---
 cInfo() {
-    branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
-    crVersion=$(echo "$branchData" | jq -r '.[0].version')
-    branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
-    echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
+  branchData=$(curl -s "https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Android&num=1")
+  crVersion=$(echo "$branchData" | jq -r '.[0].version')
+  branchPosition=$(echo "$branchData" | jq -r '.[0].chromium_main_branch_position')
+  echo -e "$info Last Chromium Canary Version: $crVersion at branch position: $branchPosition"
 }
 
 # --- Fetch the Chromium Canary Test version info ---
@@ -782,17 +708,13 @@ tInfo() {
   
   n="500"  # Initialize n=500
   while true; do
-    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
-      | sed 's/^[·[:space:]]*//' | wc -l)
-    if [ "$count" -ge 1 ]; then
-      break  # break the loop if count > 1
-    fi
+    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | sed 's/^[·[:space:]]*//' | wc -l)
+    [ $count -ge 1 ] && break  # break the loop if count > 1
     n=$((n + 500))  # if ! count > 1; then n=n+500
   done
 
   # Get the Chromium Canary Test commit time string (e.g., "30 seconds / 30 minutes / 36 hours / 2 days ago")
-  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' \
-    | head -1 | sed 's/^[·[:space:]]*//')
+  time_str=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | head -1 | sed 's/^[·[:space:]]*//')
 
   # Parse the time string into minutes
   if [[ "$time_str" =~ ([0-9]+)[[:space:]]+second ]]; then
@@ -810,9 +732,7 @@ tInfo() {
     commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -830,9 +750,7 @@ tInfo() {
     fi
     diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
     major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -841,9 +759,7 @@ comment
     commit=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'a:contains("Updating trunk VERSION from") attr{href}' | head -n 2 | tail -n 1) && baseCommitUrl="https://chromium.googlesource.com"
     diff=$(curl -sL "$baseCommitUrl$commit" | pup 'span.DiffTree-action--modify a attr{href}' | head -1) && diffGit=$(curl -s "$baseCommitUrl$diff" | pup 'pre.Diff-unified text{}')
     major=$(echo "$diffGit" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diffGit" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diffGit" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diffGit" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diffGit" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
@@ -869,18 +785,14 @@ comment
     fi
     diff=$(curl -s "https://api.github.com/repos/chromium/chromium/commits/$commitHash" | jq -r '.files[] | "\n--- \(.filename) ---\n\(.patch // "binary or too large to display")"' 2>/dev/null)
     major=$(echo "$diff" | grep -E '^\s*MAJOR=' | head -1 | cut -d'=' -f2)
-    if [ -z "$major" ]; then
-      major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
-    fi
+    [ -z "$major" ] && major=$(echo "$diff" | grep -E '^\+MAJOR=' | head -1 | cut -d'=' -f2)
     minor=$(echo "$diff" | grep -E '^\s*MINOR=' | head -1 | cut -d'=' -f2)
     build=$(echo "$diff" | grep -E '^\+BUILD=' | head -1 | cut -d'=' -f2) && patch=$(echo "$diff" | grep -E '^\s*PATCH=' | head -1 | cut -d'=' -f2)
     crVersion="${major}.${minor}.${build}.${patch}"
 comment
   fi
   
-  if [ "$crVersion" == " . . . " ]; then
-    crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
-  fi
+  [ "$crVersion" == " . . . " ] && crVersion=$(echo "$branchData" | jq -r '.[0].version' | sed -E -e 's/^([0-9]{2})([0-9])/\1X/' -e 's/([0-9])([0-9]{3})\.[0-9]+/\1XXX.X/')
   printf "\r\033[K"
 
   echo -e "$info Last Chromium Canary Test Version: $crVersion at branch position: $branchPosition"
@@ -993,43 +905,39 @@ while true; do
   else
     options=(Stable Beta Dev Canary Canary\ Test); buttons=("<Select>" "<Exit>"); menu "options" "buttons"; channel="${options[$selected]}"
   fi
-        case "$channel" in
-          [Ss]*)
-            channel="Stable"
-            echo && sInfo  # Call the Chromium Stable info function
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
-            ;;
-          [Bb]*)
-            channel="Beta"
-            echo && bInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          [Dd]*)
-            channel="Dev"
-            echo && dInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          Canary)
-            channel="Canary"
-            echo && cInfo
-            echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
-            ;;
-          Canary\ Test)
-            echo && tInfo
-            directDl  # Call the direct download function
-            ;;
-          Quit)
-            if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
-            clear  # clear Termianl
-            [ $foundTermuxAPI -eq 1 ] && channel=""
-            [ $foundTermuxAPI -eq 1 ] && termux-api-stop >/dev/null 2>&1
-            break  # break the loop
-            ;;
-          *)
-            if [ $foundTermuxAPI -eq 1 ]; then
-              termux-toast -g bottom "Invalid option! Please select a valid channel." && sleep 0.5
-            fi
-            ;;
-        esac
+  case "$channel" in
+    [Ss]*)
+      channel="Stable"
+      echo && sInfo  # Call the Chromium Stable info function
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE  # Call the find valid snapshot function and pass the value
+      ;;
+    [Bb]*)
+      channel="Beta"
+      echo && bInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    [Dd]*)
+      channel="Dev"
+      echo && dInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    Canary)
+      channel="Canary"
+      echo && cInfo
+      echo && findValidSnapshot "$branchPosition" $LAST_CHANGE
+      ;;
+    Canary\ Test)
+      echo && tInfo
+      directDl  # Call the direct download function
+      ;;
+    Quit)
+      if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
+      clear  # clear Termianl
+      [ $foundTermuxAPI -eq 1 ] && channel=""
+      [ $foundTermuxAPI -eq 1 ] && termux-api-stop >/dev/null 2>&1
+      break  # break the loop
+      ;;
+    *) [ $foundTermuxAPI -eq 1 ] && { termux-toast -g bottom "Invalid option! Please select a valid channel."; sleep 0.5; } ;;
+  esac
 done
 #####################################################################################
