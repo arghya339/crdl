@@ -113,7 +113,7 @@ memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
 installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
 installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
-AndroidDesktop=0
+[ "$arch" == "x86_64" ] && AndroidDesktop=1 || AndroidDesktop=0
 AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
