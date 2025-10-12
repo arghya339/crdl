@@ -143,17 +143,17 @@ fi
 if [ $arch == "x86" ]; then
   echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
   termux-open-url "https://chromium.googlesource.com/chromium/src/+/0267e3c2/docs/android_build_instructions.md"
-  if [ $Android -ge 9 ]; then
+  if [ $Android -ge 10 ]; then
     echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
     termux-open "https://github.com/brave/brave-browser/releases/latest/"
-  elif [ $Android -eq 8 ] || [ $Android -eq 7 ]; then
+  elif [ $Android -ge 7 ]; then
     echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
     termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
   else
     echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
     termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
   fi
-  rm $PREFIX/bin/crdl && rm $HOME/.crdl.sh
+  rm -f $PREFIX/bin/crdl && rm -f $HOME/.crdl.sh
   exit 1
 fi
 
