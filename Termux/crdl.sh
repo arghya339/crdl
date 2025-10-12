@@ -512,6 +512,7 @@ installPrompt() {
       else
         mkConfig
       fi
+      rm -rf "$Download/$crUNZIP/"  # Remove extracting dir
       ;;
     n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$Download/$crUNZIP/"; sleep 1 ;;
   esac
