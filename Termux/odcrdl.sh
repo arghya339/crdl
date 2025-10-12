@@ -253,6 +253,8 @@ if [ $arch == "arm64-v8a" ] && [ $Android -eq 9 ]; then
     y*|Y*|"") AndroidDesktop=1 ;;
     n*|N*) echo -e "$notice AndroidDesktopChromium skipped!"; AndroidDesktop=0 ;;
   esac
+else
+  AndroidDesktop=0
 fi
 
 # --- Detect arch (ARM or ARM64 or x86_64) ---
