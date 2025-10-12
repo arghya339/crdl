@@ -354,11 +354,11 @@ crInstall() {
     [ $INSTALL_STATUS -eq 0 ] && rm -rf "$Download/$crUNZIP"
   elif [ $Android -le 6 ]; then
     am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://$Download/$crUNZIP/apks/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
-    sleep 15
+    sleep 30
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$Download/$crUNZIP/"
   else
     termux-open --view "$Download/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
-    sleep 15
+    sleep 30
     am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$Download/$crUNZIP/"
   fi
 }
