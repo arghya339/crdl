@@ -258,7 +258,7 @@ fi
 if [ $arch == "arm64-v8a" ]; then
   memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a basicCalculator
   # Prefer 32-bit apk if device is usually low on memory (RAM).
-  if [ $AndroidDesktop == 1 ]; then
+  if [ $AndroidDesktop -eq 1 ]; then
     snapshotPlatform="AndroidDesktop_arm64"
   elif [ "$(echo "$memTotalGB <= 4" | bc -l)" -eq 1 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
     snapshotPlatform="Android"
