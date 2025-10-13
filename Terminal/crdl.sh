@@ -192,7 +192,7 @@ aria2ConsoleLogHide() {
   fi
   echo -e "Navigate with [↑] [↓] [←] [→] || Select with [↵]\n"
   for ((i=0; i<=$((${#options[@]} - 1)); i++)); do
-    if [ $i -eq $channel ]; then
+    if [ $i -eq $selected ]; then
       echo -e "${whiteBG}➤ ${options[$i]} $Reset"
     else
       [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${options[$i]}" || echo "$(($i + 1)). ${options[$i]}"
