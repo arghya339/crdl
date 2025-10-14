@@ -89,18 +89,18 @@ if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
       su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
       package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # Cloudflare 1.1.1.1 packages list
-      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
-      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
       su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
     else
       package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
-      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
     fi
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-    pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # off
-    pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+    pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+    pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
   fi
   putDns=0
 fi
@@ -329,7 +329,7 @@ fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 
 # --- Shizuku Setup first time ---
-if ! su -c "id" >/dev/null 2>&1 && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; }; then
+if [ $su -eq 0 ] && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; }; then
   #echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
   #termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
   echo -e "$info Please manually install Shizuku from GitHub." && sleep 1
@@ -366,7 +366,7 @@ apkInstall() {
   local activityClass=$2
   local fileName=$(basename "$apkPath" 2>/dev/null)
   
-  if su -c "id" >/dev/null 2>&1; then
+  if [ $su -eq 1 ]; then
     su -c "cp '$apkPath' '/data/local/tmp/$fileName'"
     # Temporary Disable SELinux Enforcing during installation if it not in Permissive
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
@@ -512,7 +512,7 @@ installPrompt() {
       if [ -f "$crdlJson" ] && ! jq -e 'has("INSTALLED_POSITION")' "$crdlJson" >/dev/null 2>&1 && [ $AndroidDesktop -eq 1 ]; then
         curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm "$HOME/top-30.sh"
       fi
-      if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+      if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
         [ $INSTALL_STATUS -eq 0 ] && mkConfig || { echo -e "$bad installation failed!"; sleep 1; }
       else
         mkConfig
@@ -574,7 +574,7 @@ dl() {
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
       echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
       if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-        if [ $putDns -eq 0 ] && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+        if [ $putDns -eq 0 ] && ( "$pvDnsMode" == "null" || "$pvDnsMode" == "off" ) && [ "$pvDnsSpec" == "null" ]; then
           if [ $su -eq 1 ]; then
             if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
               su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
@@ -583,7 +583,7 @@ dl() {
             else
               su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
             fi
-          elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+          elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
             ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
           fi
           putDns=1
@@ -618,7 +618,7 @@ dl() {
         am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
       fi
       if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
-        if [ $socOEM == "Mediatek" ] && su -c "id" >/dev/null 2>&1; then
+        if [ $socOEM == "Mediatek" ] && [ $su -eq 1 ]; then
           echo -e "$info Please select Network Type: LTE/NR"
           su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
         fi
