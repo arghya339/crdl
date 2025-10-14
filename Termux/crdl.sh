@@ -5,14 +5,6 @@
 # Use: ~ curl --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/crdl.sh" && bash "$HOME/.crdl.sh"
 # Developer github.com/arghya339
 
-# --- Downloading latest crdl.sh file from GitHub ---
-curl -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/crdl.sh" > /dev/null 2>&1
-
-if [ ! -f "$PREFIX/bin/crdl" ]; then
-  ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
-fi
-chmod +x $HOME/.crdl.sh  # give execute permission to crdl
-
 # --- Colored log indicators ---
 good="\033[92;1m[✔]\033[0m"
 bad="\033[91;1m[✘]\033[0m"
@@ -21,6 +13,7 @@ running="\033[37;1m[~]\033[0m"
 notice="\033[93;1m[!]\033[0m"
 question="\033[93;1m[?]\033[0m"
 
+# ANSI color code
 Green="\033[92m"
 Red="\033[91m"
 Blue="\033[94m"
@@ -30,6 +23,18 @@ White="\033[37m"
 whiteBG="\e[47m\e[30m"
 Yellow="\033[93m"
 Reset="\033[0m"
+
+# --- Checking Internet Connection ---
+if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
+  echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
+  exit 1
+fi
+
+# --- Downloading latest crdl.sh file from GitHub ---
+curl -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/crdl.sh" > /dev/null 2>&1
+
+[ ! -f "$PREFIX/bin/crdl" ] && ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
+[ ! -x "$HOME/.crdl.sh" ] && chmod +x $HOME/.crdl.sh  # give execute permission to crdl
 
 # --- Construct the crdl shape using string concatenation (ANSI Lean Font) ---
 print_crdl() {
@@ -45,7 +50,69 @@ print_crdl() {
   echo
 }
 
+# --- Global variables ---
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
+Model=$(getprop ro.product.model)  # Get device model
+arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
+arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
+socOEM=$(getprop ro.soc.manufacturer)  # Get SOC Manufacturer
+networkName1=$(getprop gsm.operator.alpha | cut -d',' -f1)  # Get SIM1 Carrier name
+networkName2=$(getprop gsm.operator.alpha | cut -d',' -f2)  # Get SIM2 Carrier name
+simOperator1=$(getprop gsm.sim.operator.alpha | cut -d',' -f1)  # Get SIM1 Operator name
+simOperator2=$(getprop gsm.sim.operator.alpha | cut -d',' -f2)  # Get SIM2 Operator name
+simCountry=$(getprop gsm.sim.operator.iso-country | cut -d',' -f1)  # Get SIM1 Country
+cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
+memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
+installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
+installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
+[ "$arch" == "x86_64" ] && AndroidDesktop=1 || AndroidDesktop=0
+AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
+branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
+appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
+appVersion=$(jq -r '.APP_VERSION' "$crdlJson" 2>/dev/null)
+installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
+chromiumActivityClass="org.chromium.chrome/com.google.android.apps.chrome.Main"
+Download="/sdcard/Download"  # Download dir
+
+clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
+
+pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
+outdatedPKG=$(apt list --upgradable 2>/dev/null)
+echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
+installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
+
+su -c "id" >/dev/null 2>&1 && su=1 || su=0
+
+if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+  if [ $su -eq 1 ]; then
+    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+      package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # Cloudflare 1.1.1.1 packages list
+      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
+      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+    else
+      package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
+      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+    fi
+  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+    package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
+    pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # off
+    pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
+  fi
+  putDns=0
+fi
+
+# Check if TermuxAPI available
+if termux-api-start > /dev/null 2>&1; then
+  foundTermuxAPI=1
+  grep -q "^# hide-soft-keyboard-on-startup = true" "$HOME/.termux/termux.properties" && sed -i '/hide-soft-keyboard-on-startup = true/s/# //' "$HOME/.termux/termux.properties"
+  grep -q "^# soft-keyboard-toggle-behaviour = enable/disable" "$HOME/.termux/termux.properties" && sed -i '/soft-keyboard-toggle-behaviour = enable\/disable/s/# //' "$HOME/.termux/termux.properties"
+else
+  foundTermuxAPI=0
+fi
 
 # --- Storage Permission Check Logic ---
 if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
@@ -88,65 +155,6 @@ if [ "$Android" -ge 6 ]; then
   fi
 fi
 
-# --- Checking Internet Connection ---
-if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
-  echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
-  exit 1
-fi
-
-# --- Global variables ---
-Model=$(getprop ro.product.model)  # Get device model
-arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
-arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
-socOEM=$(getprop ro.soc.manufacturer)  # Get SOC Manufacturer
-networkName1=$(getprop gsm.operator.alpha | cut -d',' -f1)  # Get SIM1 Carrier name
-networkName2=$(getprop gsm.operator.alpha | cut -d',' -f2)  # Get SIM2 Carrier name
-simOperator1=$(getprop gsm.sim.operator.alpha | cut -d',' -f1)  # Get SIM1 Operator name
-simOperator2=$(getprop gsm.sim.operator.alpha | cut -d',' -f2)  # Get SIM2 Operator name
-simCountry=$(getprop gsm.sim.operator.iso-country | cut -d',' -f1)  # Get SIM1 Country
-cloudflareDOH="-L --doh-url https://cloudflare-dns.com/dns-query"
-pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
-outdatedPKG=$(apt list --upgradable 2>/dev/null)
-echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
-installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
-memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-crdlJson="$HOME/.crdl.json"  # json file to store crdl related data
-installedPosition=$(jq -r '.INSTALLED_POSITION' "$crdlJson" 2>/dev/null)
-installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
-[ "$arch" == "x86_64" ] && AndroidDesktop=1 || AndroidDesktop=0
-AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
-branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
-appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
-appVersion=$(jq -r '.APP_VERSION' "$crdlJson" 2>/dev/null)
-installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
-chromiumActivityClass="org.chromium.chrome/com.google.android.apps.chrome.Main"
-Download="/sdcard/Download"  # Download dir
-if su -c "id" >/dev/null 2>&1; then
-  if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-    su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-    package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # Cloudflare 1.1.1.1 packages list
-    pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
-    pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
-    su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-  else
-    package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-    pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # off
-    pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # null
-  fi
-elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-  package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-  pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # off
-  pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # null
-fi
-# Check if TermuxAPI available
-if termux-api-start > /dev/null 2>&1; then
-  foundTermuxAPI=1
-  grep -q "^# hide-soft-keyboard-on-startup = true" "$HOME/.termux/termux.properties" && sed -i '/hide-soft-keyboard-on-startup = true/s/# //' "$HOME/.termux/termux.properties"
-  grep -q "^# soft-keyboard-toggle-behaviour = enable/disable" "$HOME/.termux/termux.properties" && sed -i '/soft-keyboard-toggle-behaviour = enable\/disable/s/# //' "$HOME/.termux/termux.properties"
-else
-  foundTermuxAPI=0
-fi
-
 # --- Checking Android Version ---
 # Latest Chromium required Android 10+
 if [ $Android -le 9 ]; then
@@ -179,8 +187,6 @@ if [ $arch == "x86" ]; then
   rm -f $PREFIX/bin/crdl && rm -f $HOME/.crdl.sh
   exit 1
 fi
-
-clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- pkg upgrade function ---
 pkgUpdate() {
@@ -225,9 +231,8 @@ pkgInstall "pv"  # pv install/update
 pkgInstall "bc"  # bc install/update
 
 # --- Download and give execute (--x) permission to AAPT2 Binary ---
-if [ ! -f "$HOME/aapt2" ]; then
-  curl -sL "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2" && chmod +x "$HOME/aapt2"
-fi
+[ ! -f "$HOME/aapt2" ] && curl -sL "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2"
+[ ! -x "$HOME/aapt2" ] && chmod +x "$HOME/aapt2"
 
 config() {
   local key="$1"
@@ -422,7 +427,7 @@ if [ ! -f "$HOME/.shortcuts/crdl" ] || [ ! -f "$HOME/.termux/widget/dynamic_shor
     done
     apkInstall "$apk_path" "com.termux.widget/com.termux.widget.TermuxLaunchShortcutActivity"  # Install Termux:Widget app using apkInstall function
   fi
-  if su -c "id" >/dev/null 2>&1; then
+  if [ $su -eq 1 ]; then
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
       su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
       su -c 'pm grant com.termux android.permission.POST_NOTIFICATIONS'
@@ -520,20 +525,21 @@ installPrompt() {
 
 extract() {
   local archivePath=$1
-
-  if [ $putDns -eq 1 ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
-    if su -c "id" >/dev/null 2>&1; then
-     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-        su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-        su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
-        su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-      else
-        su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+  if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+    if [ $putDns -eq 1 ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
+      if [ $su -eq 1 ]; then
+        if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+          su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+          su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+          su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+        else
+          su -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+        fi
+      elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+        ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
       fi
-    elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-      ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+      putDns=0
     fi
-    putDns=0
   fi
   echo && echo -e "$running Extrcting ${Red}$crUNZIP.zip${Reset}"
   termux-wake-lock
@@ -567,18 +573,21 @@ dl() {
       fi
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
       echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-      if su -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
-        if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-          su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-          su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-          su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-        else
-          su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+      if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+        if [ $putDns -eq 0 ] && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+          if [ $su -eq 1 ]; then
+            if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+              su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+              su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+              su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+            else
+              su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+            fi
+          elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
+            ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+          fi
+          putDns=1
         fi
-        putDns="1"
-      elif "$HOME/rish" -c "id" >/dev/null 2>&1 && [ "$pvDnsMode" == "off" ] && [ "$pvDnsSpec" == "null" ]; then
-        ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-        putDns="1"
       else
         am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
         if [ $simCountry != "in" ]; then
