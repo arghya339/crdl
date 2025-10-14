@@ -85,25 +85,24 @@ installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 su -c "id" >/dev/null 2>&1 && su=1 || su=0
 
 if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-  if [ $su -eq 1 ]; then
-    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-      package=$(su -c "pm list packages | grep com.cloudflare.onedotonedotonedotone" 2>/dev/null)  # Cloudflare 1.1.1.1 packages list
-      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
-      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
-      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-    else
-      package=$(su -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-      pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
-      pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
-    fi
-  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    package=$(~/rish -c "pm list packages | grep 'com.cloudflare.onedotonedotonedotone'" 2>/dev/null)  # SnapChat packages list
-    pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
-    pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
-  fi
   putDns=0
 fi
+getPvDnsStatus() {
+    if [ $su -eq 1 ]; then
+      if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+        su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+        pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+        pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
+        su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+      else
+        pvDnsMode=$(su -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+        pvDnsSpec=$(su -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
+      fi
+    elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+      pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+      pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
+    fi
+}
 
 # Check if TermuxAPI available
 if termux-api-start > /dev/null 2>&1; then
@@ -526,6 +525,7 @@ installPrompt() {
 extract() {
   local archivePath=$1
   if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+    getPvDnsStatus
     if [ $putDns -eq 1 ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
       if [ $su -eq 1 ]; then
         if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
@@ -574,6 +574,7 @@ dl() {
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
       echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
       if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+        getPvDnsStatus
         if [ $putDns -eq 0 ] && { [ "$pvDnsMode" == "null" ] || [ "$pvDnsMode" == "off" ]; } && [ "$pvDnsSpec" == "null" ]; then
           if [ $su -eq 1 ]; then
             if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
@@ -590,11 +591,8 @@ dl() {
         fi
       else
         am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
-        if [ $simCountry != "in" ]; then
-          termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone"
-        else
-          termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"
-          sleep 0.5 && termux-open "https://github.com/Aefyr/SAI/releases/latest/"
+        if [ $? != 0 ]; then
+          [ $simCountry != "in" ] && termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone" || { termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"; sleep 0.5; termux-open "https://github.com/Aefyr/SAI/releases/latest/"; }
         fi
       fi
     elif [ $DOWNLOAD_STATUS -eq 56 ] || [ $DOWNLOAD_STATUS -eq 1 ]; then
