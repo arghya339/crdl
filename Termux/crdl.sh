@@ -574,7 +574,7 @@ dl() {
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
       echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
       if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-        if [ $putDns -eq 0 ] && ( "$pvDnsMode" == "null" || "$pvDnsMode" == "off" ) && [ "$pvDnsSpec" == "null" ]; then
+        if [ $putDns -eq 0 ] && { [ "$pvDnsMode" == "null" ] || [ "$pvDnsMode" == "off" ]; } && [ "$pvDnsSpec" == "null" ]; then
           if [ $su -eq 1 ]; then
             if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
               su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
