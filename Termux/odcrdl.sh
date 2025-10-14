@@ -5,14 +5,6 @@
 # Use: ~ curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh" && bash "$HOME/.crdl.sh"
 # Developer github.com/arghya339
 
-# --- Downloading latest odcrdl.sh file from GitHub ---
-curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh"
-
-if [ ! -f "$PREFIX/bin/crdl" ]; then
-  ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
-fi
-chmod +x $HOME/.crdl.sh  # give execute permission to crdl
-
 # --- Colored log indicators ---
 good="\033[92;1m[✔]\033[0m"
 bad="\033[91;1m[✘]\033[0m"
@@ -21,6 +13,7 @@ running="\033[37;1m[~]\033[0m"
 notice="\033[93;1m[!]\033[0m"
 question="\033[93;1m[?]\033[0m"
 
+# ANSI color code
 Green="\033[92m"
 Red="\033[91m"
 Blue="\033[94m"
@@ -30,6 +23,18 @@ White="\033[37m"
 whiteBG="\e[47m\e[30m"
 Yellow="\033[93m"
 Reset="\033[0m"
+
+# --- Checking Internet Connection ---
+if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
+  echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
+  exit 1
+fi
+
+# --- Downloading latest odcrdl.sh file from GitHub ---
+curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh"
+
+[ ! -f "$PREFIX/bin/crdl" ] && ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
+[ ! -x "$HOME/.crdl.sh" ] && chmod +x $HOME/.crdl.sh  # give execute permission to crdl
 
 # --- Construct the crdl shape using string concatenation (ANSI Speed Font) ---
 print_crdl() {
@@ -46,12 +51,28 @@ print_crdl() {
   printf '\n'
 }
 
+# --- Global variables ---
 Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
+Model=$(getprop ro.product.model)  # Get device model
+arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
+arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
+memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
+Download="/sdcard/Download"  # Download dir
+
+su -c "id" >/dev/null 2>&1 && su=1 || su=0
+
+clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
+
+pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
+outdatedPKG=$(apt list --upgradable 2>/dev/null)
+echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
+installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 
 # --- Storage Permission Check Logic ---
 if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
   echo -e "${notice} ${Yellow}Storage permission not granted!${Reset}\n$running ${Green}termux-setup-storage${Reset}.."
-  if [ "$Android" -gt 5 ]; then  # for Android 5 storage permissions grant during app installation time, so Termux API termux-setup-storage command not required
+  if [ $Android -gt 5 ]; then  # for Android 5 storage permissions grant during app installation time, so Termux API termux-setup-storage command not required
     count=0
     while true; do
       if [ "$count" -ge 2 ]; then
@@ -63,7 +84,7 @@ if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
       termux-setup-storage  # ask Termux Storage permissions
       sleep 3  # wait 3 seconds
       if ls /sdcard/ 2>/dev/null | grep -q "^Android" || ls "$HOME/storage/shared/" 2>/dev/null | grep -q "^Android"; then
-        if [ "$Android" -lt 8 ]; then
+        if [ $Android -lt 8 ]; then
           exit 0  # Exit the script
         fi
         break
@@ -75,12 +96,12 @@ fi
 
 # --- enabled allow-external-apps ---
 isOverwriteTermuxProp=0
-if [ "$Android" -eq 6 ] && [ ! -f "$HOME/.termux/termux.properties" ]; then
+if [ $Android -eq 6 ] && [ ! -f "$HOME/.termux/termux.properties" ]; then
   mkdir -p "$HOME/.termux" && echo "allow-external-apps = true" > "$HOME/.termux/termux.properties"
   isOverwriteTermuxProp=1
   echo -e "$notice 'termux.properties' file has been created successfully & 'allow-external-apps = true' line has been add (enabled) in Termux \$HOME/.termux/termux.properties."
   termux-reload-settings
-elif [ "$Android" -eq 6 ] && [ -f "$HOME/.termux/termux.properties" ]; then
+elif [ $Android -eq 6 ] && [ -f "$HOME/.termux/termux.properties" ]; then
   if grep -q "^# allow-external-apps" "$HOME/.termux/termux.properties"; then
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
     isOverwriteTermuxProp=1
@@ -88,7 +109,7 @@ elif [ "$Android" -eq 6 ] && [ -f "$HOME/.termux/termux.properties" ]; then
     termux-reload-settings
   fi
 fi
-if [ "$Android" -ge 6 ]; then
+if [ $Android -ge 6 ]; then
   if grep -q "^# allow-external-apps" "$HOME/.termux/termux.properties"; then
     # other Android applications can send commands into Termux.
     # termux-open utility can send an Android Intent from Termux to Android system to open apk package file in pm.
@@ -101,24 +122,6 @@ if [ "$Android" -ge 6 ]; then
     #fi
   fi
 fi
-
-# --- Checking Internet Connection ---
-if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
-  echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
-  exit 1
-fi
-
-# --- Global variables ---
-Model=$(getprop ro.product.model)  # Get device model
-arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
-arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
-pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
-outdatedPKG=$(apt list --upgradable 2>/dev/null)
-echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
-installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
-memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
-Download="/sdcard/Download"  # Download dir
 
 # Latest Chromium required Android 10+ (The last Chromium app that supports Android 8-9 is v139.0.7230.0 [universal] & Android 7.0 is v119.0.6045.0 [arm64-v8a, armeabi-v7a] & Android 6.0 is v106.0.5249.0 [armeabi-v7a] & Android 5.0 is v95.0.4638.0 [armeabi-v7a]).
 # v139.0.7230.0: 1471513 ~> | Android: 1471509 | Android_Arm64: 1471509 | AndroidDesktop_arm64: 1471504 | AndroidDesktop_x64: 1471508 |
@@ -156,8 +159,6 @@ if [ $arch == "x86" ]; then
   rm -f $PREFIX/bin/crdl && rm -f $HOME/.crdl.sh
   exit 1
 fi
-
-clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 # --- pkg upgrade function ---
 pkgUpdate() {
@@ -289,17 +290,18 @@ elif [ $Android -eq 5 ]; then
 fi
 
 # --- Shizuku Setup first time ---
-if ! su -c "id" >/dev/null 2>&1 && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; }; then
+if [ $su -eq 0 ] && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; }; then
   #echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
   #termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
   echo -e "$info Please manually install Shizuku from GitHub." && sleep 1
   termux-open-url "https://github.com/RikkaApps/Shizuku/releases/latest"
   am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
 
-  curl -sL -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish" && chmod +x "$HOME/rish"
+  curl -sL -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish"
+  [ ! -x "$HOME/rish" ] && chmod +x "$HOME/rish"
   sleep 0.5 && curl -sL -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex"
   
-  if [ "$Android" -lt 11 ]; then
+  if [ $Android -lt 11 ]; then
     url="https://youtu.be/ZxjelegpTLA"  # YouTube/@MrPalash360: Start Shizuku using Computer
     activityClass="com.android.settings/.Settings\$DevelopmentSettingsDashboardActivity"  # Open Developer options
   else
@@ -324,7 +326,7 @@ fi
 
 # --- install Chromium function ---
 crInstall() {
-  if su -c "id" >/dev/null 2>&1; then
+  if [ $su -eq 1 ]; then
     su -c "cp '$Download/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
     # Temporary Disable SELinux Enforcing during installation if it not in Permissive
     if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
@@ -391,7 +393,7 @@ findValidSnapshot() {
           if [ $AndroidDesktop -eq 1 ]; then
             curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm -f "$HOME/top-30.sh"
           fi
-          if su -c "id" >/dev/null 2>&1 || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+          if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
             [ $INSTALL_STATUS -eq 0 ] && { rm -f $PREFIX/bin/crdl; rm -f $HOME/.crdl.sh; } || { echo -e "$bad installation failed!"; sleep 1; }
           fi
           ;;

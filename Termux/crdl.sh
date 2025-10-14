@@ -75,14 +75,14 @@ installedTime=$(jq -r '.INSTALLED_TIME' "$crdlJson" 2>/dev/null)
 chromiumActivityClass="org.chromium.chrome/com.google.android.apps.chrome.Main"
 Download="/sdcard/Download"  # Download dir
 
+su -c "id" >/dev/null 2>&1 && su=1 || su=0
+
 clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
 pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
 installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
-
-su -c "id" >/dev/null 2>&1 && su=1 || su=0
 
 if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
   putDns=0
@@ -100,7 +100,10 @@ getPvDnsStatus() {
       fi
     elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
       pvDnsMode=$('$HOME/rish' -c "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
-      pvDnsSpec=$(./rish -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
+      pvDnsSpec=$(~/rish -c "settings get global private_dns_specifier" 2>/dev/null)  # default: null
+    elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
+      pvDnsMode=$(~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings get global private_dns_mode" 2>/dev/null)  # default: null/off
+      pvDnsSpec=$(~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings get global private_dns_specifier" 2>/dev/null)  # default: null
     fi
 }
 
@@ -335,7 +338,8 @@ if [ $su -eq 0 ] && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]
   termux-open-url "https://github.com/RikkaApps/Shizuku/releases/latest"
   am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
 
-  curl -sL -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish" && chmod +x "$HOME/rish"
+  curl -sL -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish"
+  [ ! -x "$HOME/rish" ] && chmod +x "$HOME/rish"
   sleep 0.5 && curl -sL -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex"
   
   if [ "$Android" -lt 11 ]; then
@@ -356,8 +360,9 @@ if ! "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -f "$HOME/rish_shizuku.dex" ]; th
 fi
 
 if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$HOME/adb" ]; then
-  curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb" && chmod +x ~/adb
+  curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb"
 fi
+[ ! -x "$HOME/adb" ] && chmod +x ~/adb
 
 # --- apk installation function ---
 apkInstall() {
@@ -382,7 +387,7 @@ apkInstall() {
     [ $INSTALL_STATUS -eq 0 ] && rm -f "$apkPath"
   elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
     ~/rish -c "cp '$apkPath' '/data/local/tmp/$fileName'"
-    ./rish -c "pm install -r -i com.android.vending '/data/local/tmp/$fileName'" > /dev/null 2>&1  # -r=reinstall
+    ~/rish -c "pm install -r -i com.android.vending '/data/local/tmp/$fileName'" > /dev/null 2>&1  # -r=reinstall
     INSTALL_STATUS=$?
     $HOME/rish -c "rm -f '/data/local/tmp/$fileName'"
     [ "$activityClass" == "$chromiumActivityClass" ] && am start -n $activityClass > /dev/null 2>&1  # launch app after install/update
@@ -524,7 +529,7 @@ installPrompt() {
 
 extract() {
   local archivePath=$1
-  if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+  if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
     getPvDnsStatus
     if [ $putDns -eq 1 ] && [ "$pvDnsMode" == "hostname" ] && [ "$pvDnsSpec" == "one.one.one.one" ]; then
       if [ $su -eq 1 ]; then
@@ -537,6 +542,8 @@ extract() {
         fi
       elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
         ~/rish -c "settings put global private_dns_mode off && settings put global private_dns_specifier null"
+      elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
+        ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
       fi
       putDns=0
     fi
@@ -573,7 +580,7 @@ dl() {
       fi
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
       echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-      if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+      if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
         getPvDnsStatus
         if [ $putDns -eq 0 ] && { [ "$pvDnsMode" == "null" ] || [ "$pvDnsMode" == "off" ]; } && [ "$pvDnsSpec" == "null" ]; then
           if [ $su -eq 1 ]; then
@@ -586,6 +593,8 @@ dl() {
             fi
           elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
             ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+          elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
+            ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
           fi
           putDns=1
         fi
