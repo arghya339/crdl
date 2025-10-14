@@ -84,7 +84,7 @@ outdatedPKG=$(apt list --upgradable 2>/dev/null)
 echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
 installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
 
-if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
+if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
   putDns=0
 fi
 getPvDnsStatus() {
