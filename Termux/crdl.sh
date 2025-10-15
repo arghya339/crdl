@@ -362,8 +362,8 @@ fi
 
 if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$HOME/adb" ]; then
   curl -sL -o "$HOME/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb"
+  [ ! -x "$HOME/adb" ] && chmod +x ~/adb
 fi
-[ ! -x "$HOME/adb" ] && chmod +x ~/adb
 
 # --- apk installation function ---
 apkInstall() {
