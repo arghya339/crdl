@@ -510,6 +510,7 @@ installPrompt() {
         config "APP_VERSION" "${appVersion}(${appVersionCode})"
         config "APP_SIZE" "$crSize"
         config "INSTALLED_TIME" "$(date "+%Y-%m-%d %H:%M")"
+        rm -rf "$Download/$crUNZIP/"  # Remove extracting dir
         if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
         clear; exit 0
       }
@@ -522,7 +523,6 @@ installPrompt() {
       else
         mkConfig
       fi
-      rm -rf "$Download/$crUNZIP/"  # Remove extracting dir
       ;;
     n*|N*) echo -e "$notice Chromium installation skipped."; rm -rf "$Download/$crUNZIP/"; sleep 1 ;;
   esac
