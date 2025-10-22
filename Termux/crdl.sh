@@ -563,6 +563,7 @@ dl() {
   crdlSize=$(curl -sIL $dlUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
   echo -e "$running Direct Downloading Chromium $crVersion from ${Blue}$dlUrl${Reset} $crdlSize"
   archive_path="$Download/$crUNZIP.zip"
+  resolve_err=0; signal_err=0
   while true; do
     if [ "$channel" == "Stable" ] || [ "$channel" == "Beta" ] || [ "$channel" == "Dev" ]; then
       curl -L --progress-bar -C - -o "$archive_path" "$dlUrl"
@@ -580,31 +581,34 @@ dl() {
         aria2ConsoleLogHide  # for aria2
       fi
       echo -e "$bad ISP: $simOperator1 / $simOperator2 failed to resolve ${Blue}https://commondatastorage.googleapis.com/${Reset} host!"
-      echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
-      if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
-        getPvDnsStatus
-        if [ $putDns -eq 0 ] && { [ "$pvDnsMode" == "null" ] || [ "$pvDnsMode" == "off" ]; } && [ "$pvDnsSpec" == "null" ]; then
-          if [ $su -eq 1 ]; then
-            if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-              su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-              su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-              su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-            else
-              su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+      if [ $resolve_err -eq 0 ]; then
+        echo -e "$info Connect Cloudflare 1.1.1.1 + WARP, 1.1.1.1 one of the fastest DNS resolvers on Earth."
+        if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
+          getPvDnsStatus
+          if [ $putDns -eq 0 ] && { [ "$pvDnsMode" == "null" ] || [ "$pvDnsMode" == "off" ]; } && [ "$pvDnsSpec" == "null" ]; then
+            if [ $su -eq 1 ]; then
+              if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
+                su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
+                su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+                su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
+              else
+                su -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+              fi
+            elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
+              ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+            elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
+              ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
             fi
-          elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-            ~/rish -c "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
-          elif "$HOME/adb" -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | awk '{print $1}') shell "id" >/dev/null 2>&1; then
-            ~/adb -s $(~/adb devices 2>/dev/null | head -2 | tail -1 | cut -f1) shell "settings put global private_dns_mode hostname && settings put global private_dns_specifier one.one.one.one"
+            putDns=1
           fi
-          putDns=1
-        fi
-      else
-        am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
-        if [ $? != 0 ]; then
-          [ $simCountry != "in" ] && termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone" || { termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"; sleep 0.5; termux-open "https://github.com/Aefyr/SAI/releases/latest/"; }
+        else
+          am start -n com.cloudflare.onedotonedotonedotone/com.cloudflare.app.presentation.main.SplashActivity > /dev/null 2>&1
+          if [ $? != 0 ]; then
+            [ $simCountry != "in" ] && termux-open-url "https://play.google.com/store/apps/details?id=com.cloudflare.onedotonedotonedotone" || { termux-open "https://www.apkmirror.com/apk/cloudflare/1-1-1-1-faster-safer-internet/"; sleep 0.5; termux-open "https://github.com/Aefyr/SAI/releases/latest/"; }
+          fi
         fi
       fi
+      ((resolve_err++))
     elif [ $DOWNLOAD_STATUS -eq 56 ] || [ $DOWNLOAD_STATUS -eq 1 ]; then
       if [ "$channel" != "Stable" ] || [ "$channel" != "Beta" ] || [ "$channel" != "Dev" ]; then
         aria2ConsoleLogHide  # for aria2
@@ -612,29 +616,32 @@ dl() {
       echo -e "$bad $networkName1 / $networkName2 signal are unstable!"
       apMode=$(getprop persist.radio.airplane_mode_on)  # Get AirPlane Mode Status (0=OFF; 1=ON)
       [ $apMode -eq 1 ] && echo -e "$notice Please turn off Airplane mode!"
-      am start -a android.settings.WIRELESS_SETTINGS > /dev/null 2>&1
-      networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
-      networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
-      if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
-        echo -e "$info If Mobile data is turned on for SIM1, please switch Mobile data to SIM2: $simOperator2"
-        am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
-      elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
-        echo -e "$info If Mobile data is turned on for SIM2, please switch Mobile data to SIM1: $simOperator1"
-        am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
-      else
-        echo -e "$info Please connect to Wi-Fi if there is a network available near you."
-        am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
-      fi
-      if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
-        if [ $socOEM == "Mediatek" ] && [ $su -eq 1 ]; then
-          echo -e "$info Please select Network Type: LTE/NR"
-          su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
+      if [ $signal_err -eq 0 ]; then
+        am start -a android.settings.WIRELESS_SETTINGS > /dev/null 2>&1
+        networkType1=$(getprop gsm.network.type | cut -d',' -f1)  # Get SIM1 Network type (NR_SA/NR_NSA,LTE)
+        networkType2=$(getprop gsm.network.type | cut -d',' -f2)  # Get SIM2 Network type (NR_SA/NR_NSA,LTE)
+        if [ $networkType1 == "LTE" ] && [ $networkType2 == "NR_SA" ]; then
+          echo -e "$info If Mobile data is turned on for SIM1, please switch Mobile data to SIM2: $simOperator2"
+          am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
+        elif [ $networkType2 == "LTE" ] && [ $networkType1 == "NR_SA" ]; then
+          echo -e "$info If Mobile data is turned on for SIM2, please switch Mobile data to SIM1: $simOperator1"
+          am start -a android.settings.MANAGE_ALL_SIM_PROFILES_SETTINGS > /dev/null 2>&1
+        else
+          echo -e "$info Please connect to Wi-Fi if there is a network available near you."
+          am start -a android.settings.WIFI_SETTINGS > /dev/null 2>&1
         fi
-        if [ $socOEM != "Mediatek" ]; then
-          echo -e "$info Please select Network Type: LTE/NR"
-          am start -n com.android.phone/.settings.RadioInfo > /dev/null 2>&1  # Open Redio Info
+        if [[ "$networkType1" == "GSM" || "$networkType1" == "WCDMA" || "$networkType1" == "UMTS" || "$networkType2" == "GSM" || "$networkType2" == "WCDMA" || "$networkType2" == "UMTS" ]]; then
+          if [ $socOEM == "Mediatek" ] && [ $su -eq 1 ]; then
+            echo -e "$info Please select Network Type: LTE/NR"
+            su -c "am start --user 0 -n com.mediatek.engineermode/.EngineerMode > /dev/null"
+          fi
+          if [ $socOEM != "Mediatek" ]; then
+            echo -e "$info Please select Network Type: LTE/NR"
+            am start -n com.android.phone/.settings.RadioInfo > /dev/null 2>&1  # Open Redio Info
+          fi
         fi
       fi
+      ((signal_err++))
     fi
     echo -e "$notice Download failed! retrying in 5 seconds.." && sleep 5  # wait 5 seconds
   done
