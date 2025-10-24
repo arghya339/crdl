@@ -69,9 +69,11 @@ installedVersion=$(jq -r '.INSTALLED_VERSION' "$crdlJson" 2>/dev/null)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
 # Detect platform (Intel or ARM)
 if [[ $(uname -m) == "x86_64" ]]; then
-  snapshotPlatform="Mac"  # For Intel (x86_64) 
+  snapshotPlatform="Mac"  # For Intel (x86_64)
+  Arch=amd64
 else
   snapshotPlatform="Mac_Arm"  # For Apple Silicon (ARM64)
+  Arch=arm64
 fi
 LAST_CHANGE=$(curl -s "$branchUrl/$snapshotPlatform/LAST_CHANGE")
 appSize=$(jq -r '.APP_SIZE' "$crdlJson" 2>/dev/null)
@@ -118,10 +120,26 @@ formulaeInstall "bash"  # bash update
 formulaeInstall "grep"  # grep update
 formulaeInstall "curl"  # curl update
 formulaeInstall "aria2"  # aria2 install/update
+formulaeInstall "ca-certificate"  # ca-certificate update
 formulaeInstall "jq"  # jq install/update
 #formulaeInstall "libarchive"  # libarchive (brew version of bsdtar: macOS's system utilities) install/update
 formulaeInstall "pv"  # pv install/update
 formulaeInstall "pup"  # pup install/update
+# https://github.com/aria2/aria2/issues/1920
+  aria2Executing=$(aria2c -q -d "$HOME" -o aria2Executing -U "User-Agent: $USER_AGENT" -U "Referer: https://one.one.one.one/" --ca-certificate="/etc/ssl/cert.pem" --async-dns=true --async-dns-server="$cloudflareIP" "https://one.one.one.one/")
+  if echo "$aria2Executing" | grep -q "--async-dns=true" 2>/dev/null; then
+    curl -L --progress-bar -C - -o $HOME/Downloads/aria2c-macos-$Arch.tar https://github.com/tofuliang/aria2/releases/download/20240919/aria2c-macos-$Arch.tar
+    pv "$HOME/Downloads/aria2c-macos-$Arch.tar" | tar -xf - -C "$HOME/Downloads" && rm -f "$HOME/Downloads/aria2c-macos-$Arch.tar"
+    sudo mv $HOME/Downloads/aria2c /usr/local/bin/aria2c
+    if aria2c -v &>/dev/null; then
+      aria2c -v | head -1 | awk '{print $3}'
+    else
+      sudo xattr -d com.apple.quarantine /usr/local/bin/aria2c && aria2c -v | head -1 | awk '{print $3}'
+    fi
+    rm -f ~/aria2Executing
+  else
+    rm -f ~/aria2Executing
+  fi
 
 # Get active interfaces (those with 'status: active')
 active_ifaces=$(ifconfig | awk '/^[a-z]/ { iface=$1; sub(":", "", iface) } /status: active/ { print iface }')
@@ -290,7 +308,7 @@ dl() {
       curl -L --progress-bar -C - -o "$HOME/chrome-mac.zip" "$dlUrl"
       DOWNLOAD_STATUS=$?
     else
-      aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "chrome-mac.zip" -d "$HOME" "$dlUrl"
+      aria2c -x 16 -s 16 --continue=true --console-log-level=error --summary-interval=0 --download-result=hide -o "chrome-mac.zip" -d "$HOME" --ca-certificate="/etc/ssl/cert.pem" "$dlUrl"
       DOWNLOAD_STATUS=$?
       echo  # White Space
     fi
