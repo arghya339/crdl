@@ -964,6 +964,5 @@ while true; do
       ;;
     *) [ $foundTermuxAPI -eq 1 ] && { termux-toast -g bottom "Invalid option! Please select a valid channel."; sleep 0.5; } ;;
   esac
-  [ $foundTermuxAPI -eq 1 ] && termux-api-stop > /dev/null 2>&1
 done
 #####################################################################################
