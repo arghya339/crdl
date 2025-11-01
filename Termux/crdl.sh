@@ -923,7 +923,7 @@ while true; do
     while true; do
       [ $c -eq 30 ] && { kill $dialog_pid 2>/dev/null; c=0; }
       channel_index=$(termux-dialog radio -t "Select Chromium Channel" -v "Stable,Beta,Dev,Canary,Canary Test,Quit" | jq -r .index &); dialog_pid=$!  # show radio button popup dialog
-      [ -n "$channel_index" ] && break || ((c++))
+      [ -n "$channel_index" ] && break || { sleep 1; ((c++)); }
     done
     [ -n $toast_pid ] && kill $toast_pid 2>/dev/null  # stop toast process
     # show Selected channel name using toast
