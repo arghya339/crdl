@@ -3,6 +3,7 @@
 urls=(
   "https://github.com/arghya339/crdl?tab=readme-ov-file#install-extensions-from-chrome-web-store-on-androiddesktop-mobile"  # Docs
   "chrome://flags/#android-pinned-tabs-tablet-tab-strip"  # Android pinned tabs on tablet tab strip in the tabbed layout = Disabled
+  "chrome://flags/#android-pinned-tabs"  # Android pinned tabs = Disabled
   "chrome://flags/#tab-group-parity-bottom-sheet-android"  # Tab Group Parity Bottom Sheet = Disabled
   "chrome://flags/#tab-strip-incognito-migration"  # Tab Strip Incognito switcher migration to toolbar = Disabled
   "chrome://flags/#android-open-incognito-as-window"  # Open incognito tabs in new window = Disabled
