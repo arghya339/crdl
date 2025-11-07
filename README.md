@@ -47,7 +47,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   crdl
   ```
 > [!TIP]
-> [Cromite](https://github.com/uazo/cromite/releases?q=extensions&expanded=true): MV2 and MV3 extensions supported chromium based browser for mobile devices.
+> [Cromite](https://github.com/uazo/cromite/releases/latest): MV2 and MV3 extensions supported chromium based browser for mobile devices.
 
 > [!NOTE]
 > This script was tested on an arm64-v8a device running Android 14 with Termux v0.118.2 with bash v5.2.37(1).
