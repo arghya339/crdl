@@ -71,6 +71,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   ```
   crdl
   ```
+> [!TIP]
+> [Brave](https://github.com/brave/brave-browser/releases/latest): MV2 and MV3 extensions supported chromium based desktop browser.
+
 > [!NOTE]
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
@@ -88,6 +91,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   ```
   & .crdl.ps1
   ```
+> [!TIP]
+> [Brave](https://github.com/brave/brave-browser/releases/latest): MV2 and MV3 extensions supported chromium based desktop browser.
+
 > [!NOTE]  
 > This script was tested on an x86_64 (AMD64) PC running Windows 11 Pro with both Windows PowerShell v5.1.26100.2161 and Microsoft PowerShell v7.5.0
 
