@@ -231,7 +231,6 @@ pkgInstall "jq"  # jq install/update
 pkgInstall "pup"  # pup install/update
 pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
-pkgInstall "bc"  # bc install/update
 
 # --- Download and give execute (--x) permission to AAPT2 Binary ---
 [ ! -f "$HOME/aapt2" ] && curl -sL "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2"
@@ -313,13 +312,13 @@ if [ $arch == "arm64-v8a" ] && [ ! -f "$crdlJson" ]; then
 fi
 
 # --- Variables ---
-memTotalGB=$(echo "scale=2; $memTotalKB / 1048576" | bc -l 2>/dev/null || echo "0")  # scale=2 ensures the result is rounded to 2 decimal places for readability, 1048576 (which is 1024 * 1024, since 1 GB = 1024 MB and 1 MB = 1024 kB), bc is a basicCalculator
+memTotalGB=$((memTotalKB / 1024 / 1024))
 # --- Detect arch (ARM or ARM64 or x86_64) ---
 if [ $arch == "arm64-v8a" ]; then
   # Prefer 32-bit apk if device is usually low on memory (RAM).
   if [ $AndroidDesktop -eq 1 ]; then
     snapshotPlatform="AndroidDesktop_arm64"
-  elif [ "$(echo "$memTotalGB <= 4" | bc -l)" -eq 1 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+  elif [ "$memTotalGB" <= "4" ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
     snapshotPlatform="Android"
   else
     snapshotPlatform="Android_Arm64"  # For ARM64
