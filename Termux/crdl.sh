@@ -732,7 +732,7 @@ tInfo() {
   
   n="500"  # Initialize n=500
   while true; do
-    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=500" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | sed 's/^[·[:space:]]*//' | wc -l)
+    count=$(curl -s "https://chromium.googlesource.com/chromium/src/+log?n=$n" | pup 'li json{}' | jq -r '.[] | select(.children[].text | test("Updating trunk VERSION from")) | .children[] | select(.class == "CommitLog-time") | .text' | sed 's/^[·[:space:]]*//' | wc -l)
     [ $count -ge 1 ] && break  # break the loop if count > 1
     n=$((n + 500))  # if ! count > 1; then n=n+500
   done
