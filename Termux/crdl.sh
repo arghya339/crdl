@@ -195,8 +195,8 @@ pkgUpdate() {
   local pkg=$1
   if echo "$outdatedPKG" | grep -q "^$pkg/" 2>/dev/null; then
     echo -e "$running Upgrading $pkg pkg.."
-    output=$(pkg install --only-upgrade "$pkg" -y 2>/dev/null)
-    echo "$output" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; yes "N" | pkg install --only-upgrade "$pkg" -y > /dev/null 2>&1; }
+    output=$(yes "N" | apt install --only-upgrade "$pkg" -y 2>/dev/null)
+    echo "$output" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; yes "N" | apt install --only-upgrade "$pkg" -y > /dev/null 2>&1; }
   fi
 }
 
@@ -211,8 +211,11 @@ pkgInstall() {
   fi
 }
 
+pkgInstall "apt"  # apt update
 pkgInstall "dpkg"  # dpkg update
+pkgInstall "bash"  # bash update
 pkgInstall "libgnutls"  # pm apt & dpkg use it to securely download packages from repositories over HTTPS
+pkgInstall "coreutils"  # It provides basic file, shell, & text manipulation utilities. such as: ls, cp, mv, rm, mkdir, cat, echo, etc.
 pkgInstall "termux-core"  # it's contains basic essential cli utilities, such as: ls, cp, mv, rm, mkdir, cat, echo, etc.
 pkgInstall "termux-tools"  # it's provide essential commands, sush as: termux-change-repo, termux-setup-storage, termux-open, termux-share, etc.
 pkgInstall "termux-keyring"  # it's use during pkg install/update to verify digital signature of the pkg and remote repository
@@ -226,6 +229,7 @@ pkgInstall "gawk"  # gnu awk update
 pkgInstall "sed"  # sed update
 pkgInstall "curl"  # curl update
 pkgInstall "libcurl"  # curl lib update
+pkgInstall "openssl"  # openssl install/update
 pkgInstall "aria2"  # aria2 install/update
 pkgInstall "jq"  # jq install/update
 pkgInstall "pup"  # pup install/update
