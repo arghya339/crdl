@@ -209,7 +209,7 @@ confirmPrompt() {
   Prompt=${1}
   local -n prompt_buttons=$2
   Selected=${3:-0}  # :- set value as 0 if unset
-  maxLen=50
+  maxLen=$(stty size | awk '{print $2}')
   
   # breaks long prompts into multiple lines (50 characters per line)
   lines=()  # empty array
