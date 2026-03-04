@@ -8,6 +8,8 @@ urls=(
   "chrome://flags/#tab-strip-incognito-migration"  # Tab Strip Incognito switcher migration to toolbar = Disabled
   "chrome://flags/#android-open-incognito-as-window"  # Open incognito tabs in new window = Disabled
   "chrome://flags/#reader-mode-distill-in-app"  # Reader Mode distillation in app = Disabled
+  "chrome://flags/#omnibox-multiline-edit-field"  # Omnibox Multiline edit field = Enabled For Autocompte
+  "chrome://flags/#search-in-settings"  # Search in Settings = Disabled
   "chrome://extensions"  # Chrome Extensions
   "chrome://flags/#enable-android-window-popup-large-screen"  # Enable desktop-like behavior of window popup web API in desktop windowing on Android. = Enabled
   "chrome://flags/#new-tab-page-customization-v2"  # Customize the new tab page V2 = Enabled

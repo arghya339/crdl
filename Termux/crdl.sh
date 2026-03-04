@@ -237,8 +237,7 @@ pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
 
 # --- Download and give execute (--x) permission to AAPT2 Binary ---
-[ ! -f "$HOME/aapt2" ] && curl -sL "https://github.com/arghya339/aapt2/releases/download/all/aapt2_$arch" -o "$HOME/aapt2"
-[ ! -x "$HOME/aapt2" ] && chmod +x "$HOME/aapt2"
+[[ $(~/aapt2 version 2>&1 | awk '{print $NF}') =~ ^(2.19-1023|2.19-3401)$ ]] || { rm -f ~/aapt2 && curl -L --progress-bar -C - -o ~/aapt2 $(curl -sL https://api.github.com/repos/ReVanced/aapt2/releases/latest | jq -r --arg abi "$arch" '.assets[] | select(.name == "aapt2-" + $abi) | .browser_download_url') && chmod +x ~/aapt2 && ~/aapt2 version 2>&1; }
 
 config() {
   local key="$1"
