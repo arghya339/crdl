@@ -3,7 +3,7 @@
 A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 <br>
 <br>
-<img src="docs/images/Main.png">
+<img src="docs/.images/Main.png">
 <br>
 
 ## Purpose
@@ -33,48 +33,39 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Windows 10 1809 (build 17763) or later (Windows 11) with working internet connection.
 
 ## Usage
-![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
   
-  Open [Termux](https://github.com/termux/termux-app/releases/) and paste following command then press `Enter` key:
+  Open [Termux](https://github.com/termux/termux-app/releases/) / Terminal and paste following command then press `Enter` key:
   ```sh
-  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/crdl.sh && bash "$HOME/.crdl.sh"
+  curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/main/bash/crdl.sh" && bash ~/.crdl.sh
   ```
-  Run crdl with these commands in Termux:
+  Run crdl with these commands in Termux / Terminal:
   ```
   crdl
   ```
 > [!TIP]
 > [Cromite](https://github.com/uazo/cromite/releases/latest): MV2 and MV3 extensions supported chromium based browser for mobile devices.
 
-> [!NOTE]
-> This script was tested on an arm64-v8a device running Android 14 with Termux v0.118.2 with bash v5.2.37(1).
-
-### Android 9~5
-  Open [Termux](https://github.com/termux/termux-app/releases/) and paste following command then press `Enter` key:
-  ```sh
-  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Termux/odcrdl.sh && bash "$HOME/.crdl.sh"
-  ```
-
-![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
-  - Open macOS Terminal and run the script with the following command:
-  ```sh
-  curl --progress-bar -o "$HOME/.crdl.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Terminal/crdl.sh && bash "$HOME/.crdl.sh"
-  ```
-  Run crdl with these commands in Terminal:
-  ```
-  crdl
-  ```
 > [!TIP]
 > [Brave](https://github.com/brave/brave-browser/releases/latest): MV2 and MV3 extensions supported chromium based desktop browser.
 
 > [!NOTE]
+> This script was tested on an arm64-v8a device running Android 14 with Termux v0.118.2 with bash v5.2.37(1).
+
+> [!NOTE]
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
+
+### Android 5~9 Only
+  Open [Termux](https://github.com/termux/termux-app/releases/) and paste following command then press `Enter` key:
+  ```sh
+  curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/main/bash/odcrdl.sh" && bash ~/.crdl.sh
+  ```
 
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
   - Open Windows Terminal (Admin) / Microsoft PowerShell (Admin) and run the script with the following command:
 
   ```pwsh
-  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1"; Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/pwsh/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1"; Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
   ```
   Run crdl with these commands in Windows PowerShell (Admin):
   ```pwsh
@@ -103,7 +94,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 
 ## How it works (_[Demo on YouTube](https://youtube.com/)_)
 
-![image](docs/images/Result_Android.png)
+![image](docs/.images/Result_Android.png)
 
 ## Install Extensions from Chrome Web Store on AndroidDesktop Mobile
 ### Prerequisites
@@ -152,9 +143,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   - Once **Developer mode** is enabled, you will see an **`Update`** button near the top.
   - Tap the **Update** button to check for and install updates for all your installed extensions.
 
-![image](docs/images/AndroidChromium_Extensions1.png)
+![image](docs/.images/AndroidChromium_Extensions1.png)
 
-![image](docs/images/AndroidChromium_Extensions2.png)
+![image](docs/.images/AndroidChromium_Extensions2.png)
 
 ## Disclaimer
 - Chromium is an open-source browser project, developed and maintained by Google.

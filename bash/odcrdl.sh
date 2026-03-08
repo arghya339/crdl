@@ -31,7 +31,7 @@ if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
 fi
 
 # --- Downloading latest odcrdl.sh file from GitHub ---
-curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh"
+curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/odcrdl.sh"
 
 [ ! -f "$PREFIX/bin/crdl" ] && ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
 [ ! -x "$HOME/.crdl.sh" ] && chmod +x $HOME/.crdl.sh  # give execute permission to crdl

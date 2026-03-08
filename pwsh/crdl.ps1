@@ -1,10 +1,10 @@
 # Chromium is an open-source browser project, developed and maintained by Google
 # Easy Script to download and run latest Chromium Windows build
-# Use: ~ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" && Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
+# Use: ~ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/pwsh/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" && Set-ExecutionPolicy Bypass -Scope Process -Force; & "$env:USERPROFILE\.crdl.ps1"
 # Developer github.com/arghya339
 
 # --- Downloading latest crdl.ps1 file from GitHub ---
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/PowerShell/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" | Out-Null
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/pwsh/crdl.ps1" -OutFile "$env:USERPROFILE\.crdl.ps1" | Out-Null
 
 # Define ANSI color codes for Windows.PowerShell
 $Red = @{ForegroundColor = "Red"}
