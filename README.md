@@ -33,7 +33,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 - Windows 10 1809 (build 17763) or later (Windows 11) with working internet connection.
 
 ## Usage
-![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Fedora-294172?style=for-the-badge&logo=fedora&logoColor=white)
   
   Open [Termux](https://github.com/termux/termux-app/releases/) / Terminal and paste following command then press `Enter` key:
   ```sh
@@ -42,6 +42,9 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
   Run crdl with these commands in Termux / Terminal:
   ```
   crdl
+  ```
+  ```
+  crup
   ```
 > [!TIP]
 > [Cromite](https://github.com/uazo/cromite/releases/latest): MV2 and MV3 extensions supported chromium based browser for mobile devices.
