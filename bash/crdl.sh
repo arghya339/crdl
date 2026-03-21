@@ -706,12 +706,18 @@ while true; do
                       [ -f "$HOME/.shortcuts/crdl" ] && rm -f "$HOME/.shortcuts/crdl"
                       [ -f "$HOME/.termux/widget/dynamic_shortcuts/crdl" ] && rm -f "$HOME/.termux/widget/dynamic_shortcuts/crdl"
                       [ -f "$PREFIX/bin/crup" ] && rm -f "$PREFIX/bin/crup"
+                      [ -f "$HOME/.shortcuts/crup" ] && rm -f "$HOME/.shortcuts/crup"
+                      [ -f "$HOME/.termux/widget/dynamic_shortcuts/crup" ] && rm -f "$HOME/.termux/widget/dynamic_shortcuts/crup"
                     elif [ $isMacOS == true ]; then
                       [ -f "/usr/local/bin/crdl" ] && rm -f "/usr/local/bin/crdl"
+                      [ -d "/Applications/crdl.app/" ] && rm -rf "/Applications/crdl.app/"
                       [ -f "/usr/local/bin/crup" ] && rm -f "/usr/local/bin/crup"
+                      [ -d "/Applications/crup.app/" ] && rm -rf "/Applications/crup.app/"
                     else
                       [ -f "/usr/local/bin/crdl" ] && sudo rm -f "/usr/local/bin/crdl"
+                      [ -f "$USER_HOME/.local/share/applications/crdl.desktop" ] && rm -f "$USER_HOME/.local/share/applications/crdl.desktop"
                       [ -f "/usr/local/bin/crup" ] && sudo rm -f "/usr/local/bin/crup"
+                      [ -f "$USER_HOME/.local/share/applications/crup.desktop" ] && rm -f "$USER_HOME/.local/share/applications/crup.desktop"
                     fi
                     confirmPrompt "Do you want to remove this script-related dependency?" "ynButtons" "1" && response=Yes || response=No
                     case "$response" in

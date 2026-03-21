@@ -2,18 +2,6 @@
 
 urls=(
   "https://github.com/arghya339/crdl?tab=readme-ov-file#install-extensions-from-chrome-web-store-on-androiddesktop-mobile"  # Docs
-  "chrome://flags/#android-pinned-tabs-tablet-tab-strip"  # Android pinned tabs on tablet tab strip in the tabbed layout = Disabled
-  "chrome://flags/#android-pinned-tabs"  # Android pinned tabs = Disabled
-  "chrome://flags/#tab-group-parity-bottom-sheet-android"  # Tab Group Parity Bottom Sheet = Disabled
-  "chrome://flags/#tab-strip-incognito-migration"  # Tab Strip Incognito switcher migration to toolbar = Disabled
-  "chrome://flags/#android-open-incognito-as-window"  # Open incognito tabs in new window = Disabled
-  "chrome://flags/#reader-mode-distill-in-app"  # Reader Mode distillation in app = Disabled
-  "chrome://flags/#omnibox-multiline-edit-field"  # Omnibox Multiline edit field = Enabled For Autocompte
-  "chrome://flags/#search-in-settings"  # Search in Settings = Disabled
-  "chrome://extensions"  # Chrome Extensions
-  "chrome://flags/#enable-android-window-popup-large-screen"  # Enable desktop-like behavior of window popup web API in desktop windowing on Android. = Enabled
-  "chrome://flags/#new-tab-page-customization-v2"  # Customize the new tab page V2 = Enabled
-  "chrome://flags/#new-tab-page-customization-toolbar-button"  # New tab page customization toolbar button = Enabled
   "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"  # uBlock Origin Lite
   "https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"  # AdGuard AdBlocker
   "https://chromewebstore.google.com/detail/adblocker-ultimate/ohahllgiabjaoigichmmfljhkcfikeof"  # AdBlocker Ultimate
@@ -63,11 +51,11 @@ urls=(
 # Launch Chromium if not already running
 am start -n org.chromium.chrome/org.chromium.chrome.browser.ChromeTabbedActivity > /dev/null 2>&1
 
-# Wait for Chromium to initialize
-sleep 1
+# Wait for Chromium to initialize Setup
+sleep 15
 
 # Open URLs in new tabs using Android's intent system
 for url in "${urls[@]}"; do
-    am start -n org.chromium.chrome/org.chromium.chrome.browser.ChromeTabbedActivity -a android.intent.action.VIEW -d "$url" > /dev/null 2>&1
-    sleep 0.5
+  am start -n org.chromium.chrome/org.chromium.chrome.browser.ChromeTabbedActivity -a android.intent.action.VIEW -d "$url" &>/dev/null
+  sleep 0.5  # Wait 500ms
 done

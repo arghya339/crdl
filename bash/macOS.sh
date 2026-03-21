@@ -44,9 +44,9 @@ EOL
 [ ! -d "/Applications/crdl.app/" ] && CreateScriptLaunchpadShortcuts "crdl" "$HOME/.crdl.sh"
 [ ! -d "/Applications/crup.app/" ] && CreateScriptLaunchpadShortcuts "crup" "$crdl/crup.sh" "false"
 
-# Chromium required macOS 10.14+ (Catalina)
+# Chromium required macOS 12 (Monterey) or later
 productVersion=$(sw_vers -productVersion | cut -d '.' -f1)
-[ $productVersion -le 10 ] && { echo -e "$bad ${Red}macOS $productVersion is not supported by Chromium.${Reset}"; exit 1; }
+[ $productVersion -lt 12 ] && { echo -e "$bad ${Red}macOS $productVersion is not supported by Chromium !!${Reset}"; open "https://www.firefox.com/"; exit 1; }  # Chromium: macOS 12+ || FireFox: macOS 10.15+
 crZIP="chrome-mac"
 [ $(uname -m) == "x86_64" ] && { snapshotPlatform="Mac"; Arch=amd64; } || { snapshotPlatform="Mac_Arm"; Arch=arm64; }
 platform=Mac
