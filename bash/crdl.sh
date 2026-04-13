@@ -63,10 +63,10 @@ config() {
   jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
 }
 
-[ $isAndroid == true ] && scripts=(Termux)
-[ $isMacOS == true ] && scripts=(macOS)
-[ $isFedora == true ] && scripts=(Fedora)
-scripts+=(menu confirmPrompt)
+scripts=(menu confirmPrompt)
+[ $isAndroid == true ] && scripts+=(Termux)
+[ $isMacOS == true ] && scripts+=(macOS)
+[ $isFedora == true ] && scripts+=(Fedora)
 
 run() {
   for ((c=0; c<${#scripts[@]}; c++)); do
@@ -80,8 +80,6 @@ updates() {
   curl -sL -o "$crdl/.version" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/.version"
   curl -sL -o "$USER_HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/crdl.sh"
   curl -sL -o "$crdl/crup.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/crup.sh"
-  curl -sL -o $crdl/menu.sh https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/menu.sh
-  curl -sL -o $crdl/confirmPrompt.sh https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/confirmPrompt.sh
   if [ $isAndroid == true ]; then
     [ ! -f "$PREFIX/bin/crdl" ] && ln -s ~/.crdl.sh $PREFIX/bin/crdl
     [ ! -f "$PREFIX/bin/crup" ] && ln -s $crdl/crup.sh $PREFIX/bin/crup
@@ -94,8 +92,12 @@ updates() {
   fi
   [ ! -x $USER_HOME/.crdl.sh ] && chmod +x $USER_HOME/.crdl.sh
   [ ! -x $crdl/crup.sh ] && chmod +x $crdl/crup.sh
-  curl -sL -o "$crdl/${scripts[0]}.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/${scripts[0]}.sh"
   for ((c=0; c<${#scripts[@]}; c++)); do
+    if [ $c -le 1 ]; then
+      curl -sL -o "$crdl/${scripts[c]}.sh" "https://raw.githubusercontent.com/arghya339/Simplify/refs/heads/next/bash/${scripts[c]}.sh"
+    else
+      curl -sL -o "$crdl/${scripts[c]}.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/${scripts[c]}.sh"
+    fi
     source $crdl/${scripts[c]}.sh
   done
 }
@@ -519,7 +521,8 @@ while true; do
             ;;
           AndroidDesktop)
             [ "$AndroidDesktop" == "yes" ] && defaultButton=0 || defaultButton=1
-            buttons=("<yes>" "<no>"); confirmPrompt "AndroidDesktop" buttons "$defaultButton" && AndroidDesktop=yes || AndroidDesktop=no
+            confirmPrompt "AndroidDesktop" ynButtons "$defaultButton" && AndroidDesktop=yes || AndroidDesktop=no
+            config "AndroidDesktop" "$AndroidDesktop"
             ;;
           Prefer32bitApk)
             confirmPrompt "Prefer32bitApk" tfButtons "$Prefer32bitApk" && Prefer32bitApk=true || Prefer32bitApk=false

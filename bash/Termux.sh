@@ -187,10 +187,9 @@ if [ "$arch" == "arm64-v8a" ] && [ -z "$AndroidDesktop" ]; then
   if [ $foundTermuxAPI == true ] && [ $GUI == true ]; then
     crx=$(termux-dialog confirm -t "Install Chrome Extensions" -i "Do you want to install Extensions supported AndroidDesktop Chromium?" | jq -r '.text')
   else
-    confirmPrompt "Do you want to install Extensions supported AndroidDesktop Chromium?" "ynButtons" && crx=yes || crx=no
+    confirmPrompt "Do you want to install Extensions supported AndroidDesktop Chromium?" "ynButtons" && AndroidDesktop=yes || AndroidDesktop=no
   fi
-  config "AndroidDesktop" "$crx"
-  AndroidDesktop="$crx"
+  config "AndroidDesktop" "$AndroidDesktop"
 fi
 
 # Prefer 32-bit apk if device is usually low on memory (lessthen 4GB RAM)
