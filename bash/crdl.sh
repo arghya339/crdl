@@ -688,8 +688,8 @@ while true; do
             ;;
           Experiments)
             selected_flag=0
-            Experiments=("Open incognito tabs in new window = Disabled" "Reader Mode distillation in app = Disabled" "Omnibox Multiline edit field = Enabled For Autocompte" "Search in Settings = Disabled" "New tab page customization toolbar button = Enabled")
-            Flags=("chrome://flags/#android-open-incognito-as-window" "chrome://flags/#reader-mode-distill-in-app" "chrome://flags/#omnibox-multiline-edit-field" "chrome://flags/#search-in-settings" "chrome://flags/#new-tab-page-customization-toolbar-button")
+            Experiments=("Open incognito tabs in new window = Disabled" "Reader Mode distillation in app = Disabled" "Omnibox Multiline edit field = Enabled For Autocompte" "Search in Settings = Disabled" "Group Promo Prototype - Contextual page action = Disabled")
+            Flags=("chrome://flags/#android-open-incognito-as-window" "chrome://flags/#reader-mode-distill-in-app" "chrome://flags/#omnibox-multiline-edit-field" "chrome://flags/#search-in-settings" "chrome://flags/#group-promo-prototype-cpa")
             while true; do
               menu Experiments bButtons Flags "" $selected_flag && selected_flag=$selected || break
               if [ $isAndroid == true ]; then termux-open-url "${Flags[selected_flag]}"; elif [ $isMacOS == true ]; then open "${Flags[selected_flag]}"; else xdg-open "${Flags[selected_flag]}"; fi
