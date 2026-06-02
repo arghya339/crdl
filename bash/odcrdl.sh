@@ -1,11 +1,8 @@
 #!/usr/bin/bash
 
-# Chromium is an open-source browser project, developed and maintained by Google
-# Easy Script to download and run last outdated Chromium supported Android build
-# Use: ~ curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/odcrdl.sh" && bash "$HOME/.crdl.sh"
-# Developer github.com/arghya339
+# Copyright (C) 2025, Arghyadeep Mondal <github.com/arghya339>
+# Chromium is an open-source browser project, developed and maintained by Google <chromium.org/Home>
 
-# --- Colored log indicators ---
 good="\033[92;1m[✔]\033[0m"
 bad="\033[91;1m[✘]\033[0m"
 info="\033[94;1m[i]\033[0m"
@@ -13,7 +10,6 @@ running="\033[37;1m[~]\033[0m"
 notice="\033[93;1m[!]\033[0m"
 question="\033[93;1m[?]\033[0m"
 
-# ANSI color code
 Green="\033[92m"
 Red="\033[91m"
 Blue="\033[94m"
@@ -24,50 +20,40 @@ whiteBG="\e[47m\e[30m"
 Yellow="\033[93m"
 Reset="\033[0m"
 
-# --- Checking Internet Connection ---
-if ! ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1 ; then
-  echo -e "${bad} ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later."
-  exit 1
-fi
+! ping -c 1 -W 2 8.8.8.8 &>/dev/null && { echo -e "$bad ${Red} Oops! No Internet Connection available.\nConnect to the Internet and try again later.${Reset}"; exit 1; }
 
-# --- Downloading latest odcrdl.sh file from GitHub ---
 curl -sL -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/odcrdl.sh"
 
-[ ! -f "$PREFIX/bin/crdl" ] && ln -s $HOME/.crdl.sh $PREFIX/bin/crdl  # symlink (shortcut of crdl.sh)
-[ ! -x "$HOME/.crdl.sh" ] && chmod +x $HOME/.crdl.sh  # give execute permission to crdl
+[ ! -f "$PREFIX/bin/crdl" ] && ln -s $HOME/.crdl.sh $PREFIX/bin/crdl
+[ ! -x "$HOME/.crdl.sh" ] && chmod +x $HOME/.crdl.sh
 
-# --- Construct the crdl shape using string concatenation (ANSI Speed Font) ---
 print_crdl() {
-  printf "${Blue}    https://github.com/arghya339/crdl${Reset}\n"
   printf "${skyBlue}       ${Reset}${Blue}       ${Reset}  ${White}___       ${Reset}${Cyan}______________${Reset}\n"
   printf "${skyBlue}_______${Reset}${Blue}_______${Reset}  ${White}__ \      ${Reset}${Cyan}______  /__  /${Reset}\n"
   printf "${skyBlue}_  ___/${Reset}${Blue}_  ___/${Reset}  ${White}___ \     ${Reset}${Cyan}_  __  /__  / ${Reset}\n"
   printf "${skyBlue}/ /__ ${Reset}${Blue}_  /    ${Reset}  ${White}__  /     ${Reset}${Cyan}/ /_/ / _  /  ${Reset}\n"
   printf "${skyBlue}\___/ ${Reset}${Blue}/_/     ${Reset}  ${White}_/_/______${Reset}${Cyan}\__,_/  /_/   ${Reset}\n"
   printf "${skyBlue}      ${Reset}${Blue}        ${Reset}  ${White}   _/_____/${Reset}${Cyan}             ${Reset}\n"
-  #printf "${White}𝒟𝑒𝓋𝑒𝓁𝑜𝓅𝑒𝓇:𝒶𝓇𝑔𝒽𝓎𝒶𝟥𝟥𝟫${Reset}${Blue}${Reset}${White}_/_____/${Reset}   ${Cyan}             ${Reset}\n"
-  printf "${White}𝒟𝑒𝓋𝑒𝓁𝑜𝓅𝑒𝓇:𝒶𝓇𝑔𝒽𝓎𝒶𝟥𝟥𝟫${Reset}\n"
-  printf '\n'
   printf '\n'
 }
 
-# --- Global variables ---
-Android=$(getprop ro.build.version.release | cut -d. -f1)  # Get major Android version
-Model=$(getprop ro.product.model)  # Get device model
-arch=$(getprop ro.product.cpu.abi)  # Get Android architecture
-arch32=$(getprop ro.product.cup.abilist32)  # Get Android 32 bit arch
+ynButtons=("<Yes>" "<No>")
+Android=$(getprop ro.build.version.release | cut -d. -f1)
+Model=$(getprop ro.product.model)
+arch=$(getprop ro.product.cpu.abi)
+arch32=$(getprop ro.product.cup.abilist32)
 memTotalKB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 branchUrl="https://commondatastorage.googleapis.com/chromium-browser-snapshots"
-Download="/sdcard/Download"  # Download dir
+Download="/sdcard/Download"
 
-su -c "id" >/dev/null 2>&1 && su=1 || su=0
+su -c "id" &>/dev/null && su=true || su=false
 
 clear && echo -e "🚀 ${Yellow}Please wait! starting crdl...${Reset}"
 
-pkg update > /dev/null 2>&1  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
+pkg update &>/dev/null  # It downloads latest package list with versions from Termux remote repository, then compares them to local (installed) pkg versions, and shows a list of what can be upgraded if they are different.
 outdatedPKG=$(apt list --upgradable 2>/dev/null)
 echo "$outdatedPKG" | grep -q "dpkg was interrupted" 2>/dev/null && { yes "N" | dpkg --configure -a; outdatedPKG=$(apt list --upgradable 2>/dev/null); }
-installedPKG=$(pkg list-installed 2>/dev/null)  # list of installed pkg
+installedPKG=$(pkg list-installed 2>/dev/null)
 
 # --- Storage Permission Check Logic ---
 if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
@@ -95,16 +81,16 @@ if ! ls /sdcard/ 2>/dev/null | grep -E -q "^(Android|Download)"; then
 fi
 
 # --- enabled allow-external-apps ---
-isOverwriteTermuxProp=0
+isOverwriteTermuxProp=false
 if [ $Android -eq 6 ] && [ ! -f "$HOME/.termux/termux.properties" ]; then
   mkdir -p "$HOME/.termux" && echo "allow-external-apps = true" > "$HOME/.termux/termux.properties"
-  isOverwriteTermuxProp=1
+  isOverwriteTermuxProp=true
   echo -e "$notice 'termux.properties' file has been created successfully & 'allow-external-apps = true' line has been add (enabled) in Termux \$HOME/.termux/termux.properties."
   termux-reload-settings
 elif [ $Android -eq 6 ] && [ -f "$HOME/.termux/termux.properties" ]; then
   if grep -q "^# allow-external-apps" "$HOME/.termux/termux.properties"; then
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
-    isOverwriteTermuxProp=1
+    isOverwriteTermuxProp=true
     echo -e "$notice 'allow-external-apps = true' line has been uncommented (enabled) in Termux \$HOME/.termux/termux.properties."
     termux-reload-settings
   fi
@@ -115,7 +101,7 @@ if [ $Android -ge 6 ]; then
     # termux-open utility can send an Android Intent from Termux to Android system to open apk package file in pm.
     # other Android applications also can be Access Termux app data (files).
     sed -i '/allow-external-apps/s/# //' "$HOME/.termux/termux.properties"  # uncomment 'allow-external-apps = true' line
-    isOverwriteTermuxProp=1
+    isOverwriteTermuxProp=true
     echo -e "$notice 'allow-external-apps = true' line has been uncommented (enabled) in Termux \$HOME/.termux/termux.properties."
     #if [ "$Android" -eq 7 ] || [ "$Android" -eq 6 ]; then
       termux-reload-settings  # reload (restart) Termux settings required for Android 6 after enabled allow-external-apps, also required for Android 7 due to 'Package installer has stopped' err
@@ -130,37 +116,36 @@ fi
 # v95.0.4638.0 : 920003  ~> | Android: 920003  | Android_Arm64: N/A     | AndroidDesktop_arm64: N/A     | AndroidDesktop_x64: N/A     |
 
 # --- Checking Android Version & Architecture ---
-if [ $Android -eq 7 ] && [ $arch == "x86_64" ]; then
-  echo -e "${bad} ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
+if [ $Android -eq 7 ] && [ "$arch" == "x86_64" ]; then
+  echo -e "$bad ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
   echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
-  termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
-elif [[ ( $Android -eq 6 || $Android -eq 5 ) && ( $arch == "armeabi-v8a" || $arch == "x86_64" ) ]]; then
-  echo -e "${bad} ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
+  termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest"
+elif [[ ( $Android -eq 6 || $Android -eq 5 ) && ( "$arch" == "armeabi-v8a" || $arch == "x86_64" ) ]]; then
+  echo -e "$bad ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
   echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
   termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
-  rm $PREFIX/bin/crdl && rm $HOME/.crdl.sh
+  rm -f $PREFIX/bin/crdl $HOME/.crdl.sh
   exit 1
 fi
 
 # --- Checking device arch ---
-if [ $arch == "x86" ]; then
-  echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src."
+if [ "$arch" == "x86" ]; then
+  echo -e "$bad ${Red} x86 (x32-bit) arch prebuilt binary not provide by Google Chromium, try manual build Chromium from src.${Reset}"
   termux-open-url "https://chromium.googlesource.com/chromium/src/+/0267e3c2/docs/android_build_instructions.md"
   if [ $Android -ge 10 ]; then
     echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
-    termux-open "https://github.com/brave/brave-browser/releases/latest/"
+    termux-open "https://github.com/brave/brave-browser/releases/latest"
   elif [ $Android -ge 7 ]; then
     echo -e "$info Find Chromium alternative as KiwiBrowser."  # Android 7.0+ (universal)
-    termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest/"
+    termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest"
   else
     echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
     termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
   fi
-  rm -f $PREFIX/bin/crdl && rm -f $HOME/.crdl.sh
+  rm -f $PREFIX/bin/crdl $HOME/.crdl.sh
   exit 1
 fi
 
-# --- pkg upgrade function ---
 pkgUpdate() {
   local pkg=$1
   if echo "$outdatedPKG" | grep -q "^$pkg/" 2>/dev/null; then
@@ -170,7 +155,6 @@ pkgUpdate() {
   fi
 }
 
-# --- pkg install/update function ---
 pkgInstall() {
   local pkg=$1
   if echo "$installedPKG" | grep -q "$pkg" 2>/dev/null; then
@@ -204,7 +188,6 @@ pkgInstall "jq"  # jq install/update
 pkgInstall "bsdtar"  # bsdtar install/update
 pkgInstall "pv"  # pv install/update
 
-# Y/n prompt function
 confirmPrompt() {
   Prompt=${1}
   local -n prompt_buttons=$2
@@ -255,185 +238,153 @@ confirmPrompt() {
   return $Selected  # return Selected int index from this fun
 }
 
-if [ $arch == "arm64-v8a" ] && [ $Android -eq 9 ]; then
-  buttons=("<Yes>" "<No>"); confirmPrompt "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" "buttons" && crx=Yes || crx=No
-  case $crx in
-    y*|Y*|"") AndroidDesktop=1 ;;
-    n*|N*) echo -e "$notice AndroidDesktopChromium skipped!"; AndroidDesktop=0 ;;
-  esac
+if [ "$arch" == "arm64-v8a" ] && [ $Android -eq 9 ]; then
+  confirmPrompt "Do you want to install Extensions supported AndroidDesktop Chromium.apk?" "ynButtons" && AndroidDesktop=true || { echo -e "$notice AndroidDesktopChromium skipped!"; AndroidDesktop=false; }
 else
-  AndroidDesktop=0
+  AndroidDesktop=false
 fi
 
-# --- Detect arch (ARM or ARM64 or x86_64) ---
-if [ $arch == "arm64-v8a" ]; then
+if [ "$arch" == "arm64-v8a" ]; then
   memTotalGB=$((memTotalKB / 1024 / 1024))
   # Prefer 32-bit apk if device is usually low on memory (RAM).
-  if [ $AndroidDesktop -eq 1 ]; then
+  if [ $AndroidDesktop == true ]; then
     snapshotPlatform="AndroidDesktop_arm64"
-  elif [ "$memTotalGB" <= "4" ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
+  elif [ $memTotalGB -le 4 ] && [ "$arch32" == "armeabi-v7a,armeabi" ]; then  # Prefer 32-bit apk if device is usually lessthen 4GB RAM.
     snapshotPlatform="Android"
   else
     snapshotPlatform="Android_Arm64"  # For ARM64
   fi
-elif [ $arch == "armeabi-v7a" ]; then
+elif [ "$arch" == "armeabi-v7a" ]; then
   snapshotPlatform="Android"  # For ARM
-elif [ $arch == "x86_64" ]; then
+elif [ "$arch" == "x86_64" ]; then
   snapshotPlatform="AndroidDesktop_x64" # For x86_64
 fi
 
 if [ $Android -eq 9 ] || [ $Android -eq 8 ]; then
-  target="139.0.7230."
-  num=100
+  target="139.0.7230."; num=700; pos=1471513
 elif [ $Android -eq 7 ]; then
-  target="119.0.6045."
-  num=200
+  target="119.0.6045."; num=300; pos=1204232
 elif [ $Android -eq 6 ]; then
-  target="106.0.5249."
-  num=300
+  target="106.0.5249."; num=400; pos=1036826
 elif [ $Android -eq 5 ]; then
-  target="95.0.4638."
-  num=325
+  target="95.0.4638."; num=500; pos=920003
 fi
 
 # --- Shizuku Setup first time ---
-if [ $su -eq 0 ] && { [ ! -f "$HOME/rish" ] || [ ! -f "$HOME/rish_shizuku.dex" ]; }; then
-  #echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
-  #termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
-  echo -e "$info Please manually install Shizuku from GitHub." && sleep 1
-  termux-open-url "https://github.com/RikkaApps/Shizuku/releases/latest"
-  am start -n com.android.settings/.Settings\$MyDeviceInfoActivity > /dev/null 2>&1  # Open Device Info
-
-  curl -sL -o "$HOME/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish"
-  [ ! -x "$HOME/rish" ] && chmod +x "$HOME/rish"
-  sleep 0.5 && curl -sL -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/rish_shizuku.dex"
-  
-  if [ $Android -lt 11 ]; then
+if [ $su == false ] && { [ ! -f "$PREFIX/bin/rish" ] || [ ! -f "$PREFIX/bin/rish_shizuku.dex" ]; }; then
+  curl -sL -o "$PREFIX/bin/rish" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Shizuku/rish" && chmod +x "$PREFIX/bin/rish"
+  sleep 0.5 && curl -sL -o "$PREFIX/bin/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Shizuku/rish_shizuku.dex"
+  if ! am start -n "moe.shizuku.privileged.api/moe.shizuku.manager.legacy.ShellRequestHandlerActivity" &>/dev/null; then
+    #echo -e "$info Please manually install Shizuku from Google Play Store." && sleep 1
+    #termux-open-url "https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api"
+    echo -e "$info Please manually install Shizuku from GitHub." && sleep 1
+    termux-open-url "https://github.com/RikkaApps/Shizuku/releases/latest"
+  fi
+  if ! rish -c "id" &>/dev/null; then
+    am start -n com.android.settings/.Settings\$MyDeviceInfoActivity &>/dev/null  # Open Device Info
     url="https://youtu.be/ZxjelegpTLA"  # YouTube/@MrPalash360: Start Shizuku using Computer
     activityClass="com.android.settings/.Settings\$DevelopmentSettingsDashboardActivity"  # Open Developer options
-  else
-    activityClass="com.android.settings/.Settings\$WirelessDebuggingActivity"  # Open Wireless Debugging Settings
-    url="https://youtu.be/YRd0FBfdntQ"  # YouTube/@MrPalash360: Start Shizuku Android 11+
+    echo -e "$info Please start Shizuku by following guide: ${Blue}$url${Reset}" && sleep 1
+    am start -n "$activityClass" &>/dev/null
+    termux-open-url "$url"
   fi
-  echo -e "$info Please start Shizuku by following guide: $url" && sleep 1
-  am start -n "$activityClass" > /dev/null 2>&1
-  termux-open-url "$url"
 fi
-if ! "$HOME/rish" -c "id" >/dev/null 2>&1 && [ -f "$HOME/rish_shizuku.dex" ]; then
-  if ~/rish -c "id" 2>&1 | grep -q 'java.lang.UnsatisfiedLinkError'; then
-    rm -f "$HOME/rish_shizuku.dex" && curl -sL -o "$HOME/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Termux/Shizuku/Play/rish_shizuku.dex"
+if ! rish -c "id" &>/dev/null && [ -f "$PREFIX/bin/rish_shizuku.dex" ]; then
+  if rish -c "id" 2>&1 | grep -q 'java.lang.UnsatisfiedLinkError'; then
+    rm -f "$PREFIX/bin/rish_shizuku.dex" && curl -sL -o "$PREFIX/bin/rish_shizuku.dex" "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/Shizuku/Play/rish_shizuku.dex"
   fi
 fi
 
-if [ $snapshotPlatform == "AndroidDesktop_arm64" ] || [ $snapshotPlatform == "AndroidDesktop_x64" ]; then
-  crUNZIP="chrome-android-desktop"
-else
-  crUNZIP="chrome-android"
-fi
+([ "$snapshotPlatform" == "AndroidDesktop_arm64" ] || [ "$snapshotPlatform" == "AndroidDesktop_x64" ]) && crZIP="chrome-android-desktop" || crZIP="chrome-android"
 
-# --- install Chromium function ---
 crInstall() {
-  if [ $su -eq 1 ]; then
-    su -c "cp '$Download/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"  # copy apk to System dir to avoiding SELinux restrictions
-    # Temporary Disable SELinux Enforcing during installation if it not in Permissive
-    if [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ]; then
-      su -c "setenforce 0"  # set SELinux to Permissive mode to unblock unauthorized operations
-      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
-      INSTALL_STATUS=$?  # Capture exit status of the install command
-      su -c "setenforce 1"  # set SELinux to Enforcing mode to block unauthorized operations
-    else
-      su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
-      INSTALL_STATUS=$?  # Capture exit status of the install command
-    fi
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    if [ $? != 0 ]; then
-      su -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    fi
-    su -c "rm -f '/data/local/tmp/ChromePublic.apk'"  # Cleanup temporary APK
-    [ $INSTALL_STATUS -eq 0 ] && rm -rf "$Download/$crUNZIP"
-  elif "$HOME/rish" -c "id" >/dev/null 2>&1; then
-    ~/rish -c "cp '$Download/$crUNZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # copy apk to System dir
-    $HOME/rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'" > /dev/null 2>&1  # -r=reinstall
-    INSTALL_STATUS=$?  # Capture exit status of the install command
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1  # launch Chromium after update
-    if [ $? != 0 ]; then
-      ~/rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" > /dev/null 2>&1
-    fi
-    $HOME/rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"  # Cleanup temp APK
-    [ $INSTALL_STATUS -eq 0 ] && rm -rf "$Download/$crUNZIP"
+  if [ $su == true ]; then
+    su -c "cp '$Download/$crZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"
+    [ "$(su -c 'getenforce 2>/dev/null')" = "Enforcing" ] && { su -c "setenforce 0"; writeSELinux=true; } || writeSELinux=false
+    su -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    INSTALL_STATUS=$?
+    [ $writeSELinux == true ] && su -c "setenforce 1"
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main &>/dev/null
+    [ $? -ne 0 ] && su -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" &>/dev/null
+    su -c "rm -f '/data/local/tmp/ChromePublic.apk'"
+    [ $INSTALL_STATUS -eq 0 ] && rm -rf "$Download/$crZIP"
+  elif rish -c "id" &>/dev/null; then
+    rish -c "cp '$Download/$crZIP/apks/ChromePublic.apk' '/data/local/tmp/ChromePublic.apk'"
+    rish -c "pm install -r -i com.android.vending '/data/local/tmp/ChromePublic.apk'"
+    INSTALL_STATUS=$?
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main &>/dev/null
+    [ $? -ne 0 ] && rish -c "monkey -p org.chromium.chrome -c android.intent.category.LAUNCHER 1" &>/dev/null
+    rish -c "rm -f '/data/local/tmp/ChromePublic.apk'"
+    [ $INSTALL_STATUS -eq 0 ] && rm -rf "$Download/$crZIP"
   elif [ $Android -le 6 ]; then
-    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://$Download/$crUNZIP/apks/ChromePublic.apk" > /dev/null 2>&1  # Activity Manager
+    am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d "file://$Download/$crZIP/apks/ChromePublic.apk" &>/dev/null
     sleep 30
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$Download/$crUNZIP/"
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main &>/dev/null && rm -rf "$Download/$crZIP/"
   else
-    termux-open --view "$Download/$crUNZIP/apks/ChromePublic.apk"  # install apk using Session installer
+    termux-open --view "$Download/$crZIP/apks/ChromePublic.apk"
     sleep 30
-    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main > /dev/null 2>&1 && rm -rf "$Download/$crUNZIP/"
+    am start -n org.chromium.chrome/com.google.android.apps.chrome.Main &>/dev/null && rm -rf "$Download/$crZIP/"
   fi
 }
 
-# --- Find valid snapshot by searching downward from branch position ---
+# --- Find valid snapshot ---
 findValidSnapshot() {
   local position=$1
-  local range=500
 
-  echo -e "${running} Searching downward from $position (max attempts: $range)"
+  echo -e "\n$running Searching downward from: $position"
   
-  # Search downward starting from branchPosition
-  for ((pos = position; pos >= position - range; pos--)); do
-    [ "$pos" -lt 0 ] && break  # Stop if we go below 0
-    checkUrl="$branchUrl/$snapshotPlatform/$pos/$crUNZIP.zip"
-    if curl --head --silent --fail "$checkUrl" >/dev/null 2>&1; then
-      echo -e "${good} Found valid snapshot at: $pos" && echo
-      crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size: %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
-      echo -e "$running Downloading Chromium $crVersion from: ${Blue}$checkUrl${Reset} $crdlSize"
+  # Search downward starting from position
+  for ((i=position; i>0; i--)); do
+    branchPosition=$i
+    checkUrl="$branchUrl/$snapshotPlatform/$branchPosition/$crZIP.zip"
+    if curl --head --silent --fail "$checkUrl" &>/dev/null; then
+      echo -e "$good Found valid snapshot at: $branchPosition\n"
+      crdlSize=$(curl -sIL $checkUrl 2>/dev/null | grep -i Content-Length | tail -n 1 | awk '{ printf "Content Size %.2f MB\n", $2 / 1024 / 1024 }' 2>/dev/null)
+      echo -e "$running Downloading Chromium v$crVersion from ${Blue}$checkUrl${Reset} $crdlSize"
       while true; do
-        curl -L --progress-bar -C - -o "$Download/$crUNZIP.zip" "$checkUrl"
+        curl -L --progress-bar -C - -o "$Download/$crZIP.zip" "$checkUrl"
         [ $? -eq 0 ] && break || { echo -e "$notice Retrying in 5 seconds.."; sleep 5; }
       done
-      echo && echo -e "$running Extracting ${Red}$crUNZIP.zip${Reset}"
-      pv "$Download/$crUNZIP.zip" | bsdtar -xf - -C "$Download" --include "$crUNZIP/apks/ChromePublic.apk" && rm "$Download/$crUNZIP.zip"
-      echo; buttons=("<Yes>" "<No>"); confirmPrompt "Do you want to install Chromium_v$crVersion.apk?" "buttons" && opt=Yes || opt=No
-      case $opt in
-        y*|Y*|"")
+      echo -e "\n$running Extracting ${Red}$crZIP.zip${Reset}"
+      pv "$Download/$crZIP.zip" | bsdtar -xf - -C "$Download" --include "$crZIP/apks/ChromePublic.apk" && rm -f "$Download/$crZIP.zip"
+      echo; confirmPrompt "Do you want to install Chromium_v$crVersion.apk?" "ynButtons" && opt=Yes || opt=No
+      case "$opt" in
+        Yes)
           crInstall
-          if [ $AndroidDesktop -eq 1 ]; then
+          if [ $AndroidDesktop == true ]; then
             curl -L --progress-bar -o "$HOME/top-30.sh" https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-30.sh && bash "$HOME/top-30.sh" && rm -f "$HOME/top-30.sh"
           fi
-          if [ $su -eq 1 ] || "$HOME/rish" -c "id" >/dev/null 2>&1; then
-            [ $INSTALL_STATUS -eq 0 ] && { rm -f $PREFIX/bin/crdl; rm -f $HOME/.crdl.sh; } || { echo -e "$bad installation failed!"; sleep 1; }
+          if [ $su == true ] || rish -c "id" &>/dev/null; then
+            [ $INSTALL_STATUS -eq 0 ] && rm -f $PREFIX/bin/crdl $HOME/.crdl.sh || { echo -e "$bad Installation failed!"; sleep 1; }
           fi
           ;;
-        n*|N*) echo -e "$notice Chromium installation skipped!"; rm -rf "$Download/chrome-android"; sleep 1 ;;
+        No) echo -e "$notice Chromium installation skipped!"; rm -rf "$Download/chrome-android"; sleep 1 ;;
       esac
-      if [ $isOverwriteTermuxProp -eq 1 ]; then sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties";fi
-      sleep 3; clear; break  # Break the searching loop
+      [ $isOverwriteTermuxProp == true ] && sed -i '/allow-external-apps/s/^/# /' "$HOME/.termux/termux.properties"
+      sleep 3; clear; break
     else
-      echo -e "$notice No valid snapshot found at position: $pos"
+      echo -e "$notice No valid snapshot found at position: $branchPosition"
     fi
   done
 }
 
 # --- Fetch Chromium version info ---
-sInfo() {
+fetchBranchDetails() {
   attempts=5
   attempt_count=0
     
-  if [ $Android -eq 9 ] || [ $Android -eq 8 ]; then
-    channel=Canary
-  else
-    channel=Stable
-  fi
+  ([ $Android -eq 9 ] || [ $Android -eq 8 ]) && channel=Canary || channel=Stable
 
   while true; do
     dashUrl="https://chromiumdash.appspot.com/fetch_releases?channel=$channel&platform=Android&num=$num"
     branchData=$(curl -sL "$dashUrl" | jq --arg t "$target" 'map(select(.version | startswith($t))) | first')
-    crVersion=$(echo "$branchData" | jq -r '.version')
-    prefix=$(echo "$crVersion" | awk -F '.' '{print $1"."$2"."$3"."}')
+    crVersion=$(jq -r '.version' <<< "$branchData")
+    prefix=$(awk -F '.' '{print $1"."$2"."$3"."}' <<< "$crVersion")
         
     if [ "$prefix" = "$target" ]; then
-      branchPosition=$(echo "$branchData" | jq -r '.chromium_main_branch_position')
-      echo -e "$info Last Chromium $channel Releases Version: $crVersion at branch position: $branchPosition"
+      branchPos=$(jq -r '.chromium_main_branch_position' <<< "$branchData")
+      echo -e "$info Last Chromium $channel Releases Version: $crVersion at branch position: $branchPos"
+      findValidSnapshot "$branchPos"
       break
     fi
         
@@ -441,14 +392,12 @@ sInfo() {
     num=$((num + 100))
     if (( attempt_count >= attempts )); then
       echo -e "$bad Version starting with $target not found after $attempts attempts!" >&2
-      return 1
+      echo -e "$notice Falling back to pre-defined branch position: $pos"
+      findValidSnapshot "$pos"
+      break
     fi
   done
 }
 
-# --- Main Execution ---
-clear  # clear Terminal
-print_crdl  # Call the print crdl shape function
-echo && sInfo  # Call the Chromium Stable info function
-echo && findValidSnapshot "$branchPosition"
-#######################################################
+clear && print_crdl && fetchBranchDetails
+#########################################
