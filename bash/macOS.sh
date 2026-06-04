@@ -52,7 +52,7 @@ crZIP="chrome-mac"
 platform=Mac
 [ -f "$crdlJson" ] && AutoUpdatesDependencies=$(jq -r '.AutoUpdatesDependencies' "$crdlJson" 2>/dev/null) || AutoUpdatesDependencies=true
 
-formulaeUpdate() {
+pkgUpdate() {
   formulae=$1
   if echo "$outdatedFormulae" | grep -q "^$formulae" 2>/dev/null; then
     echo -e "$running Upgrading $formulae formulae.."
@@ -60,17 +60,17 @@ formulaeUpdate() {
   fi
 }
 
-formulaeInstall() {
+pkgInstall() {
   formulae=$1
   if echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
-    formulaeUpdate "$formulae"
+    pkgUpdate "$formulae"
   else
     echo -e "$running Installing $formulae formulae.."
     brew install "$formulae" > /dev/null 2>&1
   fi
 }
 
-formulaeUninstall() {
+pkgUninstall() {
   formulaeList=$(brew list 2>/dev/null)
   formulae=$1
   if echo "$formulaeList" | grep -q "$formulae" 2>/dev/null; then
@@ -83,14 +83,14 @@ dependencies() {
   brew --version &>/dev/null && brew update &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   formulaeList=$(brew list 2>/dev/null)
   outdatedFormulae=$(brew outdated 2>/dev/null)
-  formulaeInstall "bash"  # bash update
-  formulaeInstall "grep"  # grep update
-  formulaeInstall "curl"  # curl update
-  formulaeInstall "aria2"  # aria2 install/update
-  formulaeInstall "ca-certificate"  # ca-certificate update
-  formulaeInstall "jq"  # jq install/update
-  formulaeInstall "pv"  # pv install/update
-  formulaeInstall "pup"  # pup install/update
+  pkgInstall "bash"  # bash update
+  pkgInstall "grep"  # grep update
+  pkgInstall "curl"  # curl update
+  pkgInstall "aria2"  # aria2 install/update
+  pkgInstall "ca-certificates"  # ca-certificates update
+  pkgInstall "jq"  # jq install/update
+  pkgInstall "pv"  # pv install/update
+  pkgInstall "pup"  # pup install/update
   # https://github.com/aria2/aria2/issues/1920
   aria2Executing=$(aria2c -q -d "$HOME" -o aria2Executing --ca-certificate="/etc/ssl/cert.pem" --async-dns=true --async-dns-server="$googleIP" "https://one.one.one.one/")
   if echo "$aria2Executing" | grep -q "--async-dns=true" 2>/dev/null; then

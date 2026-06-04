@@ -23,7 +23,7 @@ Yellow="\033[93m"
 Reset="\033[0m"
 
 checkInternet() {
-  if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
+  if ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
     return
   else
     echo -e "$bad ${Red}No Internet Connection available!${Reset}"
@@ -31,17 +31,18 @@ checkInternet() {
   fi
 }
 
+isMacOS=false; isAndroid=false; isFedora=false; scripts=(menu confirmPrompt)
 if [[ "$(uname)" == "Darwin" ]]; then
-  isMacOS=true; isAndroid=false; isFedora=false
+  isMacOS=true; scripts+=(macOS)
 elif [[ -d "/sdcard" ]] && [[ -d "/system" ]]; then
-  isAndroid=true; isMacOS=false; isFedora=false
+  isAndroid=true; scripts+=(Termux)
 elif [[ -f "/etc/os-release" ]]; then
   if grep -qi "fedora" /etc/os-release 2>/dev/null; then
-    isFedora=true; isAndroid=false; isMacOS=false
+    isFedora=true; scripts+=(Fedora)
   fi
 fi
 
-([ $isAndroid == true ] || [ $isMacOS == true ]) && USER_HOME="$HOME" || USER_HOME="$(getent passwd 1000 | cut -d: -f6)"
+[ -f "/etc/os-release" ] && USER_HOME="$(getent passwd 1000 | cut -d: -f6)" || USER_HOME="$HOME"
 crdl="$USER_HOME/.crdl"
 [ $isAndroid == true ] && Download="/sdcard/Download" || Download="$USER_HOME/Downloads"
 mkdir -p $crdl
@@ -63,16 +64,7 @@ config() {
   jq --arg key "$key" --arg value "$value" '.[$key] = $value' "$crdlJson" > temp.json && mv temp.json "$crdlJson"
 }
 
-scripts=(menu confirmPrompt)
-[ $isAndroid == true ] && scripts+=(Termux)
-[ $isMacOS == true ] && scripts+=(macOS)
-[ $isFedora == true ] && scripts+=(Fedora)
-
-run() {
-  for ((c=0; c<${#scripts[@]}; c++)); do
-    source $crdl/${scripts[c]}.sh
-  done
-}
+run() { for ((c=0; c<${#scripts[@]}; c++)); do source $crdl/${scripts[c]}.sh; done; }
 
 [ -f "$crdl/.version" ] && localVersion=$(cat "$crdl/.version") || localVersion=
 checkInternet &>/dev/null && remoteVersion=$(curl -sL "https://raw.githubusercontent.com/arghya339/crdl/refs/heads/main/bash/.version") || remoteVersion="$localVersion"
@@ -102,7 +94,7 @@ updates() {
   done
 }
 [ -f "$crdl" ] && AutoUpdatesScript=$(jq -r '.AutoUpdatesScript' "$crdlJson" 2>/dev/null) || AutoUpdatesScript=true
-if [ "$AutoUpdatesScript" == true ]; then
+if [ $AutoUpdatesScript == true ]; then
   [ "$remoteVersion" != "$localVersion" ] && { checkInternet && updates && localVersion="$remoteVersion"; } || run
 else
   run
@@ -186,7 +178,7 @@ aria2ConsoleLogHide() {
       [ $(($i + 1)) -le 9 ] && echo " $(($i + 1)). ${options[$i]}" || echo "$(($i + 1)). ${options[$i]}"
     fi
   done
-  echo -e "\n${whiteBG}➤ ${buttons[0]} $Reset   ${buttons[1]}"
+  echo -e "\n${whiteBG}➤ ${eButtons[0]} $Reset   ${eButtons[1]}"
   echo -e "\n$info Last Chromium $option Version: $crVersion at branch position: $branchPosition"
   echo -e "${good} Found valid snapshot at: $branchPosition\n"
   echo -e "$running Downloading Chromium $crVersion from ${Blue}$dlURL${Reset} $crdlSize"
@@ -207,8 +199,9 @@ mkConfig() {
 installPrompt() {
   appPath=${1}
   if [ $isAndroid == true ]; then
-    appVersion=$($HOME/aapt2 dump badging $appPath 2>/dev/null | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-    appVersionCode=$($HOME/aapt2 dump badging $appPath 2>/dev/null | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")
+    appInfo=$($PREFIX/bin/aapt2 dump badging $appPath 2>/dev/null)
+    appVersion=$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<< "$appInfo")
+    appVersionCode=$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<< "$appInfo")
     crSize=$(awk "BEGIN {printf \"%.2f MB\n\", $(stat -c%s $appPath 2>/dev/null)/1000000}" 2>/dev/null)
   elif [ $isMacOS == true ]; then
     chmod -R +x $appPath && appVersion=$($appPath/Contents/MacOS/Chromium --version | awk '{print $2}' 2>/dev/null)
@@ -234,7 +227,7 @@ installPrompt() {
       elif ( [ $isMacOS == true ] && [ ! -d "/Applications/Chromium.app" ] ) || ( [ $isFedora == true ] && [ ! -d "/opt/$crZIP/" ] ); then
         curl -L --progress-bar -C - -o "$crdl/top-50.sh" "https://raw.githubusercontent.com/arghya339/crdl/main/Extensions/bash/top-50.sh" && bash "$crdl/top-50.sh" && rm -f "$crdl/top-50.sh"
       fi
-      if [ $isAndroid == false ] || { [ $isAndroid == true ] && { [ $su == true ] || "$HOME/rish" -c "id" >/dev/null 2>&1 || "$HOME/adb" -s $("$HOME/adb" devices 2>/dev/null | grep "device$" | awk '{print $1}' | tail -1) shell "id" >/dev/null 2>&1; }; }; then
+      if [ $isAndroid == false ] || { [ $isAndroid == true ] && { [ $su == true ] || [ $rish == true ] || [ $adb == true ]; }; }; then
         if [ $installStatus -eq 0 ]; then
           if [ -n "$crup" ]; then
             if [ -t 0 ]; then
@@ -483,20 +476,18 @@ while true; do
         sDescriptions+=(RemoveDownloadedFileAfterInstallation Downloader)
         [ $isAndroid == true ] && { sOptions+=(Experiments GUI AutoUpdatesTermux Share); sDescriptions+=("chrome://flags/" GraphicalUserInterface AutoUpdatesTermuxOnLaunch ShareScript); }
         menu sOptions bButtons sDescriptions "" $selected_settings && selected_settings=$selected || break
-        case "${sOptions[selected]}" in
+        case "${sOptions[selected_settings]}" in
           printArt)
             confirmPrompt "Show crdl branding on launch" tfButtons "$printArt" && printArt=true || printArt=false
             config "printArt" "$printArt"
             ;;
           AutoUpdatesScript)
-            confirmPrompt "Auto updates Script on launch" tfButtons "$AutoUpdatesScript" && autoupdates=true || autoupdates=false
-            config "AutoUpdatesScript" "$autoupdates"
-            reloadConfig
+            confirmPrompt "Auto updates Script on launch" tfButtons "$AutoUpdatesScript" && AutoUpdatesScript=true || AutoUpdatesScript=false
+            config "AutoUpdatesScript" "$AutoUpdatesScript"
             ;;
           AutoUpdatesDependencies)
-            confirmPrompt "Auto updates dependencies on launch" tfButtons "$AutoUpdatesDependencies" && autoupdates=true || autoupdates=false
-            config "AutoUpdatesDependencies" "$autoupdates"
-            reloadConfig
+            confirmPrompt "Auto updates dependencies on launch" tfButtons "$AutoUpdatesDependencies" && AutoUpdatesDependencies=true || AutoUpdatesDependencies=false
+            config "AutoUpdatesDependencies" "$AutoUpdatesDependencies"
             ;;
           CheckUpdates) checkInternet && { updates; dependencies; } ;;
           About)
@@ -535,7 +526,6 @@ while true; do
           AutoUpdatesTermux)
             confirmPrompt "Auto updates Termux on launch" tfButtons "$AutoUpdatesTermux" && AutoUpdatesTermux=true || AutoUpdatesTermux=false
             config "AutoUpdatesTermux" "$AutoUpdatesTermux"
-            reloadConfig
             ;;
           SchedulerUpdateChromium)
             case "$Scheduler" in
@@ -551,13 +541,14 @@ while true; do
             SchedulerOpt=(None 15min 30min 1h 3h 6h 9h 12h)
             SchedulerDesc=("Don'tCheck" CheckEvery15Minutes CheckEvery30Minutes CheckEvery1Hours CheckEvery3Hours CheckEvery6Hours CheckEvery9Hours CheckEvery12Hours)
             if menu SchedulerOpt bButtons SchedulerDesc "" $selected_options; then
-              config "Scheduler" "${SchedulerOpt[selected]}"
-              reloadConfig
+              selected_options=$selected
+              Scheduler="${SchedulerOpt[selected_options]}"
+              config "Scheduler" "$Scheduler"
               if [ "$Scheduler" == "None" ]; then
                 if [ $isAndroid == true ]; then
                   termux-job-scheduler --cancel --job-id 1993615810
                 elif [ $isMacOS == true ]; then
-                  if [ "$Timer" == "None" ] && [ "$Boot" == false ]; then
+                  if [ "$Timer" == "None" ] && [ $Boot == false ]; then
                     launchctl unload $HOME/Library/LaunchAgents/com.${USER}.crup.plist
                     launchctl remove com.${USER}.crup
                     rm -f $HOME/Library/LaunchAgents/com.${USER}.crup.plist
@@ -568,7 +559,7 @@ while true; do
                   if [ "$Timer" == "None" ]; then
                     sudo systemctl disable --now crup.timer
                     sudo rm -f /etc/systemd/system/crup.timer
-                    if [ "$Boot" == false ]; then
+                    if [ $Boot == false ]; then
                       sudo systemctl disable --now crup.service
                       sudo rm -f /etc/systemd/system/crup.service
                     fi
@@ -578,7 +569,7 @@ while true; do
                   fi
                 fi
               else
-                case "${SchedulerOpt[selected]}" in
+                case "${SchedulerOpt[selected_options]}" in
                   15min) SchedulerS=$((60 * 15)) ;;
                   30min) SchedulerS=$((60 * 30)) ;;
                   1h) SchedulerS=$((60 * 60)) ;;
@@ -600,15 +591,15 @@ while true; do
             ;;
           TimerTriggerUpdateChromium)
             [ "$Timer" == "None" ] && selected_buttons=0 || selected_buttons=1 
-            TimerButtons=(None Trigger); confirmPrompt "TimerTrigger" TimerButtons "$selected_buttons" && TimerOpt=None || TimerOpt=Trigger
-            if [ "$TimerOpt" == "None" ]; then
+            TimerButtons=(None Trigger); confirmPrompt "TimerTrigger" TimerButtons "$selected_buttons" && Timer=None || Timer=Trigger
+            if [ "$Timer" == "None" ]; then
               if [ $isAndroid == true ]; then
                 sv down crond
                 (crontab -l | grep -v "crup.sh") | crontab -
                 pkill crond
                 termux-wake-unlock
               elif [ $isMacOS == true ]; then
-                if [ "$Scheduler" == "None" ] && [ "$Boot" == false ]; then
+                if [ "$Scheduler" == "None" ] && [ $Boot == false ]; then
                   launchctl unload $HOME/Library/LaunchAgents/com.${USER}.crup.plist
                   launchctl remove com.${USER}.crup
                   rm -f $HOME/Library/LaunchAgents/com.${USER}.crup.plist
@@ -619,7 +610,7 @@ while true; do
                 if [ "$Scheduler" == "None" ]; then
                   sudo systemctl disable --now crup.timer
                   sudo rm -f /etc/systemd/system/crup.timer
-                  if [ "$Boot" == false ]; then
+                  if [ $Boot == false ]; then
                     sudo systemctl disable --now crup.service
                     sudo rm -f /etc/systemd/system/crup.service
                   fi
@@ -628,16 +619,14 @@ while true; do
                   systemdService
                 fi
               fi
-              config "Timer" "None"
-              reloadConfig
+              config "Timer" "$Timer"
             else
-              read -r -p "Timer(24-Hour): " -i "$(date "+%H:%M")" -e Time
-              [ -z "$Time" ] && Time="None"
-              if [ "$Time" != "None" ]; then
-                config "Timer" "$Time"
-                reloadConfig
+              read -r -p "Timer(24-Hour): " -i "$(date "+%H:%M")" -e Timer
+              [ -z "$Timer" ] && Timer="None"
+              if [ "$Timer" != "None" ]; then
+                config "Timer" "$Timer"
                 if [ $isAndroid == true ]; then
-                  TimerTriggerUpdateChromium "$Time"
+                  TimerTriggerUpdateChromium "$Timer"
                 elif [ $isMacOS == true ]; then
                   LaunchAgents
                 elif [ $isFedora == true ]; then
@@ -649,8 +638,7 @@ while true; do
           UpdateChromiumAtBoot)
             confirmPrompt "UpdateChromiumAtBoot" tfButtons "$Boot" && Boot=true || Boot=false
             config "Boot" "$Boot"
-            reloadConfig
-            if [ "$Boot" == true ]; then
+            if [ $Boot == true ]; then
               if [ $isAndroid == true ]; then
                 UpdateChromiumAtBoot
               elif [ $isMacOS == true ]; then
@@ -725,24 +713,11 @@ while true; do
                     confirmPrompt "Do you want to remove this script-related dependency?" "ynButtons" "1" && response=Yes || response=No
                     case "$response" in
                       Yes)
-                        if [ $isAndroid == true ]; then
-                          pkgUninstall "aria2"
-                          pkgUninstall "jq"
-                          pkgUninstall "pup"
-                          pkgUninstall "bsdtar"
-                          pkgUninstall "pv"
-                        elif [ $isMacOS == true ]; then
-                          formulaeUninstall "aria2"
-                          formulaeUninstall "jq"
-                          formulaeUninstall "pup"
-                          formulaeUninstall "pv"
-                        elif [ $isFedora == true ]; then
-                          dnfRemove "curl"
-                          dnfRemove "aria2"
-                          dnfRemove "jq"
-                          dnfRemove "bsdtar"
-                          dnfRemove "pv"
-                        fi
+                        pkgUninstall "aria2"
+                        ([ $isAndroid == true ] || [ $isMacOS == true ]) && pkgUninstall "pup"
+                        pkgUninstall "jq"
+                        ([ $isAndroid == true ] || [ $isFedora == true ]) && pkgUninstall "bsdtar"
+                        pkgUninstall "pv"
                         ;;
                     esac
                     confirmPrompt "Do you want to uninstall Chromium from this Device?" "ynButtons" "1" && response=Yes || response=No
@@ -753,21 +728,16 @@ while true; do
                         elif [ $isAndroid == true ]; then
                           am start -a android.intent.action.UNINSTALL_PACKAGE -d package:org.chromium.chrome &>/dev/null
                         else
-                          rm -rf /opt/$crZIP/
                           sudo rm -f /usr/local/bin/chromium
+                          rm -f "$USER_HOME/.local/share/applications/Chromium.desktop"
+                          sudo rm -rf /opt/$crZIP/
                         fi
                         ;;
                     esac
                     printf '\033[2J\033[3J\033[H'
                     echo -e "$good ${Yellow}crdl has been uninstalled successfully :(${Reset}"
                     echo -e "💔 ${Yellow}We're sorry to see you go. Feel free to reinstall anytime!${Reset}"
-                    if [ $isAndroid == true ]; then
-                      termux-open "https://github.com/arghya339/crdl"
-                    elif [ $isMacOS == true ]; then
-                      open "https://github.com/arghya339/crdl"
-                    else
-                      xdg-open "https://github.com/arghya339/crdl"
-                    fi
+                    if [ $isAndroid == true ]; then termux-open "https://github.com/arghya339/crdl"; elif [ $isMacOS == true ]; then open "https://github.com/arghya339/crdl"; else xdg-open "https://github.com/arghya339/crdl" &>/dev/null; fi
                     exit 0
                     ;;
                 esac
@@ -775,13 +745,8 @@ while true; do
             esac
             ;;
           SourceCode)
-            if [ $isAndroid == true ]; then
-              termux-open-url "https://github.com/arghya339/crdl"
-            elif [ $isMacOS == true ]; then
-              open "https://github.com/arghya339/crdl"
-            else
-              xdg-open "https://github.com/arghya339/crdl"
-            fi
+            GitHubURL="https://github.com/arghya339/crdl"
+            if [ $isAndroid == true ]; then termux-open-url "$GitHubURL"; elif [ $isMacOS == true ]; then open "$GitHubURL"; else xdg-open "$GitHubURL" &>/dev/null; fi
             ;;
           Donate)
             DonateURL="https://www.paypal.com/paypalme/arghyadeep339"

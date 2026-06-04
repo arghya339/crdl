@@ -35,7 +35,7 @@ elif [[ $(uname -m) == arm* ]] || [ $(uname -m) == "aarch64" ]; then
 fi
 [ -f "$crdlJson" ] && AutoUpdatesDependencies=$(jq -r '.AutoUpdatesDependencies' "$crdlJson" 2>/dev/null) || AutoUpdatesDependencies=true
 
-dnfUpdate() {
+pkgUpdate() {
   dnf=${1}
   if grep -q "^$dnf" <<< "$dnfUpgradesList" 2>/dev/null; then
     echo -e "$running Upgrading $dnf package.."
@@ -43,17 +43,17 @@ dnfUpdate() {
   fi
 }
 
-dnfInstall() {
+pkgInstall() {
   dnf=${1}
   if grep -q "^$dnf" <<< "$dnfList" 2>/dev/null; then
-    dnfUpdate "$dnf"
+    pkgUpdate "$dnf"
   else
     echo -e "$running Installing $dnf package.."
     sudo dnf install "$dnf" -y >/dev/null 2>&1
   fi
 }
 
-dnfRemove() {
+pkgUninstall() {
   dnf=${1}
   dnfList=$(dnf list --installed 2>/dev/null)
   if grep -q "^$dnf" <<< "$dnfList" 2>/dev/null; then
@@ -65,15 +65,15 @@ dnfRemove() {
 dependencies() {
   dnfList=$(dnf list --installed 2>/dev/null)
   dnfUpgradesList=$(dnf --refresh list --upgrades 2>/dev/null)
-  dnfInstall "bash"
-  dnfInstall "grep"
-  dnfInstall "gawk"
-  dnfInstall "sed"
-  dnfInstall "curl"
-  dnfInstall "aria2"
-  dnfInstall "jq"
-  dnfInstall "bsdtar"
-  dnfInstall "pv"
+  pkgInstall "bash"
+  pkgInstall "grep"
+  pkgInstall "gawk"
+  pkgInstall "sed"
+  pkgInstall "curl"
+  pkgInstall "aria2"
+  pkgInstall "jq"
+  pkgInstall "bsdtar"
+  pkgInstall "pv"
   if ! pup --version &>/dev/null; then
     if [ $(uname -m) == "x86_64" ]; then
       arch="amd64"
