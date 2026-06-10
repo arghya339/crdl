@@ -22,7 +22,7 @@ $urls = @(
   "https://chromewebstore.google.com/detail/popup-blocker-strict/aefkmifgmaafnojlojpnekbpbmjiiogg"  # Popup Blocker (strict)
   "https://chromewebstore.google.com/detail/unhook-remove-youtube-rec/khncfooichmfjbepaaaebmommgaepoid"  # Unhook
   #"https://chromewebstore.google.com/detail/absolute-enable-right-cli/jdocbkpgdakpekjlhemmfcncgdjeiika"  # Absolute Enable Right Click & Copy MV2
-  "https://chromewebstore.google.com/detail/activate-enable-right-cli/pkoccklolohdacbfooifnpebakpbeipc"  # Activate Enable Right Click & Copy MV3
+  "https://chromewebstore.google.com/detail/absolute-enable-right-cli/okaeekdeohehbdanbbohcfhhlblcmjkm"  # Absolute Enable Right Click & Copy MV3
   #"https://chromewebstore.google.com/detail/firefox-relay/lknpoadjjkjcmjhbjpcljdednccbldeb"  # Firefox Relay MV2
   "https://chromewebstore.google.com/detail/onetab/chphlpgkkbolifaimnlloiipkdnihall"  # OneTab
   "https://chromewebstore.google.com/detail/blocksite-block-websites/eiimnmioipafcokbfikbljfdeojpcgbh"  # BlockSite: Block Websites

@@ -45,6 +45,7 @@ urls=(
   # "https://chromewebstore.google.com/detail/cookie-autodelete/fhcgjolkccmbidfldomjliifgaodjagh"  # Cookie AutoDelete MV2
   "https://chromewebstore.google.com/detail/i-dont-care-about-cookies/fihnjjcciajhdojfnbdddfaoknhalnja"  # I don't care about cookies
   # "https://chromewebstore.google.com/detail/absolute-enable-right-cli/jdocbkpgdakpekjlhemmfcncgdjeiika"  # Absolute Enable Right Click & Copy MV2
+  "https://chromewebstore.google.com/detail/absolute-enable-right-cli/okaeekdeohehbdanbbohcfhhlblcmjkm"  # Absolute Enable Right Click & Copy MV3
   #"https://chromewebstore.google.com/detail/dont-f-with-paste/nkgllhigpcljnhoakjkgaieabnkmgdkb"  # Don't F*** With Paste
 )
 
