@@ -121,7 +121,7 @@ fi
 
 # Only for Genymotion (Android Emulator)
 if [ "$(getprop ro.product.manufacturer)" == "Genymobile" ] && [ ! -f "$PREFIX/bin/adb" ]; then
-  curl -sL -o "$PREFIX/bin/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${cpuAbi}/bin/adb" && chmod +x $PREFIX/bin/adb
+  curl -sL -o "$PREFIX/bin/adb" "https://raw.githubusercontent.com/rendiix/termux-adb-fastboot/refs/heads/master/binary/${arch}/bin/adb" && chmod +x $PREFIX/bin/adb
 fi
 
 runCmd() {
