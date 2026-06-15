@@ -2,7 +2,7 @@
 
 # Copyright (C) 2025, Arghyadeep Mondal <github.com/arghya339>
 
-[ "$(uname)" == "Darwin" ] && PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/arghya/bin"
+[ "$(uname)" == "Darwin" ] && PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/$USER/bin"
 ping -c 1 -W 2 8.8.8.8 &>/dev/null || exit 1
 crup=booted
 [ -f "/etc/os-release" ] && USER_HOME="$(getent passwd 1000 | cut -d: -f6)" || USER_HOME="$HOME"
