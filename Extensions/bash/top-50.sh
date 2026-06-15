@@ -3,6 +3,7 @@
 urls=(
   #"https://chromewebstore.google.com/detail/chrome-web-store-launcher/gecgipfabdickgidpmbicneamekgbaej"  # Chrome Web Store Launcher (by Google) MV2
   #"https://github.com/prem-k-r/CRXtract"  # download the extension CRX file
+  # "https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm"  # uBlock Origin MV2
   "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"  # uBlock Origin Lite
   "https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"  # AdGuard AdBlocker
   "https://chromewebstore.google.com/detail/dark-reader/eimadpbcbfnmbkopoojfekhnkhdbieeh"  # Dark Reader
@@ -35,7 +36,8 @@ urls=(
   "https://chromewebstore.google.com/detail/h264ify/aleakchihdccplidncghkekgioiakgal"  # h264ify
   "https://chromewebstore.google.com/detail/ultrawideo/bfbnagnphiehemkdgmmficmjfddgfhpl"  # UltraWideo
   "https://chromewebstore.google.com/detail/ublacklist/pncfbmialoiaghdehhbnbhkkgmjanfhe"  # uBlacklist
-  #"https://chromewebstore.google.com/detail/dont-f-with-paste/nkgllhigpcljnhoakjkgaieabnkmgdkb"  # Don't F*** With Paste
+  "https://chromewebstore.google.com/detail/dont-f-with-paste/efaagigdgamehbpimpiagfpoihlkgamh"  # Don't F*** With Paste
+  "https://chromewebstore.google.com/detail/showpassword/bbiclfnbhommljbjcoelobnnnibemabl"  # ShowPassword
   "https://chromewebstore.google.com/detail/temp-mail-disposable-temp/inojafojbhdpnehkhhfjalgjjobnhomj"  # Temp Mail - Disposable Temporary Email
   "https://chromewebstore.google.com/detail/google-analytics-opt-out/fllaojicojecljbmefodhfapmkghcbnh"  # Google Analytics Opt-out Add-on (by Google)
   "https://chromewebstore.google.com/detail/video-roll-all-in-one-vid/cokngoholafkeghnhhdlmiadlojpindm"  # Video Roll
@@ -49,6 +51,7 @@ urls=(
   "https://chromewebstore.google.com/detail/video-speed-controller/nffaoalbilbmmfgbnbgppjihopabppdk"  # Video Speed Controller
   "https://chromewebstore.google.com/detail/honey-automatic-coupons-r/bmnlcjabgnpnenekpadlanbbkooimhnj"  # Honey: Automatic Coupons
   #"https://chromewebstore.google.com/detail/imagus/immpkjjlgappgfkkfieppnmlhakdmaab"  # Imagus MV2
+  "https://chromewebstore.google.com/detail/imagus-reborn/fcjmgeodgobggcppooncdagfkogfffdm"  # Imagus Reborn MV3
   "https://chromewebstore.google.com/detail/tineye-reverse-image-sear/haebnnbpedcbhciplfhjjkbafijpncjl"  # TinEye Reverse Image Search
   "https://chromewebstore.google.com/detail/wot-website-security-safe/bhmmomiinigofkjcapegjjndpbikblnp"  # WOT: Website Security & Safety Checker
   "https://chromewebstore.google.com/detail/floccus-bookmarks-sync/fnaicdffflnofjppbagibeoednhnbjhg"  # floccus bookmarks sync
