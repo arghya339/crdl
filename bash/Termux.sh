@@ -8,6 +8,7 @@ if [ -f "$crdlJson" ]; then
   AndroidDesktop=$(jq -r '.AndroidDesktop' "$crdlJson" 2>/dev/null)
   Prefer32bitApk=$(jq -r '.Prefer32bitApk' "$crdlJson" 2>/dev/null)
   GUI=$(jq -r '.GUI' "$crdlJson" 2>/dev/null)
+  aapt2=$(jq -r '.aapt2' "$crdlJson" 2>/dev/null)
 else
   AutoUpdatesDependencies=true
   AutoUpdatesTermux=true
@@ -31,7 +32,7 @@ if [ $arch == "x86" ]; then
     echo -e "$info Find Chromium alternative as BraveMonox86.apk"  # Android 9.0+ (universal: arm64-v8a, armeabi-v7a, x86_64, x86)
     termux-open "https://github.com/brave/brave-browser/releases/latest/"
   else
-    echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
+    echo -e "$info Find Chromium alternative as Firefox."  # Android 8.0+ (universal)
     termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
   fi
   rm -f $PREFIX/bin/crdl $HOME/.crdl.sh
@@ -207,7 +208,10 @@ dependencies() {
 }
 [ "$AutoUpdatesDependencies" == true ] && checkInternet && dependencies
 
-[[ $($PREFIX/bin/aapt2 version 2>&1 | awk '{print $NF}') =~ ^(2.19-V14.0.6.0.TKSMIXM|2.19-3401)$ ]] || { rm -f $PREFIX/bin/aapt2 && curl -L --progress-bar -C - -o $PREFIX/bin/aapt2 $(curl -sL https://api.github.com/repos/ReVanced/aapt2/releases/latest | jq -r --arg abi "$arch" '.assets[] | select(.name == "aapt2-" + $abi) | .browser_download_url') && chmod +x $PREFIX/bin/aapt2 && $PREFIX/bin/aapt2 version 2>&1; }
+if checkInternet; then
+  tag_name=$(curl -sL https://api.github.com/repos/ReVanced/aapt2/releases/latest | jq -r '.tag_name')
+  [ "$tag_name" != "$aapt2" ] && { rm -f $PREFIX/bin/aapt2 && curl -L --progress-bar -C - -o $PREFIX/bin/aapt2 https://github.com/ReVanced/aapt2/releases/download/${tag_name}/aapt2-${arch} && chmod +x $PREFIX/bin/aapt2 && $PREFIX/bin/aapt2 version 2>&1 && config "aapt2" "$tag_name"; }
+fi
 
 if [ "$arch" == "arm64-v8a" ] && [ -z "$AndroidDesktop" ]; then
   if [ $foundTermuxAPI == true ] && [ $GUI == true ]; then

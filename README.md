@@ -35,7 +35,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 ## Usage
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white) ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0) ![Fedora](https://img.shields.io/badge/Fedora-294172?style=for-the-badge&logo=fedora&logoColor=white)
   
-  Open [Termux](https://github.com/termux/termux-app/releases/) / Terminal and paste following command then press `Enter` key:
+  Open [Termux](https://github.com/termux/termux-app/releases/latest) / Terminal and paste following command then press `Enter` key:
   ```sh
   curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/main/bash/crdl.sh" && bash ~/.crdl.sh
   ```
@@ -59,7 +59,7 @@ A feature-rich command-line Chromium Downloader for Android/ macOS/ Windows.
 > This script was tested on an Intel Mac running macOS Sonoma (14) with Terminal v2.14(453) with bash v3.2.57.
 
 ### Android 5~9 Only
-  Open [Termux](https://github.com/termux/termux-app/releases/) and paste following command then press `Enter` key:
+  Open [Termux](https://github.com/termux/termux-app/releases?q=prerelease%3Atrue) and paste following command then press `Enter` key:
   ```sh
   curl -L --progress-bar -o "$HOME/.crdl.sh" "https://raw.githubusercontent.com/arghya339/crdl/main/bash/odcrdl.sh" && bash ~/.crdl.sh
   ```

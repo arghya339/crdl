@@ -123,7 +123,7 @@ if [ $Android -eq 7 ] && [ "$arch" == "x86_64" ]; then
 elif [[ ( $Android -eq 6 || $Android -eq 5 ) && ( "$arch" == "armeabi-v8a" || $arch == "x86_64" ) ]]; then
   echo -e "$bad ${Red}Android $Android with Arch $arch is not supported by Chromium.${Reset}"
   echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
-  termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+  [ "$arch" == "x86_64" ] && termux-open "https://archive.mozilla.org/pub/fenix/releases/143.0.4/android/fenix-143.0.4-android-x86_64/" || termux-open "https://archive.mozilla.org/pub/fenix/releases/143.0.4/android/fenix-143.0.4-android-arm64-v8a/"
   rm -f $PREFIX/bin/crdl $HOME/.crdl.sh
   exit 1
 fi
@@ -140,7 +140,7 @@ if [ "$arch" == "x86" ]; then
     termux-open-url "https://github.com/kiwibrowser/src.next/releases/latest"
   else
     echo -e "$info Find Chromium alternative as Firefox."  # Android 5.0+ (universal)
-    termux-open "https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+    termux-open "https://archive.mozilla.org/pub/fenix/releases/143.0.4/android/fenix-143.0.4-android-x86/"
   fi
   rm -f $PREFIX/bin/crdl $HOME/.crdl.sh
   exit 1
